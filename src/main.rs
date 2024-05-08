@@ -1,4 +1,4 @@
-use anyhow;
+use anyhow::anyhow;
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use serde::Deserialize;
@@ -40,7 +40,7 @@ impl GameEntry {
     }
 }
 
-fn main() -> anyhow::Result<()> {
+fn get_minecraft_id() -> anyhow::Result<usize> {
     let loading = Loading::new(Spinner::default());
 
     loading.info(format!(
@@ -60,11 +60,18 @@ fn main() -> anyhow::Result<()> {
 
     let games: GamesList = response.json()?;
 
-    let minecraft_id: Option<usize> = games.find_game("minecraft").map(GameEntry::get_id);
+    let minecraft_id = games
+        .find_game("minecraft")
+        .map(GameEntry::get_id)
+        .ok_or(anyhow!("Minecraft was not found in the list of games"));
 
     loading.end();
 
-    println!("{:?}", minecraft_id);
+    minecraft_id
+}
+
+fn main() -> anyhow::Result<()> {
+    println!("{:?}", get_minecraft_id());
 
     Ok(())
 }
