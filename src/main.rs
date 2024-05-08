@@ -1,5 +1,4 @@
 mod fetchers;
-mod token;
 mod filter;
 mod config;
 

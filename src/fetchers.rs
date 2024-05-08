@@ -1,11 +1,11 @@
-use crate::token::TOKEN;
 use anyhow::anyhow;
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use serde::Deserialize;
 
+pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
-                                                                    //
+
 #[derive(Debug, Deserialize)]
 struct GamesList {
     data: Vec<GameEntry>,
