@@ -146,7 +146,7 @@ where
 ///   }
 /// }
 /// ```
-pub struct MinecraftId(usize);
+pub type MinecraftId = usize;
 
 impl Fetchable for MinecraftId {
     fn link() -> anyhow::Result<Url> {
@@ -174,7 +174,6 @@ impl Fetchable for MinecraftId {
             .into_iter()
             .find(|entry| entry.name == "minecraft" || entry.slug == "minecraft")
             .map(|entry| entry.id)
-            .map(Self)
             .context("Minecraft was not found in the list of games")
     }
 
@@ -199,7 +198,7 @@ impl Fetchable for MinecraftId {
 ///     ]
 /// }
 /// ```
-pub struct MinecraftVersions(Vec<ManyVersions>);
+pub type MinecraftVersions = Vec<ManyVersions>;
 
 impl Fetchable for MinecraftVersions {
     fn link() -> anyhow::Result<Url> {
@@ -217,7 +216,6 @@ impl Fetchable for MinecraftVersions {
             .json::<Data>()
             .context("Parsing Minecraft versions")
             .map(|v| v.result)
-            .map(Self)
     }
 
     fn info() -> impl Display {
@@ -231,7 +229,7 @@ impl Fetchable for MinecraftVersions {
 ///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
 /// }
 /// ```
-pub struct ForgeVersions(HashMap<SingleVersion, Vec<SingleVersion>>);
+pub type ForgeVersions = HashMap<SingleVersion, Vec<SingleVersion>>;
 
 impl Fetchable for ForgeVersions {
     fn link() -> anyhow::Result<Url> {
@@ -249,7 +247,6 @@ impl Fetchable for ForgeVersions {
             .json::<Data>()
             .context("Deserializing Forge versions")
             .map(|Data { result: [version] }| version)
-            .map(Self)
     }
 
     fn info() -> impl Display {
@@ -277,7 +274,7 @@ impl Fetchable for ForgeVersions {
 ///   ]
 /// }
 /// ```
-pub struct CurseForgeCategories(HashMap<String, usize>);
+pub type CurseForgeCategories = HashMap<String, usize>;
 
 impl Fetchable for CurseForgeCategories {
     fn link() -> anyhow::Result<Url> {
@@ -287,7 +284,7 @@ impl Fetchable for CurseForgeCategories {
         {
             let mut queries = url.query_pairs_mut();
 
-            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?.0;
+            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
 
             queries.append_pair("gameId", &format!("{id}"));
             queries.append_pair("classesOnly", "true");
@@ -310,11 +307,10 @@ impl Fetchable for CurseForgeCategories {
 
         let data = response.json::<Data>()?.data;
 
-        Ok(Self(
-            data.into_iter()
-                .map(|entry| (entry.name, entry.id))
-                .collect(),
-        ))
+        Ok(data
+            .into_iter()
+            .map(|entry| (entry.name, entry.id))
+            .collect())
     }
 
     fn info() -> impl Display {
@@ -336,8 +332,8 @@ impl Fetchable for ModSearchList {
         {
             let mut queries = url.query_pairs_mut();
 
-            let game_id = MinecraftId::fetch(AdditionalFetchParameters::default())?.0;
-            let categories = CurseForgeCategories::fetch(AdditionalFetchParameters::default())?.0;
+            let game_id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
+            let categories = CurseForgeCategories::fetch(AdditionalFetchParameters::default())?;
 
             let class_id = categories.get("Mods").context("No category `Mods` found")?;
 
@@ -694,18 +690,13 @@ mod fetchers_test {
     fn minecraft_versions() {
         assert!(
             MinecraftVersions::fetch(AdditionalFetchParameters::default())
-                .is_ok_and(|versions| !versions.0.is_empty())
+                .is_ok_and(|versions| !versions.is_empty())
         );
     }
 
     #[test]
     fn forge_versions() {
-        assert!(
-            ForgeVersions::fetch(AdditionalFetchParameters::default()).is_ok_and(|map| map
-                .0
-                .keys()
-                .count()
-                > 0)
-        );
+        assert!(ForgeVersions::fetch(AdditionalFetchParameters::default())
+            .is_ok_and(|map| map.keys().count() > 0));
     }
 }
