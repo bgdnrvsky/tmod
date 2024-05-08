@@ -12,7 +12,7 @@ pub enum Loader {
 
 #[cfg(test)]
 mod loaders_kind_parsing {
-    use crate::loader::Loader;
+    use crate::config::Loader;
     use std::str::FromStr;
 
     #[test]
