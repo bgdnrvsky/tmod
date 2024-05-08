@@ -1,7 +1,7 @@
-use serde::Deserialize;
+use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
 
-#[derive(Debug, Clone, EnumString, Deserialize, Display, PartialEq, Eq)]
+#[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
 #[strum(ascii_case_insensitive)]
 pub enum Loader {
     Forge,
