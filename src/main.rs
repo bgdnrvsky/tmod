@@ -1,4 +1,5 @@
-use anyhow::{self, Context};
+use anyhow;
+use loading::{Loading, Spinner};
 use reqwest as rq;
 use serde::Deserialize;
 
@@ -40,31 +41,28 @@ impl GameEntry {
 }
 
 fn main() -> anyhow::Result<()> {
-    let mut req = rq::blocking::Request::new(
-        rq::Method::GET,
-        rq::Url::parse(GAMES_LIST_URL)
-            .with_context(|| format!("While parsing games list url: {}", GAMES_LIST_URL))?,
-    );
+    let loading = Loading::new(Spinner::default());
+
+    loading.info(format!(
+        "Retrieving Minecraft's ID from {url}",
+        url = GAMES_LIST_URL
+    ));
+
+    loading.text("Decoding game entries");
+
+    let mut req = rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(GAMES_LIST_URL)?);
 
     let header_map = req.headers_mut();
     header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
 
     let client = rq::blocking::Client::new();
-    let response = client.execute(req).with_context(|| {
-        format!(
-            "While retrieving games list from CurseForge via url: {}",
-            GAMES_LIST_URL
-        )
-    })?;
+    let response = client.execute(req)?;
 
-    let games: GamesList = response.json().with_context(|| {
-        format!(
-            "While decoding games list from CurseForge via url {}",
-            GAMES_LIST_URL
-        )
-    })?;
+    let games: GamesList = response.json()?;
 
     let minecraft_id: Option<usize> = games.find_game("minecraft").map(GameEntry::get_id);
+
+    loading.end();
 
     println!("{:?}", minecraft_id);
 
