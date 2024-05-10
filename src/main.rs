@@ -1,7 +1,7 @@
 mod config;
 mod fetchers;
 mod loader;
-mod r#mod;
+mod minecraft_mod;
 
 fn main() -> anyhow::Result<()> {
     Ok(())
