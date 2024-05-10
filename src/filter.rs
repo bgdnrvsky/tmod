@@ -6,14 +6,13 @@ use crate::config::Loader;
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Config {
     loader: Loader,
-    #[serde(rename = "version")]
     game_version: Version,
 }
 
 #[cfg(test)]
 mod config_deserializer {
     use super::Config;
-    use crate::config::Loader;
+    use crate::config::{Loaders, Loader};
 
     #[test]
     fn valid() {
@@ -26,7 +25,7 @@ mod config_deserializer {
 
         assert_eq!(
             Ok(Config {
-                loader: Loader::Forge,
+                loader: Loader::any(Loaders::Forge),
                 game_version: semver::Version::new(1, 20, 1)
             }),
             config

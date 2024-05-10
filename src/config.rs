@@ -1,48 +1,70 @@
+use semver::VersionReq;
+use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
 
 #[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
 #[strum(ascii_case_insensitive)]
-pub enum Loader {
+pub enum Loaders {
     Forge,
     Fabric,
     Quilt,
     NeoForge,
 }
 
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+pub struct Loader {
+    kind: Loaders,
+    version: VersionReq,
+}
+
+impl Loader {
+    pub fn explicit(kind: Loaders, version: VersionReq) -> anyhow::Result<Self> {
+        // TODO: Check if version exists
+        Ok(Self { kind, version })
+    }
+
+    pub fn any(kind: Loaders) -> Self {
+        Self {
+            kind,
+            version: VersionReq::STAR,
+        }
+    }
+}
+
 #[cfg(test)]
 mod loaders_kind_parsing {
-    use crate::config::Loader;
+    use crate::config::Loaders;
     use std::str::FromStr;
 
     #[test]
     fn from_lowercase() {
-        assert_eq!(Ok(Loader::Forge), Loader::from_str("forge"));
-        assert_eq!(Ok(Loader::Fabric), Loader::from_str("fabric"));
-        assert_eq!(Ok(Loader::Quilt), Loader::from_str("quilt"));
-        assert_eq!(Ok(Loader::NeoForge), Loader::from_str("neoforge"));
+        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("forge"));
+        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("fabric"));
+        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("quilt"));
+        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("neoforge"));
     }
 
     #[test]
     fn from_uppercase() {
-        assert_eq!(Ok(Loader::Forge), Loader::from_str("FORGE"));
-        assert_eq!(Ok(Loader::Fabric), Loader::from_str("FABRIC"));
-        assert_eq!(Ok(Loader::Quilt), Loader::from_str("QUILT"));
-        assert_eq!(Ok(Loader::NeoForge), Loader::from_str("NEOFORGE"));
+        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("FORGE"));
+        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("FABRIC"));
+        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("QUILT"));
+        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("NEOFORGE"));
     }
 
     #[test]
     fn from_mixedcase() {
-        assert_eq!(Ok(Loader::Forge), Loader::from_str("fOrGe"));
-        assert_eq!(Ok(Loader::Fabric), Loader::from_str("FabRIC"));
-        assert_eq!(Ok(Loader::Quilt), Loader::from_str("QUIlT"));
-        assert_eq!(Ok(Loader::NeoForge), Loader::from_str("NeOFORGE"));
+        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("fOrGe"));
+        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("FabRIC"));
+        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("QUIlT"));
+        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("NeOFORGE"));
     }
 
     #[test]
     fn from_invalid() {
-        assert!(Loader::from_str("loader").is_err());
-        assert!(Loader::from_str("LOADER").is_err());
-        assert!(Loader::from_str("LoAder").is_err());
+        assert!(Loaders::from_str("loader").is_err());
+        assert!(Loaders::from_str("LOADER").is_err());
+        assert!(Loaders::from_str("LoAder").is_err());
     }
 }
