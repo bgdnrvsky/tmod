@@ -6,11 +6,12 @@ use loading::{Loading, Spinner};
 use reqwest as rq;
 use semver::VersionReq;
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{Map, Value};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
+const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
 
 #[derive(Debug, Deserialize)]
 struct GamesList {
@@ -122,6 +123,42 @@ pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
                 })
         })
         .collect()
+}
+
+pub fn get_forge_versions() -> anyhow::Result<Map<String, Value>> {
+    #[cfg(not(test))]
+    let loading = Loading::new(Spinner::default());
+
+    #[cfg(not(test))]
+    loading.info(format!(
+        "Retrieving Forge's versions from {url}",
+        url = FORGE_VERSIONS_LIST_URL
+    ));
+
+    #[cfg(not(test))]
+    loading.text("Downloading");
+
+    let req = rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(FORGE_VERSIONS_LIST_URL)?);
+
+    let client = rq::blocking::Client::new();
+    let response = client.execute(req)?;
+
+    let mut json: Value = serde_json::from_str(&response.text()?)?;
+
+    #[cfg(not(test))]
+    loading.end();
+
+    json.get_mut("result")
+        .ok_or(anyhow!("No versions are present in response's JSON"))?
+        .as_array_mut()
+        .ok_or(anyhow!("Result in JSON response was not an array"))?
+        .get_mut(0)
+        .ok_or(anyhow!("Array is expected to have at least one element"))?
+        .as_object()
+        .ok_or(anyhow!(
+            "The only entry in resulting array is expected to be an object (map)"
+        ))
+        .cloned()
 }
 
 #[cfg(test)]
