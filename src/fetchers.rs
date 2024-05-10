@@ -1,6 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::anyhow;
+#[cfg(not(test))]
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use semver::VersionReq;
