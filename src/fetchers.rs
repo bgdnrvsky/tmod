@@ -1,17 +1,23 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 #[cfg(not(test))]
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use semver::VersionReq;
 use serde::Deserialize;
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
 const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
+
+#[derive(Debug, Clone, Deserialize)]
+struct ForgeVersions {
+    pub result: [HashMap<VersionReq, Vec<String>>; 1], // TODO: Use custom Version function instead of
+                                                       // String
+}
 
 #[derive(Debug, Deserialize)]
 struct GamesList {
@@ -125,7 +131,7 @@ pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
         .collect()
 }
 
-pub fn get_forge_versions() -> anyhow::Result<Map<String, Value>> {
+pub fn get_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 
@@ -143,27 +149,17 @@ pub fn get_forge_versions() -> anyhow::Result<Map<String, Value>> {
     let client = rq::blocking::Client::new();
     let response = client.execute(req)?;
 
-    let mut json: Value = serde_json::from_str(&response.text()?)?;
-
     #[cfg(not(test))]
     loading.end();
 
-    json.get_mut("result")
-        .ok_or(anyhow!("No versions are present in response's JSON"))?
-        .as_array_mut()
-        .ok_or(anyhow!("Result in JSON response was not an array"))?
-        .get_mut(0)
-        .ok_or(anyhow!("Array is expected to have at least one element"))?
-        .as_object()
-        .ok_or(anyhow!(
-            "The only entry in resulting array is expected to be an object (map)"
-        ))
-        .cloned()
+    serde_json::from_str(&response.text()?)
+        .with_context(|| anyhow!("Failed to deserialize forge versions"))
+        .map(|versions: ForgeVersions| versions.result.first().unwrap().clone())
 }
 
 #[cfg(test)]
 mod fetchers_test {
-    use crate::fetchers::{get_minecraft_id, get_minecraft_versions};
+    use crate::fetchers::*;
 
     #[test]
     fn minecraft_id() {
@@ -173,5 +169,10 @@ mod fetchers_test {
     #[test]
     fn minecraft_versions() {
         assert!(get_minecraft_versions().is_ok());
+    }
+
+    #[test]
+    fn forge_versions() {
+        assert!(get_forge_versions().is_ok());
     }
 }
