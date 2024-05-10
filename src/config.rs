@@ -1,70 +1,53 @@
-use semver::VersionReq;
+use semver::Version;
 use serde::Deserialize;
-use serde_with::DeserializeFromStr;
-use strum::{Display, EnumString};
 
-#[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
-#[strum(ascii_case_insensitive)]
-pub enum Loaders {
-    Forge,
-    Fabric,
-    Quilt,
-    NeoForge,
-}
+use crate::loader::Loader;
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
-pub struct Loader {
-    kind: Loaders,
-    version: VersionReq,
-}
-
-impl Loader {
-    pub fn explicit(kind: Loaders, version: VersionReq) -> anyhow::Result<Self> {
-        // TODO: Check if version exists
-        Ok(Self { kind, version })
-    }
-
-    pub fn any(kind: Loaders) -> Self {
-        Self {
-            kind,
-            version: VersionReq::STAR,
-        }
-    }
+pub struct Config {
+    loader: Loader,
+    game_version: Version,
 }
 
 #[cfg(test)]
-mod loaders_kind_parsing {
-    use crate::config::Loaders;
-    use std::str::FromStr;
+mod config_deserializer_tests {
+    use semver::VersionReq;
+
+    use super::Config;
+    use crate::loader::{Loader, Loaders};
 
     #[test]
-    fn from_lowercase() {
-        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("forge"));
-        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("fabric"));
-        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("quilt"));
-        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("neoforge"));
+    fn valid() {
+        let config = toml::from_str::<Config>(
+            r#"
+            game_version = "1.20.1"
+
+            [loader]
+            kind = "forge"
+            version = "47.2.0"
+"#,
+        );
+
+        assert_eq!(
+            config,
+            Ok(Config {
+                loader: Loader::explicit(Loaders::Forge, VersionReq::parse("47.2.0").unwrap())
+                    .unwrap(),
+                game_version: semver::Version::new(1, 20, 1)
+            })
+        );
     }
 
     #[test]
-    fn from_uppercase() {
-        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("FORGE"));
-        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("FABRIC"));
-        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("QUILT"));
-        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("NEOFORGE"));
-    }
+    fn missing() {
+        let config = toml::from_str::<Config>(
+            r#"
+            [loader]
+            kind = "forge"
+            version = "47.2.0"
+"#,
+        );
 
-    #[test]
-    fn from_mixedcase() {
-        assert_eq!(Ok(Loaders::Forge), Loaders::from_str("fOrGe"));
-        assert_eq!(Ok(Loaders::Fabric), Loaders::from_str("FabRIC"));
-        assert_eq!(Ok(Loaders::Quilt), Loaders::from_str("QUIlT"));
-        assert_eq!(Ok(Loaders::NeoForge), Loaders::from_str("NeOFORGE"));
-    }
-
-    #[test]
-    fn from_invalid() {
-        assert!(Loaders::from_str("loader").is_err());
-        assert!(Loaders::from_str("LOADER").is_err());
-        assert!(Loaders::from_str("LoAder").is_err());
+        assert!(config.is_err());
     }
 }

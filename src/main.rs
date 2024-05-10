@@ -1,9 +1,19 @@
-mod fetchers;
-mod filter;
+use crate::loader::Loader;
+
 mod config;
+mod fetchers;
+mod loader;
 
 fn main() -> anyhow::Result<()> {
-    println!("{:?}", fetchers::get_minecraft_id());
+    println!(
+        "{:#?}",
+        toml::from_str::<Loader>(
+            r#"
+            kind = "forge"
+            version = "47.2.2"
+"#,
+        )
+    );
 
     Ok(())
 }
