@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
 use anyhow::{anyhow, Context};
 #[cfg(not(test))]
@@ -6,7 +6,6 @@ use loading::{Loading, Spinner};
 use reqwest as rq;
 use semver::VersionReq;
 use serde::Deserialize;
-use serde_json::Value;
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
@@ -15,8 +14,12 @@ const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
 
 #[derive(Debug, Clone, Deserialize)]
 struct ForgeVersions {
-    pub result: [HashMap<VersionReq, Vec<String>>; 1], // TODO: Use custom Version function instead of
-                                                       // String
+    pub result: [HashMap<VersionReq, Vec<String>>; 1], // TODO: Use custom Version struct
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct MinecraftVersions {
+    pub result: Vec<VersionReq>, // TODO: Use custom Version struct
 }
 
 #[derive(Debug, Deserialize)]
@@ -108,27 +111,12 @@ pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
     let client = rq::blocking::Client::new();
     let response = client.execute(req)?;
 
-    let json: Value = serde_json::from_str(&response.text()?)?;
-
     #[cfg(not(test))]
     loading.end();
 
-    json.get("result")
-        .ok_or(anyhow!("No versions are present in response's JSON"))?
-        .as_array()
-        .ok_or(anyhow!("Result in JSON response was not an array"))?
-        .iter()
-        .map(|value| {
-            value
-                .as_str()
-                .ok_or(anyhow!(
-                    "One of the values in 'result' key of JSON was not a string"
-                ))
-                .and_then(|value| {
-                    VersionReq::from_str(value).map_err(|e| anyhow!("Failed to parse version: {e}"))
-                })
-        })
-        .collect()
+    serde_json::from_str::<MinecraftVersions>(&response.text()?)
+        .with_context(|| anyhow!("Failed to deserialize minecraft versions"))
+        .map(|v| v.result)
 }
 
 pub fn get_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
@@ -168,11 +156,11 @@ mod fetchers_test {
 
     #[test]
     fn minecraft_versions() {
-        assert!(get_minecraft_versions().is_ok());
+        assert!(get_minecraft_versions().is_ok_and(|versions| versions.len() > 0));
     }
 
     #[test]
     fn forge_versions() {
-        assert!(get_forge_versions().is_ok());
+        assert!(get_forge_versions().is_ok_and(|map| map.keys().count() > 0));
     }
 }
