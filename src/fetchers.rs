@@ -79,15 +79,13 @@ pub fn get_minecraft_id() -> anyhow::Result<usize> {
 
     let games: GamesList = response.json()?;
 
-    let minecraft_id = games
-        .find_game("minecraft")
-        .map(GameEntry::get_id)
-        .ok_or(anyhow!("Minecraft was not found in the list of games"));
-
     #[cfg(not(test))]
     loading.end();
 
-    minecraft_id
+    games
+        .find_game("minecraft")
+        .map(GameEntry::get_id)
+        .context("Minecraft was not found in the list of games")
 }
 
 pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
