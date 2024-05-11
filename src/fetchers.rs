@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{cell::OnceCell, collections::HashMap};
 
 use anyhow::{anyhow, Context};
 #[cfg(not(test))]
@@ -11,6 +11,28 @@ pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJ
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
 const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
+
+#[derive(Debug, Default)]
+pub struct Fetcher {
+    minecraft_id: OnceCell<anyhow::Result<usize>>,
+    minecraft_versions: OnceCell<anyhow::Result<Vec<VersionReq>>>,
+    forge_versions: OnceCell<anyhow::Result<HashMap<VersionReq, Vec<String>>>>,
+}
+
+impl Fetcher {
+    pub fn get_minecraft_id(&self) -> &anyhow::Result<usize> {
+        self.minecraft_id.get_or_init(fetch_minecraft_id)
+    }
+
+    pub fn get_minecraft_versions(&self) -> &anyhow::Result<Vec<VersionReq>> {
+        self.minecraft_versions
+            .get_or_init(fetch_minecraft_versions)
+    }
+
+    pub fn get_forge_versions(&self) -> &anyhow::Result<HashMap<VersionReq, Vec<String>>> {
+        self.forge_versions.get_or_init(fetch_forge_versions)
+    }
+}
 
 #[derive(Debug, Clone, Deserialize)]
 struct ForgeVersions {
@@ -56,7 +78,7 @@ impl GameEntry {
     }
 }
 
-pub fn get_minecraft_id() -> anyhow::Result<usize> {
+pub fn fetch_minecraft_id() -> anyhow::Result<usize> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 
@@ -88,7 +110,7 @@ pub fn get_minecraft_id() -> anyhow::Result<usize> {
         .context("Minecraft was not found in the list of games")
 }
 
-pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
+pub fn fetch_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 
@@ -117,7 +139,7 @@ pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
         .map(|v| v.result)
 }
 
-pub fn get_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
+pub fn fetch_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 
@@ -149,16 +171,16 @@ mod fetchers_test {
 
     #[test]
     fn minecraft_id() {
-        assert!(get_minecraft_id().is_ok());
+        assert!(fetch_minecraft_id().is_ok());
     }
 
     #[test]
     fn minecraft_versions() {
-        assert!(get_minecraft_versions().is_ok_and(|versions| versions.len() > 0));
+        assert!(fetch_minecraft_versions().is_ok_and(|versions| versions.len() > 0));
     }
 
     #[test]
     fn forge_versions() {
-        assert!(get_forge_versions().is_ok_and(|map| map.keys().count() > 0));
+        assert!(fetch_forge_versions().is_ok_and(|map| map.keys().count() > 0));
     }
 }
