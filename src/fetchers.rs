@@ -81,11 +81,44 @@ impl Fetcher {
     }
 }
 
+#[serde_as]
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModLinks {
+    #[serde_as(as = "DisplayFromStr")]
+    #[serde(rename = "websiteUrl")]
+    website: rq::Url,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    wiki: Option<rq::Url>,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    issues: Option<rq::Url>,
+    #[serde_as(as = "Option<DisplayFromStr>")]
+    source: Option<rq::Url>,
+}
+
+impl ModLinks {
+    pub fn curseforge_url(&self) -> &rq::Url {
+        &self.website
+    }
+
+    pub fn wiki_url(&self) -> Option<&rq::Url> {
+        self.wiki.as_ref()
+    }
+
+    pub fn issues_url(&self) -> Option<&rq::Url> {
+        self.issues.as_ref()
+    }
+
+    pub fn source_url(&self) -> Option<&rq::Url> {
+        self.source.as_ref()
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct SearchedMod {
     id: usize,
     name: String,
     slug: String,
+    links: ModLinks,
     #[serde(rename = "thumbsUpCount")]
     thumbs_up_count: usize,
     #[serde(rename = "downloadCount")]
@@ -94,6 +127,36 @@ pub struct SearchedMod {
     files: Vec<ModFile>,
     #[serde(rename = "latestFilesIndexes")]
     indexes: Vec<ModFileIndex>,
+}
+
+impl SearchedMod {
+    pub fn id(&self) -> usize {
+        self.id
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn thumbs_up_count(&self) -> usize {
+        self.thumbs_up_count
+    }
+
+    pub fn download_count(&self) -> usize {
+        self.download_count
+    }
+
+    pub fn files(&self) -> &[ModFile] {
+        &self.files
+    }
+
+    pub fn indexes(&self) -> &[ModFileIndex] {
+        &self.indexes
+    }
+
+    pub fn links(&self) -> &ModLinks {
+        &self.links
+    }
 }
 
 impl PartialEq for SearchedMod {
