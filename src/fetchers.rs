@@ -18,17 +18,82 @@ const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://g
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
 const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
 const SEARCH_MODS_URL: &str = "https://api.curseforge.com/v1/mods/search";
+const CATEGORIES_LIST_URL: &str = "https://api.curseforge.com/v1/categories";
 
 #[derive(Debug, Default)]
 pub struct Fetcher {
     minecraft_id: OnceCell<anyhow::Result<usize>>,
     minecraft_versions: OnceCell<anyhow::Result<Vec<VersionReq>>>,
     forge_versions: OnceCell<anyhow::Result<HashMap<VersionReq, Vec<String>>>>,
+    categories: OnceCell<anyhow::Result<HashMap<String, usize>>>,
 }
 
 impl Fetcher {
     pub fn get_minecraft_id(&self) -> Result<&usize, &anyhow::Error> {
         self.minecraft_id.get_or_init(fetch_minecraft_id).as_ref()
+    }
+
+    pub fn get_categories(&self) -> Result<&HashMap<String, usize>, &anyhow::Error> {
+        self.categories
+            .get_or_init(|| {
+                #[cfg(not(test))]
+                let loading = Loading::new(Spinner::default());
+
+                #[cfg(not(test))]
+                loading.info(format!(
+                    "Retrieving CurseForge search categories from {url}",
+                    url = CATEGORIES_LIST_URL
+                ));
+
+                #[cfg(not(test))]
+                loading.text("Decoding categories");
+
+                let mut url =
+                    rq::Url::parse(CATEGORIES_LIST_URL).context("Parsing search mods url")?;
+
+                {
+                    let mut querys = url.query_pairs_mut();
+
+                    let id = self
+                        .get_minecraft_id()
+                        .ok()
+                        .context("Getting minecraft id")?;
+
+                    querys.append_pair("gameId", &format!("{id}"));
+                    querys.append_pair("classesOnly", "true");
+                }
+
+                let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+
+                let header_map = req.headers_mut();
+                header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+
+                let client = rq::blocking::Client::new();
+                let response = client.execute(req)?;
+
+                #[derive(Debug, Clone, Deserialize)]
+                struct Data {
+                    data: Vec<CategoryEntry>,
+                }
+
+                #[derive(Debug, Clone, Deserialize)]
+                struct CategoryEntry {
+                    name: String,
+                    id: usize,
+                }
+
+                let data = response.json::<Data>()?;
+
+                #[cfg(not(test))]
+                loading.end();
+
+                Ok(data
+                    .data
+                    .into_iter()
+                    .map(|entry| (entry.name, entry.id))
+                    .collect())
+            })
+            .as_ref()
     }
 
     pub fn get_minecraft_versions(&self) -> Result<&Vec<VersionReq>, &anyhow::Error> {
