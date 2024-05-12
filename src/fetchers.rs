@@ -164,7 +164,7 @@ impl Fetcher {
         for std::cmp::Reverse(m) in mods {
             println!(
                 "- (id: {id}) {mod_name} - {curseforge}",
-                id = m.id(),
+                id = format!("{}", m.id()).bold(),
                 mod_name = m.name().bold().blue(),
                 curseforge = m.links().curseforge_url().as_str().italic(),
             );
