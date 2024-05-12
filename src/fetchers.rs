@@ -1,4 +1,8 @@
-use std::{cell::OnceCell, collections::HashMap};
+use std::{
+    cell::OnceCell,
+    cmp::Reverse,
+    collections::{BTreeSet, HashMap},
+};
 
 use anyhow::{anyhow, Context};
 #[cfg(not(test))]
@@ -38,7 +42,10 @@ impl Fetcher {
             .as_ref()
     }
 
-    pub fn search_mods(&self, mod_slug: impl AsRef<str>) -> anyhow::Result<Vec<SearchedMod>> {
+    pub fn search_mods(
+        &self,
+        mod_slug: impl AsRef<str>,
+    ) -> anyhow::Result<BTreeSet<Reverse<SearchedMod>>> {
         let mut url = rq::Url::parse(SEARCH_MODS_URL).context("Parsing search mods url")?;
 
         {
@@ -67,7 +74,7 @@ impl Fetcher {
         #[derive(Debug, Clone, Deserialize)]
         struct ModSearchList {
             #[serde(rename = "data")]
-            mods: Vec<SearchedMod>,
+            mods: BTreeSet<Reverse<SearchedMod>>,
         }
 
         Ok(response.json::<ModSearchList>()?.mods)
@@ -87,6 +94,28 @@ pub struct SearchedMod {
     files: Vec<ModFile>,
     #[serde(rename = "latestFilesIndexes")]
     indexes: Vec<ModFileIndex>,
+}
+
+impl PartialEq for SearchedMod {
+    fn eq(&self, other: &Self) -> bool {
+        self.id.eq(&other.id)
+    }
+}
+
+impl Eq for SearchedMod {}
+
+impl PartialOrd for SearchedMod {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for SearchedMod {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.download_count
+            .cmp(&other.download_count)
+            .then_with(|| self.thumbs_up_count.cmp(&other.thumbs_up_count))
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
