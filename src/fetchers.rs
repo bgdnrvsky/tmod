@@ -5,6 +5,7 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
+use colored::Colorize;
 #[cfg(not(test))]
 use loading::{Loading, Spinner};
 use reqwest as rq;
@@ -78,6 +79,21 @@ impl Fetcher {
         }
 
         Ok(response.json::<ModSearchList>()?.mods)
+    }
+
+    pub fn list_mods(&self, mod_slug: impl AsRef<str>) -> anyhow::Result<()> {
+        let mods = self.search_mods(mod_slug)?;
+
+        for std::cmp::Reverse(m) in mods {
+            println!(
+                "- (id: {id}) {mod_name} - {curseforge}",
+                id = m.id(),
+                mod_name = m.name().bold().blue(),
+                curseforge = m.links().curseforge_url().as_str().italic(),
+            );
+        }
+
+        Ok(())
     }
 }
 
