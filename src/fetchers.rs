@@ -259,6 +259,36 @@ impl Fetcher {
 
         Ok(())
     }
+
+    pub fn get_mod_by_id(&self, mod_id: usize) -> anyhow::Result<SearchedMod> {
+        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods")
+            .context("Parsing search mods url")?;
+
+        {
+            let mut segments = url
+                .path_segments_mut()
+                .map_err(|_| anyhow!("Url, used to search for a mod by it's id can't be a base"))?;
+
+            segments.push(&format!("{}", mod_id));
+        }
+
+        let client = rq::blocking::Client::new();
+        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+
+        let header_map = req.headers_mut();
+        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+
+        let response = client
+            .execute(req)
+            .context("Making call to CurseForge's API to search for mod by id")?;
+
+        #[derive(Debug, Clone, Deserialize)]
+        struct ModSearchList {
+            data: SearchedMod,
+        }
+
+        Ok(response.json::<ModSearchList>()?.data)
+    }
 }
 
 #[serde_as]
