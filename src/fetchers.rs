@@ -124,6 +124,18 @@ impl Fetcher {
                 .copied()?;
 
             querys.append_pair("gameId", &format!("{id}"));
+            querys.append_pair("pageSize", "50");
+            querys.append_pair(
+                "classId",
+                &format!(
+                    "{}",
+                    self.get_categories()
+                        .ok()
+                        .context("Getting categories")?
+                        .get("Mods")
+                        .context("No category `Mods` found")?
+                ),
+            );
             querys.append_pair("searchFilter", mod_slug.as_ref());
         }
 
