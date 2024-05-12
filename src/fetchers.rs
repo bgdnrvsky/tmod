@@ -30,7 +30,40 @@ pub struct Fetcher {
 
 impl Fetcher {
     pub fn get_minecraft_id(&self) -> Result<&usize, &anyhow::Error> {
-        self.minecraft_id.get_or_init(fetch_minecraft_id).as_ref()
+        self.minecraft_id
+            .get_or_init(|| {
+                #[cfg(not(test))]
+                let loading = Loading::new(Spinner::default());
+
+                #[cfg(not(test))]
+                loading.info(format!(
+                    "Retrieving Minecraft's ID from {url}",
+                    url = GAMES_LIST_URL
+                ));
+
+                #[cfg(not(test))]
+                loading.text("Decoding game entries");
+
+                let mut req =
+                    rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(GAMES_LIST_URL)?);
+
+                let header_map = req.headers_mut();
+                header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+
+                let client = rq::blocking::Client::new();
+                let response = client.execute(req)?;
+
+                let games: GamesList = response.json()?;
+
+                #[cfg(not(test))]
+                loading.end();
+
+                games
+                    .find_game("minecraft")
+                    .map(GameEntry::get_id)
+                    .context("Minecraft was not found in the list of games")
+            })
+            .as_ref()
     }
 
     pub fn get_categories(&self) -> Result<&HashMap<String, usize>, &anyhow::Error> {
@@ -98,13 +131,67 @@ impl Fetcher {
 
     pub fn get_minecraft_versions(&self) -> Result<&Vec<VersionReq>, &anyhow::Error> {
         self.minecraft_versions
-            .get_or_init(fetch_minecraft_versions)
+            .get_or_init(|| {
+                #[cfg(not(test))]
+                let loading = Loading::new(Spinner::default());
+
+                #[cfg(not(test))]
+                loading.info(format!(
+                    "Retrieving Minecraft's versions from {url}",
+                    url = MINECRAFT_VERSIONS_LIST_URL
+                ));
+
+                #[cfg(not(test))]
+                loading.text("Downloading");
+
+                let req = rq::blocking::Request::new(
+                    rq::Method::GET,
+                    rq::Url::parse(MINECRAFT_VERSIONS_LIST_URL)?,
+                );
+
+                let client = rq::blocking::Client::new();
+                let response = client.execute(req)?;
+
+                #[cfg(not(test))]
+                loading.end();
+
+                serde_json::from_str::<MinecraftVersions>(&response.text()?)
+                    .with_context(|| anyhow!("Failed to deserialize minecraft versions"))
+                    .map(|v| v.result)
+            })
             .as_ref()
     }
 
     pub fn get_forge_versions(&self) -> Result<&HashMap<VersionReq, Vec<String>>, &anyhow::Error> {
         self.forge_versions
-            .get_or_init(fetch_forge_versions)
+            .get_or_init(|| {
+                #[cfg(not(test))]
+                let loading = Loading::new(Spinner::default());
+
+                #[cfg(not(test))]
+                loading.info(format!(
+                    "Retrieving Forge's versions from {url}",
+                    url = FORGE_VERSIONS_LIST_URL
+                ));
+
+                #[cfg(not(test))]
+                loading.text("Downloading");
+
+                let req = rq::blocking::Request::new(
+                    rq::Method::GET,
+                    rq::Url::parse(FORGE_VERSIONS_LIST_URL)?,
+                );
+
+                let client = rq::blocking::Client::new();
+                let response = client.execute(req)?;
+
+                #[cfg(not(test))]
+                loading.end();
+
+                serde_json::from_str(&response.text()?)
+                    .with_context(|| anyhow!("Failed to deserialize forge versions"))
+                    .map(|versions: ForgeVersions| versions.result.first().unwrap().clone())
+            })
             .as_ref()
     }
 
@@ -346,109 +433,26 @@ impl GameEntry {
     }
 }
 
-pub fn fetch_minecraft_id() -> anyhow::Result<usize> {
-    #[cfg(not(test))]
-    let loading = Loading::new(Spinner::default());
-
-    #[cfg(not(test))]
-    loading.info(format!(
-        "Retrieving Minecraft's ID from {url}",
-        url = GAMES_LIST_URL
-    ));
-
-    #[cfg(not(test))]
-    loading.text("Decoding game entries");
-
-    let mut req = rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(GAMES_LIST_URL)?);
-
-    let header_map = req.headers_mut();
-    header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
-
-    let client = rq::blocking::Client::new();
-    let response = client.execute(req)?;
-
-    let games: GamesList = response.json()?;
-
-    #[cfg(not(test))]
-    loading.end();
-
-    games
-        .find_game("minecraft")
-        .map(GameEntry::get_id)
-        .context("Minecraft was not found in the list of games")
-}
-
-pub fn fetch_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
-    #[cfg(not(test))]
-    let loading = Loading::new(Spinner::default());
-
-    #[cfg(not(test))]
-    loading.info(format!(
-        "Retrieving Minecraft's versions from {url}",
-        url = MINECRAFT_VERSIONS_LIST_URL
-    ));
-
-    #[cfg(not(test))]
-    loading.text("Downloading");
-
-    let req = rq::blocking::Request::new(
-        rq::Method::GET,
-        rq::Url::parse(MINECRAFT_VERSIONS_LIST_URL)?,
-    );
-
-    let client = rq::blocking::Client::new();
-    let response = client.execute(req)?;
-
-    #[cfg(not(test))]
-    loading.end();
-
-    serde_json::from_str::<MinecraftVersions>(&response.text()?)
-        .with_context(|| anyhow!("Failed to deserialize minecraft versions"))
-        .map(|v| v.result)
-}
-
-pub fn fetch_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
-    #[cfg(not(test))]
-    let loading = Loading::new(Spinner::default());
-
-    #[cfg(not(test))]
-    loading.info(format!(
-        "Retrieving Forge's versions from {url}",
-        url = FORGE_VERSIONS_LIST_URL
-    ));
-
-    #[cfg(not(test))]
-    loading.text("Downloading");
-
-    let req = rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(FORGE_VERSIONS_LIST_URL)?);
-
-    let client = rq::blocking::Client::new();
-    let response = client.execute(req)?;
-
-    #[cfg(not(test))]
-    loading.end();
-
-    serde_json::from_str(&response.text()?)
-        .with_context(|| anyhow!("Failed to deserialize forge versions"))
-        .map(|versions: ForgeVersions| versions.result.first().unwrap().clone())
-}
-
 #[cfg(test)]
 mod fetchers_test {
-    use crate::fetchers::*;
+    use crate::fetchers::Fetcher;
 
     #[test]
     fn minecraft_id() {
-        assert!(fetch_minecraft_id().is_ok());
+        assert!(Fetcher::default().get_minecraft_id().is_ok());
     }
 
     #[test]
     fn minecraft_versions() {
-        assert!(fetch_minecraft_versions().is_ok_and(|versions| versions.len() > 0));
+        assert!(Fetcher::default()
+            .get_minecraft_versions()
+            .is_ok_and(|versions| !versions.is_empty()));
     }
 
     #[test]
     fn forge_versions() {
-        assert!(fetch_forge_versions().is_ok_and(|map| map.keys().count() > 0));
+        assert!(Fetcher::default()
+            .get_forge_versions()
+            .is_ok_and(|map| map.keys().count() > 0));
     }
 }
