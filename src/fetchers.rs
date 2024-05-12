@@ -6,11 +6,13 @@ use loading::{Loading, Spinner};
 use reqwest as rq;
 use semver::VersionReq;
 use serde::Deserialize;
+use serde_with::{serde_as, DisplayFromStr};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
 const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
+const SEARCH_MODS_URL: &str = "https://api.curseforge.com/v1/mods/search";
 
 #[derive(Debug, Default)]
 pub struct Fetcher {
@@ -20,18 +22,99 @@ pub struct Fetcher {
 }
 
 impl Fetcher {
-    pub fn get_minecraft_id(&self) -> &anyhow::Result<usize> {
-        self.minecraft_id.get_or_init(fetch_minecraft_id)
+    pub fn get_minecraft_id(&self) -> Result<&usize, &anyhow::Error> {
+        self.minecraft_id.get_or_init(fetch_minecraft_id).as_ref()
     }
 
-    pub fn get_minecraft_versions(&self) -> &anyhow::Result<Vec<VersionReq>> {
+    pub fn get_minecraft_versions(&self) -> Result<&Vec<VersionReq>, &anyhow::Error> {
         self.minecraft_versions
             .get_or_init(fetch_minecraft_versions)
+            .as_ref()
     }
 
-    pub fn get_forge_versions(&self) -> &anyhow::Result<HashMap<VersionReq, Vec<String>>> {
-        self.forge_versions.get_or_init(fetch_forge_versions)
+    pub fn get_forge_versions(&self) -> Result<&HashMap<VersionReq, Vec<String>>, &anyhow::Error> {
+        self.forge_versions
+            .get_or_init(fetch_forge_versions)
+            .as_ref()
     }
+
+    pub fn search_mods(&self, mod_slug: impl AsRef<str>) -> anyhow::Result<Vec<SearchedMod>> {
+        let mut url = rq::Url::parse(SEARCH_MODS_URL).context("Parsing search mods url")?;
+
+        {
+            let mut querys = url.query_pairs_mut();
+
+            let id = self
+                .get_minecraft_id()
+                .ok()
+                .context("Getting Minecraft id")
+                .copied()?;
+
+            querys.append_pair("gameId", &format!("{id}"));
+            querys.append_pair("searchFilter", mod_slug.as_ref());
+        }
+
+        let client = rq::blocking::Client::new();
+        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+
+        let header_map = req.headers_mut();
+        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+
+        let response = client
+            .execute(req)
+            .context("Making call to CurseForge's API to search for mods")?;
+
+        #[derive(Debug, Clone, Deserialize)]
+        struct ModSearchList {
+            #[serde(rename = "data")]
+            mods: Vec<SearchedMod>,
+        }
+
+        Ok(response.json::<ModSearchList>()?.mods)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct SearchedMod {
+    id: usize,
+    name: String,
+    slug: String,
+    #[serde(rename = "thumbsUpCount")]
+    thumbs_up_count: usize,
+    #[serde(rename = "downloadCount")]
+    download_count: usize,
+    #[serde(rename = "latestFiles")]
+    files: Vec<ModFile>,
+    #[serde(rename = "latestFilesIndexes")]
+    indexes: Vec<ModFileIndex>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModFileIndex {
+    #[serde(rename = "fileId")]
+    id: usize,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModDependency {
+    #[serde(rename = "modId")]
+    id: usize,
+}
+
+#[serde_as]
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModFile {
+    id: usize,
+    #[serde(rename = "fileName")]
+    file_name: String,
+    #[serde(rename = "downloadCount")]
+    download_count: usize,
+    #[serde_as(as = "DisplayFromStr")]
+    #[serde(rename = "downloadUrl")]
+    url: rq::Url,
+    #[serde(rename = "gameVersions")]
+    versions: Vec<String>,
+    dependencies: Vec<ModDependency>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

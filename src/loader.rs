@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
@@ -28,6 +29,24 @@ impl Loader {
         Self {
             kind,
             version: VersionReq::STAR,
+        }
+    }
+}
+
+impl TryFrom<usize> for Loaders {
+    type Error = anyhow::Error;
+
+    fn try_from(loader_id: usize) -> Result<Self, Self::Error> {
+        match loader_id {
+            1 => Ok(Self::Forge),
+            4 => Ok(Self::Fabric),
+            5 => Ok(Self::Quilt),
+            6 => Ok(Self::NeoForge),
+            _ => Err(anyhow!(
+                "Unknown mod loader number {loader_id}\
+                             while processing JSON response\
+                             while searching for a mod"
+            )),
         }
     }
 }
