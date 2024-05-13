@@ -1,292 +1,222 @@
 use std::{
-    cell::OnceCell,
     cmp::Reverse,
     collections::{BTreeSet, HashMap},
+    fmt::Display,
 };
 
-use anyhow::{anyhow, Context};
-use colored::Colorize;
+use anyhow::Context;
 #[cfg(not(test))]
 use loading::{Loading, Spinner};
 use reqwest as rq;
+use reqwest::blocking::Response;
+use reqwest::Url;
 use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
 
-pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
-const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
-const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
-const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
-const SEARCH_MODS_URL: &str = "https://api.curseforge.com/v1/mods/search";
-const CATEGORIES_LIST_URL: &str = "https://api.curseforge.com/v1/categories";
+pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
-#[derive(Debug, Default)]
-pub struct Fetcher {
-    minecraft_id: OnceCell<anyhow::Result<usize>>,
-    minecraft_versions: OnceCell<anyhow::Result<Vec<VersionReq>>>,
-    forge_versions: OnceCell<anyhow::Result<HashMap<VersionReq, Vec<String>>>>,
-    categories: OnceCell<anyhow::Result<HashMap<String, usize>>>,
+pub trait Fetchable
+where
+    Self: Sized,
+{
+    fn link() -> anyhow::Result<Url>;
+
+    fn parse(response: Response) -> anyhow::Result<Self>;
+
+    fn fetch(info: impl Display, params: Option<HashMap<String, String>>) -> anyhow::Result<Self> {
+        #[cfg(not(test))]
+        let loading = Self::loading_init(info);
+
+        let mut url = Self::link()?;
+
+        if let Some(params) = params {
+            let mut parameters = url.query_pairs_mut();
+
+            parameters.extend_pairs(params);
+        }
+
+        let response = Self::download(url)?;
+
+        #[cfg(not(test))]
+        Self::loading_end(loading);
+
+        Self::parse(response)
+    }
+
+    #[cfg(not(test))]
+    fn loading_init(info: impl Display) -> Loading {
+        let loading = Loading::new(Spinner::default());
+        loading.info(info);
+        loading.text("Fetching");
+        loading
+    }
+
+    fn download(url: Url) -> anyhow::Result<Response> {
+        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+
+        // Even if we don't need it
+        let header_map = req.headers_mut();
+        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+
+        let client = rq::blocking::Client::new();
+        client.execute(req).context("Getting response from API")
+    }
+
+    #[cfg(not(test))]
+    fn loading_end(loading: Loading) {
+        loading.end();
+    }
 }
 
-impl Fetcher {
-    pub fn get_minecraft_id(&self) -> Result<&usize, &anyhow::Error> {
-        self.minecraft_id
-            .get_or_init(|| {
-                #[cfg(not(test))]
-                let loading = Loading::new(Spinner::default());
+pub struct MinecraftId(usize);
+pub struct MinecraftVersions(Vec<VersionReq>); // TODO: Use custom Version struct
+pub struct ForgeVersions(HashMap<VersionReq, Vec<String>>); // TODO: Use custom Version struct
+pub struct CurseForgeCategories(HashMap<String, usize>);
 
-                #[cfg(not(test))]
-                loading.info(format!(
-                    "Retrieving Minecraft's ID from {url}",
-                    url = GAMES_LIST_URL
-                ));
-
-                #[cfg(not(test))]
-                loading.text("Decoding game entries");
-
-                let mut req =
-                    rq::blocking::Request::new(rq::Method::GET, rq::Url::parse(GAMES_LIST_URL)?);
-
-                let header_map = req.headers_mut();
-                header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
-
-                let client = rq::blocking::Client::new();
-                let response = client.execute(req)?;
-
-                let games: GamesList = response.json()?;
-
-                #[cfg(not(test))]
-                loading.end();
-
-                games
-                    .find_game("minecraft")
-                    .map(GameEntry::get_id)
-                    .context("Minecraft was not found in the list of games")
-            })
-            .as_ref()
+impl Fetchable for MinecraftId {
+    fn link() -> anyhow::Result<Url> {
+        Url::parse("https://api.curseforge.com/v1/games")
+            .context("Url parsing for getting Minecraft id from CurseForge")
     }
 
-    pub fn get_categories(&self) -> Result<&HashMap<String, usize>, &anyhow::Error> {
-        self.categories
-            .get_or_init(|| {
-                #[cfg(not(test))]
-                let loading = Loading::new(Spinner::default());
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Deserialize)]
+        struct GamesList {
+            data: Vec<GameEntry>,
+        }
 
-                #[cfg(not(test))]
-                loading.info(format!(
-                    "Retrieving CurseForge search categories from {url}",
-                    url = CATEGORIES_LIST_URL
-                ));
+        #[derive(Debug, Deserialize)]
+        struct GameEntry {
+            id: usize,
+            name: String,
+            slug: String,
+        }
 
-                #[cfg(not(test))]
-                loading.text("Decoding categories");
+        let games: GamesList = response.json()?;
 
-                let mut url =
-                    rq::Url::parse(CATEGORIES_LIST_URL).context("Parsing search mods url")?;
+        games
+            .data
+            .into_iter()
+            .find(|entry| entry.name == "minecraft" || entry.slug == "minecraft")
+            .map(|entry| entry.id)
+            .map(Self)
+            .context("Minecraft was not found in the list of games")
+    }
+}
 
-                {
-                    let mut querys = url.query_pairs_mut();
-
-                    let id = self
-                        .get_minecraft_id()
-                        .ok()
-                        .context("Getting minecraft id")?;
-
-                    querys.append_pair("gameId", &format!("{id}"));
-                    querys.append_pair("classesOnly", "true");
-                }
-
-                let mut req = rq::blocking::Request::new(rq::Method::GET, url);
-
-                let header_map = req.headers_mut();
-                header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
-
-                let client = rq::blocking::Client::new();
-                let response = client.execute(req)?;
-
-                #[derive(Debug, Clone, Deserialize)]
-                struct Data {
-                    data: Vec<CategoryEntry>,
-                }
-
-                #[derive(Debug, Clone, Deserialize)]
-                struct CategoryEntry {
-                    name: String,
-                    id: usize,
-                }
-
-                let data = response.json::<Data>()?;
-
-                #[cfg(not(test))]
-                loading.end();
-
-                Ok(data
-                    .data
-                    .into_iter()
-                    .map(|entry| (entry.name, entry.id))
-                    .collect())
-            })
-            .as_ref()
+impl Fetchable for MinecraftVersions {
+    fn link() -> anyhow::Result<Url> {
+        Url::parse("https://mc-versions-api.net/api/java")
+            .context("Url parsing for getting Minecraft versions")
     }
 
-    pub fn get_minecraft_versions(&self) -> Result<&Vec<VersionReq>, &anyhow::Error> {
-        self.minecraft_versions
-            .get_or_init(|| {
-                #[cfg(not(test))]
-                let loading = Loading::new(Spinner::default());
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Clone, Deserialize)]
+        struct Data {
+            result: Vec<VersionReq>,
+        }
 
-                #[cfg(not(test))]
-                loading.info(format!(
-                    "Retrieving Minecraft's versions from {url}",
-                    url = MINECRAFT_VERSIONS_LIST_URL
-                ));
+        response
+            .json::<Data>()
+            .context("Parsing Minecraft versions")
+            .map(|v| v.result)
+            .map(Self)
+    }
+}
 
-                #[cfg(not(test))]
-                loading.text("Downloading");
-
-                let req = rq::blocking::Request::new(
-                    rq::Method::GET,
-                    rq::Url::parse(MINECRAFT_VERSIONS_LIST_URL)?,
-                );
-
-                let client = rq::blocking::Client::new();
-                let response = client.execute(req)?;
-
-                #[cfg(not(test))]
-                loading.end();
-
-                serde_json::from_str::<MinecraftVersions>(&response.text()?)
-                    .with_context(|| anyhow!("Failed to deserialize minecraft versions"))
-                    .map(|v| v.result)
-            })
-            .as_ref()
+impl Fetchable for ForgeVersions {
+    fn link() -> anyhow::Result<Url> {
+        Url::parse("https://mc-versions-api.net/api/forge")
+            .context("Url parsing for getting forge versions")
     }
 
-    pub fn get_forge_versions(&self) -> Result<&HashMap<VersionReq, Vec<String>>, &anyhow::Error> {
-        self.forge_versions
-            .get_or_init(|| {
-                #[cfg(not(test))]
-                let loading = Loading::new(Spinner::default());
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Clone, Deserialize)]
+        struct Data {
+            result: [HashMap<VersionReq, Vec<String>>; 1],
+        }
 
-                #[cfg(not(test))]
-                loading.info(format!(
-                    "Retrieving Forge's versions from {url}",
-                    url = FORGE_VERSIONS_LIST_URL
-                ));
-
-                #[cfg(not(test))]
-                loading.text("Downloading");
-
-                let req = rq::blocking::Request::new(
-                    rq::Method::GET,
-                    rq::Url::parse(FORGE_VERSIONS_LIST_URL)?,
-                );
-
-                let client = rq::blocking::Client::new();
-                let response = client.execute(req)?;
-
-                #[cfg(not(test))]
-                loading.end();
-
-                serde_json::from_str(&response.text()?)
-                    .with_context(|| anyhow!("Failed to deserialize forge versions"))
-                    .map(|versions: ForgeVersions| versions.result.first().unwrap().clone())
-            })
-            .as_ref()
+        response
+            .json::<Data>()
+            .context("Deserializing Forge versions")
+            .map(|Data { result: [version] }| version)
+            .map(Self)
     }
+}
 
-    pub fn search_mods(
-        &self,
-        mod_slug: impl AsRef<str>,
-    ) -> anyhow::Result<BTreeSet<Reverse<SearchedMod>>> {
-        let mut url = rq::Url::parse(SEARCH_MODS_URL).context("Parsing search mods url")?;
+impl Fetchable for CurseForgeCategories {
+    fn link() -> anyhow::Result<Url> {
+        let mut url = Url::parse("https://api.curseforge.com/v1/categories")
+            .context("Url parsing for getting all categories")?;
 
         {
             let mut querys = url.query_pairs_mut();
 
-            let id = self
-                .get_minecraft_id()
-                .ok()
-                .context("Getting Minecraft id")
-                .copied()?;
+            let id = MinecraftId::fetch("Getting Minecraft id from CurseForge", None)?.0;
 
             querys.append_pair("gameId", &format!("{id}"));
-            querys.append_pair(
-                "classId",
-                &format!(
-                    "{}",
-                    self.get_categories()
-                        .ok()
-                        .context("Getting categories")?
-                        .get("Mods")
-                        .context("No category `Mods` found")?
-                ),
-            );
-            querys.append_pair("searchFilter", mod_slug.as_ref());
+            querys.append_pair("classesOnly", "true");
         }
 
-        let client = rq::blocking::Client::new();
-        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+        Ok(url)
+    }
 
-        let header_map = req.headers_mut();
-        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
-
-        let response = client
-            .execute(req)
-            .context("Making call to CurseForge's API to search for mods")?;
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Clone, Deserialize)]
+        struct Data {
+            data: Vec<CategoryEntry>,
+        }
 
         #[derive(Debug, Clone, Deserialize)]
-        struct ModSearchList {
-            #[serde(rename = "data")]
-            mods: BTreeSet<Reverse<SearchedMod>>,
+        struct CategoryEntry {
+            name: String,
+            id: usize,
         }
 
-        Ok(response.json::<ModSearchList>()?.mods)
+        let data = response.json::<Data>()?.data;
+
+        Ok(Self(
+            data.into_iter()
+                .map(|entry| (entry.name, entry.id))
+                .collect(),
+        ))
     }
+}
 
-    pub fn list_mods(&self, mod_slug: impl AsRef<str>) -> anyhow::Result<()> {
-        let mods = self.search_mods(mod_slug)?;
-
-        for std::cmp::Reverse(m) in mods {
-            println!(
-                "- (id: {id}) {mod_name} - {curseforge}",
-                id = format!("{}", m.id()).bold(),
-                mod_name = m.name().bold().blue(),
-                curseforge = m.links().curseforge_url().as_str().italic(),
-            );
-        }
-
-        Ok(())
-    }
-
-    pub fn get_mod_by_id(&self, mod_id: usize) -> anyhow::Result<SearchedMod> {
-        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods")
-            .context("Parsing search mods url")?;
+impl Fetchable for ModSearchList {
+    fn link() -> anyhow::Result<Url> {
+        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods/search").context("Parsing search mods url")?;
 
         {
-            let mut segments = url
-                .path_segments_mut()
-                .map_err(|_| anyhow!("Url, used to search for a mod by it's id can't be a base"))?;
+            let mut querys = url.query_pairs_mut();
 
-            segments.push(&format!("{}", mod_id));
+            let game_id = MinecraftId::fetch("Getting Minecraft id", None)?.0;
+            let categories = CurseForgeCategories::fetch("Getting CurseForge categories", None)?.0;
+
+            let class_id = categories.get("Mods").context("No category `Mods` found")?;
+
+            querys.append_pair("gameId", &format!("{game_id}"));
+            querys.append_pair("classId", &format!("{class_id}"));
         }
 
-        let client = rq::blocking::Client::new();
-        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
+        Ok(url)
+    }
 
-        let header_map = req.headers_mut();
-        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        response.json().context("Deserializing searched mods")
+    }
+}
 
-        let response = client
-            .execute(req)
-            .context("Making call to CurseForge's API to search for mod by id")?;
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModSearchList {
+    #[serde(rename = "data")]
+    mods: BTreeSet<Reverse<SearchedMod>>,
+}
 
-        #[derive(Debug, Clone, Deserialize)]
-        struct ModSearchList {
-            data: SearchedMod,
-        }
-
-        Ok(response.json::<ModSearchList>()?.data)
+impl ModSearchList {
+    pub fn mods(&self) -> &BTreeSet<Reverse<SearchedMod>> {
+        &self.mods
     }
 }
 
@@ -418,70 +348,22 @@ pub struct ModFile {
     dependencies: Vec<ModDependency>,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct ForgeVersions {
-    pub result: [HashMap<VersionReq, Vec<String>>; 1], // TODO: Use custom Version struct
-}
-
-#[derive(Debug, Clone, Deserialize)]
-struct MinecraftVersions {
-    pub result: Vec<VersionReq>, // TODO: Use custom Version struct
-}
-
-#[derive(Debug, Deserialize)]
-struct GamesList {
-    data: Vec<GameEntry>,
-}
-
-impl GamesList {
-    fn find_game(&self, game_name: impl AsRef<str>) -> Option<&GameEntry> {
-        self.data.iter().find(|entry| {
-            entry.get_name() == game_name.as_ref() || entry.get_slug() == game_name.as_ref()
-        })
-    }
-}
-
-#[derive(Debug, Deserialize)]
-struct GameEntry {
-    id: usize,
-    name: String,
-    slug: String,
-}
-
-impl GameEntry {
-    fn get_slug(&self) -> &str {
-        &self.name
-    }
-
-    fn get_name(&self) -> &str {
-        &self.slug
-    }
-
-    fn get_id(&self) -> usize {
-        self.id
-    }
-}
-
 #[cfg(test)]
 mod fetchers_test {
-    use crate::fetchers::Fetcher;
+    use crate::fetchers::*;
 
     #[test]
     fn minecraft_id() {
-        assert!(Fetcher::default().get_minecraft_id().is_ok());
+        assert!(MinecraftId::fetch("", None).is_ok());
     }
 
     #[test]
     fn minecraft_versions() {
-        assert!(Fetcher::default()
-            .get_minecraft_versions()
-            .is_ok_and(|versions| !versions.is_empty()));
+        assert!(MinecraftVersions::fetch("", None).is_ok_and(|versions| !versions.0.is_empty()));
     }
 
     #[test]
     fn forge_versions() {
-        assert!(Fetcher::default()
-            .get_forge_versions()
-            .is_ok_and(|map| map.keys().count() > 0));
+        assert!(ForgeVersions::fetch("", None).is_ok_and(|map| map.0.keys().count() > 0));
     }
 }
