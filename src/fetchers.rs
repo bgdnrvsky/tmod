@@ -7,8 +7,8 @@ use std::{
 use anyhow::Context;
 use loading::{Loading, Spinner};
 use reqwest as rq;
-use reqwest::blocking::Response;
-use reqwest::Url;
+use rq::blocking::Response;
+use rq::Url;
 use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
@@ -35,10 +35,10 @@ where
 
         let mut url = Self::link()?;
 
-        if let Some(querys) = params {
+        if let Some(queries) = params {
             let mut parameters = url.query_pairs_mut();
 
-            parameters.extend_pairs(querys);
+            parameters.extend_pairs(queries);
         }
 
         let response = Self::download(url)?;
@@ -86,10 +86,6 @@ pub struct ForgeVersions(HashMap<VersionReq, Vec<String>>); // TODO: Use custom 
 pub struct CurseForgeCategories(HashMap<String, usize>);
 
 impl Fetchable for MinecraftId {
-    fn info() -> impl Display {
-        "Getting Minecraft id from CurseForge"
-    }
-
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://api.curseforge.com/v1/games")
             .context("Url parsing for getting Minecraft id from CurseForge")
@@ -118,13 +114,13 @@ impl Fetchable for MinecraftId {
             .map(Self)
             .context("Minecraft was not found in the list of games")
     }
+
+    fn info() -> impl Display {
+        "Getting Minecraft id from CurseForge"
+    }
 }
 
 impl Fetchable for MinecraftVersions {
-    fn info() -> impl Display {
-        "Getting Minecraft versions"
-    }
-
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/java")
             .context("Url parsing for getting Minecraft versions")
@@ -142,13 +138,13 @@ impl Fetchable for MinecraftVersions {
             .map(|v| v.result)
             .map(Self)
     }
+
+    fn info() -> impl Display {
+        "Getting Minecraft versions"
+    }
 }
 
 impl Fetchable for ForgeVersions {
-    fn info() -> impl Display {
-        "Getting Forge versions from CurseForge"
-    }
-
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/forge")
             .context("Url parsing for getting forge versions")
@@ -166,24 +162,24 @@ impl Fetchable for ForgeVersions {
             .map(|Data { result: [version] }| version)
             .map(Self)
     }
+
+    fn info() -> impl Display {
+        "Getting Forge versions from CurseForge"
+    }
 }
 
 impl Fetchable for CurseForgeCategories {
-    fn info() -> impl Display {
-        "Getting game categories from CurseForge"
-    }
-
     fn link() -> anyhow::Result<Url> {
         let mut url = Url::parse("https://api.curseforge.com/v1/categories")
             .context("Url parsing for getting all categories")?;
 
         {
-            let mut querys = url.query_pairs_mut();
+            let mut queries = url.query_pairs_mut();
 
             let id = MinecraftId::fetch()?.0;
 
-            querys.append_pair("gameId", &format!("{id}"));
-            querys.append_pair("classesOnly", "true");
+            queries.append_pair("gameId", &format!("{id}"));
+            queries.append_pair("classesOnly", "true");
         }
 
         Ok(url)
@@ -209,27 +205,27 @@ impl Fetchable for CurseForgeCategories {
                 .collect(),
         ))
     }
+
+    fn info() -> impl Display {
+        "Getting game categories from CurseForge"
+    }
 }
 
 impl Fetchable for ModSearchList {
-    fn info() -> impl Display {
-        "Searching for mod"
-    }
-
     fn link() -> anyhow::Result<Url> {
-        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods/search")
+        let mut url = Url::parse("https://api.curseforge.com/v1/mods/search")
             .context("Parsing search mods url")?;
 
         {
-            let mut querys = url.query_pairs_mut();
+            let mut queries = url.query_pairs_mut();
 
             let game_id = MinecraftId::fetch()?.0;
             let categories = CurseForgeCategories::fetch()?.0;
 
             let class_id = categories.get("Mods").context("No category `Mods` found")?;
 
-            querys.append_pair("gameId", &format!("{game_id}"));
-            querys.append_pair("classId", &format!("{class_id}"));
+            queries.append_pair("gameId", &format!("{game_id}"));
+            queries.append_pair("classId", &format!("{class_id}"));
         }
 
         Ok(url)
@@ -237,6 +233,10 @@ impl Fetchable for ModSearchList {
 
     fn parse(response: Response) -> anyhow::Result<Self> {
         response.json().context("Deserializing searched mods")
+    }
+
+    fn info() -> impl Display {
+        "Searching for mod"
     }
 }
 
@@ -257,29 +257,29 @@ impl ModSearchList {
 pub struct ModLinks {
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "websiteUrl")]
-    website: rq::Url,
+    website: Url,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    wiki: Option<rq::Url>,
+    wiki: Option<Url>,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    issues: Option<rq::Url>,
+    issues: Option<Url>,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    source: Option<rq::Url>,
+    source: Option<Url>,
 }
 
 impl ModLinks {
-    pub fn curseforge_url(&self) -> &rq::Url {
+    pub fn curseforge_url(&self) -> &Url {
         &self.website
     }
 
-    pub fn wiki_url(&self) -> Option<&rq::Url> {
+    pub fn wiki_url(&self) -> Option<&Url> {
         self.wiki.as_ref()
     }
 
-    pub fn issues_url(&self) -> Option<&rq::Url> {
+    pub fn issues_url(&self) -> Option<&Url> {
         self.issues.as_ref()
     }
 
-    pub fn source_url(&self) -> Option<&rq::Url> {
+    pub fn source_url(&self) -> Option<&Url> {
         self.source.as_ref()
     }
 }
@@ -374,7 +374,7 @@ pub struct ModFile {
     download_count: usize,
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "downloadUrl")]
-    url: rq::Url,
+    url: Url,
     #[serde(rename = "gameVersions")]
     versions: Vec<String>,
     dependencies: Vec<ModDependency>,
