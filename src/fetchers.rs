@@ -5,7 +5,6 @@ use std::{
 };
 
 use anyhow::Context;
-#[cfg(not(test))]
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use reqwest::blocking::Response;
@@ -24,16 +23,22 @@ where
 
     fn parse(response: Response) -> anyhow::Result<Self>;
 
-    fn fetch(info: impl Display, params: Option<HashMap<String, String>>) -> anyhow::Result<Self> {
+    fn fetch() -> anyhow::Result<Self> {
+        Self::fetch_with_additional_params(None)
+    }
+
+    fn fetch_with_additional_params(
+        params: Option<HashMap<String, String>>,
+    ) -> anyhow::Result<Self> {
         #[cfg(not(test))]
-        let loading = Self::loading_init(info);
+        let loading = Self::loading_init();
 
         let mut url = Self::link()?;
 
-        if let Some(params) = params {
+        if let Some(querys) = params {
             let mut parameters = url.query_pairs_mut();
 
-            parameters.extend_pairs(params);
+            parameters.extend_pairs(querys);
         }
 
         let response = Self::download(url)?;
@@ -44,11 +49,18 @@ where
         Self::parse(response)
     }
 
-    #[cfg(not(test))]
-    fn loading_init(info: impl Display) -> Loading {
+    fn info() -> impl Display {
+        "Fetching data"
+    }
+
+    fn description() -> impl Display {
+        "Fetching"
+    }
+
+    fn loading_init() -> Loading {
         let loading = Loading::new(Spinner::default());
-        loading.info(info);
-        loading.text("Fetching");
+        loading.info(Self::info());
+        loading.text(Self::description());
         loading
     }
 
@@ -63,7 +75,6 @@ where
         client.execute(req).context("Getting response from API")
     }
 
-    #[cfg(not(test))]
     fn loading_end(loading: Loading) {
         loading.end();
     }
@@ -75,6 +86,10 @@ pub struct ForgeVersions(HashMap<VersionReq, Vec<String>>); // TODO: Use custom 
 pub struct CurseForgeCategories(HashMap<String, usize>);
 
 impl Fetchable for MinecraftId {
+    fn info() -> impl Display {
+        "Getting Minecraft id from CurseForge"
+    }
+
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://api.curseforge.com/v1/games")
             .context("Url parsing for getting Minecraft id from CurseForge")
@@ -106,6 +121,10 @@ impl Fetchable for MinecraftId {
 }
 
 impl Fetchable for MinecraftVersions {
+    fn info() -> impl Display {
+        "Getting Minecraft versions"
+    }
+
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/java")
             .context("Url parsing for getting Minecraft versions")
@@ -126,6 +145,10 @@ impl Fetchable for MinecraftVersions {
 }
 
 impl Fetchable for ForgeVersions {
+    fn info() -> impl Display {
+        "Getting Forge versions from CurseForge"
+    }
+
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/forge")
             .context("Url parsing for getting forge versions")
@@ -146,6 +169,10 @@ impl Fetchable for ForgeVersions {
 }
 
 impl Fetchable for CurseForgeCategories {
+    fn info() -> impl Display {
+        "Getting game categories from CurseForge"
+    }
+
     fn link() -> anyhow::Result<Url> {
         let mut url = Url::parse("https://api.curseforge.com/v1/categories")
             .context("Url parsing for getting all categories")?;
@@ -153,7 +180,7 @@ impl Fetchable for CurseForgeCategories {
         {
             let mut querys = url.query_pairs_mut();
 
-            let id = MinecraftId::fetch("Getting Minecraft id from CurseForge", None)?.0;
+            let id = MinecraftId::fetch()?.0;
 
             querys.append_pair("gameId", &format!("{id}"));
             querys.append_pair("classesOnly", "true");
@@ -185,14 +212,19 @@ impl Fetchable for CurseForgeCategories {
 }
 
 impl Fetchable for ModSearchList {
+    fn info() -> impl Display {
+        "Searching for mod"
+    }
+
     fn link() -> anyhow::Result<Url> {
-        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods/search").context("Parsing search mods url")?;
+        let mut url = rq::Url::parse("https://api.curseforge.com/v1/mods/search")
+            .context("Parsing search mods url")?;
 
         {
             let mut querys = url.query_pairs_mut();
 
-            let game_id = MinecraftId::fetch("Getting Minecraft id", None)?.0;
-            let categories = CurseForgeCategories::fetch("Getting CurseForge categories", None)?.0;
+            let game_id = MinecraftId::fetch()?.0;
+            let categories = CurseForgeCategories::fetch()?.0;
 
             let class_id = categories.get("Mods").context("No category `Mods` found")?;
 
@@ -354,16 +386,16 @@ mod fetchers_test {
 
     #[test]
     fn minecraft_id() {
-        assert!(MinecraftId::fetch("", None).is_ok());
+        assert!(MinecraftId::fetch().is_ok());
     }
 
     #[test]
     fn minecraft_versions() {
-        assert!(MinecraftVersions::fetch("", None).is_ok_and(|versions| !versions.0.is_empty()));
+        assert!(MinecraftVersions::fetch().is_ok_and(|versions| !versions.0.is_empty()));
     }
 
     #[test]
     fn forge_versions() {
-        assert!(ForgeVersions::fetch("", None).is_ok_and(|map| map.0.keys().count() > 0));
+        assert!(ForgeVersions::fetch().is_ok_and(|map| map.0.keys().count() > 0));
     }
 }
