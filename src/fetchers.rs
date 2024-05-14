@@ -1,3 +1,4 @@
+use std::fmt::Formatter;
 use std::{
     cmp::Reverse,
     collections::{BTreeSet, HashMap},
@@ -5,6 +6,7 @@ use std::{
 };
 
 use anyhow::Context;
+use colored::Colorize;
 use loading::{Loading, Spinner};
 use reqwest as rq;
 use rq::blocking::Response;
@@ -246,6 +248,18 @@ pub struct ModSearchList {
     mods: BTreeSet<Reverse<SearchedMod>>,
 }
 
+impl Display for ModSearchList {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Found {n} mods:", n = self.mods.len())?;
+
+        for Reverse(m) in &self.mods {
+            writeln!(f, "- {m}")?;
+        }
+
+        Ok(())
+    }
+}
+
 impl ModSearchList {
     pub fn mods(&self) -> &BTreeSet<Reverse<SearchedMod>> {
         &self.mods
@@ -327,6 +341,18 @@ impl SearchedMod {
 
     pub fn links(&self) -> &ModLinks {
         &self.links
+    }
+}
+
+impl Display for SearchedMod {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "(id: {mod_id}) {mod_name} - {website_url}",
+            mod_id = format!("{}", self.id).bold(),
+            mod_name = self.name.blue(),
+            website_url = format!("{}", self.links.website).italic()
+        )
     }
 }
 
