@@ -17,6 +17,36 @@ use serde_with::{serde_as, DisplayFromStr};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
+#[derive(Debug, Clone, Default)]
+pub struct AdditionalFetchParameters {
+    queries: Option<HashMap<String, String>>,
+    path_segments: Option<Vec<String>>,
+}
+
+impl AdditionalFetchParameters {
+    pub fn get_path_segments(&self) -> Option<&[String]> {
+        self.path_segments.as_ref().map(AsRef::as_ref)
+    }
+
+    pub fn get_queries(&self) -> Option<&HashMap<String, String>> {
+        self.queries.as_ref()
+    }
+
+    pub fn with_queries(self, queries: HashMap<String, String>) -> Self {
+        Self {
+            queries: Some(queries),
+            path_segments: self.path_segments,
+        }
+    }
+
+    pub fn with_segments(self, segments: Vec<String>) -> Self {
+        Self {
+            queries: self.queries,
+            path_segments: Some(segments),
+        }
+    }
+}
+
 /// Performs downloading, logging and parsing of some type from specified url with support for
 /// custom runtime parameters for url
 pub trait Fetchable
@@ -29,24 +59,22 @@ where
     /// from response's JSON to the datatype
     fn parse(response: Response) -> anyhow::Result<Self>;
 
-    /// Performs GET without any runtime parameters
-    fn fetch() -> anyhow::Result<Self> {
-        Self::fetch_with_additional_params(None)
-    }
-
-    /// Performs GET with runtime parameters
-    fn fetch_with_additional_params(
-        params: Option<HashMap<String, String>>,
-    ) -> anyhow::Result<Self> {
+    /// Performs the GET
+    fn fetch(additional_parameters: AdditionalFetchParameters) -> anyhow::Result<Self> {
         #[cfg(not(test))]
         let loading = Self::loading_init();
 
         let mut url = Self::link()?;
 
-        if let Some(queries) = params {
-            let mut parameters = url.query_pairs_mut();
+        if let Some(queries) = additional_parameters.get_queries() {
+            url.query_pairs_mut().extend_pairs(queries);
+        }
 
-            parameters.extend_pairs(queries);
+        if let Some(segments) = additional_parameters.get_path_segments() {
+            url.path_segments_mut()
+                .ok()
+                .context("Url cannot be a base")?
+                .extend(segments);
         }
 
         let response = Self::download(url)?;
@@ -255,7 +283,7 @@ impl Fetchable for CurseForgeCategories {
         {
             let mut queries = url.query_pairs_mut();
 
-            let id = MinecraftId::fetch()?.0;
+            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?.0;
 
             queries.append_pair("gameId", &format!("{id}"));
             queries.append_pair("classesOnly", "true");
@@ -298,8 +326,8 @@ impl Fetchable for ModSearchList {
         {
             let mut queries = url.query_pairs_mut();
 
-            let game_id = MinecraftId::fetch()?.0;
-            let categories = CurseForgeCategories::fetch()?.0;
+            let game_id = MinecraftId::fetch(AdditionalFetchParameters::default())?.0;
+            let categories = CurseForgeCategories::fetch(AdditionalFetchParameters::default())?.0;
 
             let class_id = categories.get("Mods").context("No category `Mods` found")?;
 
@@ -489,16 +517,25 @@ mod fetchers_test {
 
     #[test]
     fn minecraft_id() {
-        assert!(MinecraftId::fetch().is_ok());
+        assert!(MinecraftId::fetch(AdditionalFetchParameters::default()).is_ok());
     }
 
     #[test]
     fn minecraft_versions() {
-        assert!(MinecraftVersions::fetch().is_ok_and(|versions| !versions.0.is_empty()));
+        assert!(
+            MinecraftVersions::fetch(AdditionalFetchParameters::default())
+                .is_ok_and(|versions| !versions.0.is_empty())
+        );
     }
 
     #[test]
     fn forge_versions() {
-        assert!(ForgeVersions::fetch().is_ok_and(|map| map.0.keys().count() > 0));
+        assert!(
+            ForgeVersions::fetch(AdditionalFetchParameters::default()).is_ok_and(|map| map
+                .0
+                .keys()
+                .count()
+                > 0)
+        );
     }
 }
