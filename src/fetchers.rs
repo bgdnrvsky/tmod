@@ -17,18 +17,24 @@ use serde_with::{serde_as, DisplayFromStr};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
+/// Performs downloading, logging and parsing of some type from specified url with support for
+/// custom runtime parameters for url
 pub trait Fetchable
 where
     Self: Sized,
 {
+    /// Url where GET whill be performed
     fn link() -> anyhow::Result<Url>;
 
+    /// from response's JSON to the datatype
     fn parse(response: Response) -> anyhow::Result<Self>;
 
+    /// Performs GET without any runtime parameters
     fn fetch() -> anyhow::Result<Self> {
         Self::fetch_with_additional_params(None)
     }
 
+    /// Performs GET with runtime parameters
     fn fetch_with_additional_params(
         params: Option<HashMap<String, String>>,
     ) -> anyhow::Result<Self> {
@@ -51,10 +57,12 @@ where
         Self::parse(response)
     }
 
+    /// Message, displayed, by default: _i Fetching data_
     fn info() -> impl Display {
         "Fetching data"
     }
 
+    /// Message, displayed by loading bar, by default: _% Fetching_
     fn description() -> impl Display {
         "Fetching"
     }
@@ -66,6 +74,7 @@ where
         loading
     }
 
+    /// Performs plain GET
     fn download(url: Url) -> anyhow::Result<Response> {
         let mut req = rq::blocking::Request::new(rq::Method::GET, url);
 
@@ -82,9 +91,77 @@ where
     }
 }
 
+/// Example JSON:
+/// ```json
+/// {
+///   "data": [
+///     {
+///       "id": 0,
+///       "name": "string",
+///       "slug": "string",
+///       "dateModified": "2019-08-24T14:15:22Z",
+///       "assets": {
+///         "iconUrl": "string",
+///         "tileUrl": "string",
+///         "coverUrl": "string"
+///       },
+///       "status": 1,
+///       "apiStatus": 1
+///     }
+///   ],
+///   "pagination": {
+///     "index": 0,
+///     "pageSize": 0,
+///     "resultCount": 0,
+///     "totalCount": 0
+///   }
+/// }
+/// ```
 pub struct MinecraftId(usize);
+/// Example JSON:
+/// ```json
+/// {
+///     "result":
+///     [
+///         "1.20.1",
+///         "1.20",
+///         "1.19.4",
+///         "1.19.3",
+///         "1.19.2",
+///         "1.19.1",
+///         "1.19",
+///         "..."
+///     ]
+/// }
+/// ```
 pub struct MinecraftVersions(Vec<VersionReq>); // TODO: Use custom Version struct
+/// Example JSON:
+/// ```json
+/// {
+///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
+/// }
+/// ```
 pub struct ForgeVersions(HashMap<VersionReq, Vec<String>>); // TODO: Use custom Version struct
+/// Example JSON:
+/// ```json
+/// {
+///   "data": [
+///     {
+///       "id": 0,
+///       "gameId": 0,
+///       "name": "string",
+///       "slug": "string",
+///       "url": "string",
+///       "iconUrl": "string",
+///       "dateModified": "2019-08-24T14:15:22Z",
+///       "isClass": true,
+///       "classId": 0,
+///       "parentCategoryId": 0,
+///       "displayIndex": 0
+///     }
+///   ]
+/// }
+/// ```
 pub struct CurseForgeCategories(HashMap<String, usize>);
 
 impl Fetchable for MinecraftId {
