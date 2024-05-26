@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, digit1, one_of},
-    combinator::map_res,
+    combinator::{map, map_res},
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
@@ -48,6 +48,7 @@ impl Comparator {
             .or(single!("(" x ",)").map(Self::Greater))
             .or(double!("[" x y "]").map(|(x, y)| Self::BetweenInclusive(x, y)))
             .or(double!("(" x y ")").map(|(x, y)| Self::BetweenUnInclusive(x, y)))
+            .or(map(Version::parse, Self::GreaterEq))
             .parse(s)
     }
 }
@@ -150,11 +151,10 @@ mod comparators {
 
     #[test]
     fn basics() {
-        // TODO
-        // assert_eq!(
-        //     Comparator::from_str("1.0").ok(),
-        //     Some(Comparator::GreaterEq(Version::from_str("1.0").unwrap()))
-        // );
+        assert_eq!(
+            Comparator::from_str("1.0").ok(),
+            Some(Comparator::GreaterEq(Version::from_str("1.0").unwrap()))
+        );
 
         assert!(Comparator::from_str("(,1.0]").is_ok());
         assert!(Comparator::from_str("(,1.0)").is_ok());
