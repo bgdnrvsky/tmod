@@ -7,6 +7,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
 };
+use serde_with::DeserializeFromStr;
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -68,7 +69,7 @@ impl FromStr for Comparator {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, DeserializeFromStr)]
 pub struct VersionRange {
     comparators: Vec<Comparator>,
 }
@@ -113,7 +114,7 @@ impl VersionItem {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr)]
 pub struct Version {
     items: Vec<VersionItem>,
 }
