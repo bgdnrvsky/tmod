@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.83"
+itertools = "0.13.0"
 jars = "0.1.1"
 loading = "0.3.0"
 nom = "7.1.3"
