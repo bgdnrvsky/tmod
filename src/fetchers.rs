@@ -7,6 +7,8 @@ use reqwest as rq;
 use semver::VersionReq;
 use serde::Deserialize;
 
+use crate::version::{ManyVersions, SingleVersion};
+
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 const GAMES_LIST_URL: &str = "https://api.curseforge.com/v1/games"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 const MINECRAFT_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/java";
@@ -14,12 +16,12 @@ const FORGE_VERSIONS_LIST_URL: &str = "https://mc-versions-api.net/api/forge";
 
 #[derive(Debug, Clone, Deserialize)]
 struct ForgeVersions {
-    pub result: [HashMap<VersionReq, Vec<String>>; 1], // TODO: Use custom Version struct
+    pub result: [HashMap<SingleVersion, Vec<SingleVersion>>; 1],
 }
 
 #[derive(Debug, Clone, Deserialize)]
 struct MinecraftVersions {
-    pub result: Vec<VersionReq>, // TODO: Use custom Version struct
+    pub result: Vec<ManyVersions>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,7 +92,7 @@ pub fn get_minecraft_id() -> anyhow::Result<usize> {
     minecraft_id
 }
 
-pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
+pub fn get_minecraft_versions() -> anyhow::Result<Vec<ManyVersions>> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 
@@ -119,7 +121,7 @@ pub fn get_minecraft_versions() -> anyhow::Result<Vec<VersionReq>> {
         .map(|v| v.result)
 }
 
-pub fn get_forge_versions() -> anyhow::Result<HashMap<VersionReq, Vec<String>>> {
+pub fn get_forge_versions() -> anyhow::Result<HashMap<SingleVersion, Vec<SingleVersion>>> {
     #[cfg(not(test))]
     let loading = Loading::new(Spinner::default());
 

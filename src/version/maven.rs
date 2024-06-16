@@ -1,4 +1,5 @@
 use anyhow::anyhow;
+use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, digit1, one_of},
@@ -7,7 +8,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
 };
-use serde_with::DeserializeFromStr;
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +20,20 @@ enum Comparator {
     LessEq(Version),
     BetweenInclusive(Version, Version),
     BetweenUnInclusive(Version, Version),
+}
+
+impl std::fmt::Display for Comparator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Comparator::Exact(version) => write!(f, "[{version}]"),
+            Comparator::Greater(version) => write!(f, "({version},)"),
+            Comparator::GreaterEq(version) => write!(f, "[{version},)"),
+            Comparator::Less(version) => write!(f, "(,{version})"),
+            Comparator::LessEq(version) => write!(f, "(,{version}]"),
+            Comparator::BetweenInclusive(a, b) => write!(f, "[{a},{b}]"),
+            Comparator::BetweenUnInclusive(a, b) => write!(f, "({a},{b})"),
+        }
+    }
 }
 
 impl Comparator {
@@ -69,9 +84,26 @@ impl FromStr for Comparator {
     }
 }
 
-#[derive(Debug, Clone, DeserializeFromStr)]
+#[derive(Debug, Clone, DeserializeFromStr, SerializeDisplay, PartialEq, Eq)]
 pub struct VersionRange {
     comparators: Vec<Comparator>,
+}
+
+impl std::fmt::Display for VersionRange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.comparators.len() == 1 {
+            write!(f, "{}", self.comparators.get(0).unwrap().to_string())
+        } else {
+            write!(
+                f,
+                "{}",
+                self.comparators
+                    .iter()
+                    .map(|comparator| comparator.to_string())
+                    .join(",")
+            )
+        }
+    }
 }
 
 impl VersionRange {
@@ -97,10 +129,19 @@ impl FromStr for VersionRange {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum VersionItem {
     Numeric(usize),
     Textual(String),
+}
+
+impl std::fmt::Display for VersionItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VersionItem::Numeric(number) => write!(f, "{number}"),
+            VersionItem::Textual(text) => write!(f, "{text}"),
+        }
+    }
 }
 
 impl VersionItem {
@@ -114,9 +155,19 @@ impl VersionItem {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr)]
+#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay, Hash)]
 pub struct Version {
     items: Vec<VersionItem>,
+}
+
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.items.iter().map(|item| item.to_string()).join(".")
+        )
+    }
 }
 
 impl Version {
