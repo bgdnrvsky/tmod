@@ -1,7 +1,7 @@
-use std::path::Path;
+use std::{path::Path, str::FromStr};
 
-use crate::loader::Loaders;
-use anyhow::{anyhow, Context};
+use crate::{loader::Loaders, version::SingleVersion};
+use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -25,7 +25,7 @@ struct ModIncomp {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Mod {
     id: String,
-    version: String, // TODO: Use custom version struct
+    version: SingleVersion,
     dependencies: Vec<ModDep>,
     incompatibilities: Option<Vec<ModIncomp>>,
 }
@@ -76,7 +76,7 @@ impl Mod {
 
         Ok(Self {
             id: mod_id.to_owned(),
-            version: mod_version.to_owned(),
+            version: SingleVersion::Forge(crate::version::maven::Version::from_str(mod_version)?),
             dependencies: dependencies?,
             incompatibilities: None,
         })
@@ -131,7 +131,7 @@ impl Mod {
 
         Ok(Self {
             id: mod_id.to_string(),
-            version: mod_version.to_string(),
+            version: SingleVersion::Fabric(semver::Version::from_str(mod_version)?),
             dependencies,
             incompatibilities,
         })

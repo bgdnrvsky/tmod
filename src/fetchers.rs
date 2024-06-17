@@ -11,9 +11,10 @@ use loading::{Loading, Spinner};
 use reqwest as rq;
 use rq::blocking::Response;
 use rq::Url;
-use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
+
+use crate::version::{ManyVersions, SingleVersion};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
@@ -162,14 +163,14 @@ pub struct MinecraftId(usize);
 ///     ]
 /// }
 /// ```
-pub struct MinecraftVersions(Vec<VersionReq>); // TODO: Use custom Version struct
+pub struct MinecraftVersions(Vec<ManyVersions>);
 /// Example JSON:
 /// ```json
 /// {
 ///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
 /// }
 /// ```
-pub struct ForgeVersions(HashMap<VersionReq, Vec<String>>); // TODO: Use custom Version struct
+pub struct ForgeVersions(HashMap<SingleVersion, Vec<SingleVersion>>);
 /// Example JSON:
 /// ```json
 /// {
@@ -236,7 +237,7 @@ impl Fetchable for MinecraftVersions {
     fn parse(response: Response) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Deserialize)]
         struct Data {
-            result: Vec<VersionReq>,
+            result: Vec<ManyVersions>,
         }
 
         response
@@ -260,7 +261,7 @@ impl Fetchable for ForgeVersions {
     fn parse(response: Response) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Deserialize)]
         struct Data {
-            result: [HashMap<VersionReq, Vec<String>>; 1],
+            result: [HashMap<SingleVersion, Vec<SingleVersion>>; 1],
         }
 
         response
