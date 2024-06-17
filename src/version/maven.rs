@@ -3,7 +3,7 @@ use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, digit1, one_of},
-    combinator::{map, map_res},
+    combinator::{map_res, opt},
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
@@ -13,58 +13,101 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Comparator {
+    Minimum(Version),
     Exact(Version),
-    Greater(Version),
-    GreaterEq(Version),
-    Less(Version),
-    LessEq(Version),
-    BetweenInclusive(Version, Version),
-    BetweenUnInclusive(Version, Version),
+    Pair {
+        left: ComparatorHalf,
+        right: ComparatorHalf,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ComparatorHalf {
+    Inclusive(Option<Version>),
+    Uninclusive(Option<Version>),
+}
+
+impl ComparatorHalf {
+    fn parse_left(s: &str) -> IResult<&str, Self> {
+        preceded(tag("("), opt(Version::parse))
+            .map(Self::Uninclusive)
+            .or(preceded(tag("["), opt(Version::parse)).map(Self::Inclusive))
+            .parse(s)
+    }
+
+    fn parse_right(s: &str) -> IResult<&str, Self> {
+        terminated(opt(Version::parse), tag(")"))
+            .map(Self::Uninclusive)
+            .or(terminated(opt(Version::parse), tag("]")).map(Self::Inclusive))
+            .parse(s)
+    }
+
+    fn parse(s: &str) -> IResult<&str, Self> {
+        Self::parse_left.or(Self::parse_right).parse(s)
+    }
+}
+
+impl FromStr for ComparatorHalf {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok(("", item)) => Ok(item),
+            Ok((rest, item)) => {
+                eprintln!("The ComparatorHalf was parsed, but remaining input is left: `{rest}`");
+                Ok(item)
+            }
+            Err(e) => Err(anyhow!("Error while parsing Comparator: {e}")),
+        }
+    }
 }
 
 impl std::fmt::Display for Comparator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Comparator::Minimum(version) => write!(f, "{version}"),
             Comparator::Exact(version) => write!(f, "[{version}]"),
-            Comparator::Greater(version) => write!(f, "({version},)"),
-            Comparator::GreaterEq(version) => write!(f, "[{version},)"),
-            Comparator::Less(version) => write!(f, "(,{version})"),
-            Comparator::LessEq(version) => write!(f, "(,{version}]"),
-            Comparator::BetweenInclusive(a, b) => write!(f, "[{a},{b}]"),
-            Comparator::BetweenUnInclusive(a, b) => write!(f, "({a},{b})"),
+            Comparator::Pair { left, right } => {
+                match left {
+                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
+                        Some(version) => write!(f, "[{version}"),
+                        None => write!(f, "["),
+                    },
+                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
+                        Some(version) => write!(f, "({version}"),
+                        None => write!(f, "("),
+                    },
+                }?;
+
+                match right {
+                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
+                        Some(version) => write!(f, "{version}]"),
+                        None => write!(f, "]"),
+                    },
+                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
+                        Some(version) => write!(f, "{version})"),
+                        None => write!(f, ")"),
+                    },
+                }
+            }
         }
     }
 }
 
 impl Comparator {
     fn parse(s: &str) -> IResult<&str, Self> {
-        macro_rules! single {
-            ($op:literal x $cl:literal) => {
-                delimited(tag($op), Version::parse, tag($cl))
-            };
-        }
-
-        macro_rules! double {
-            ($op:literal x y $cl:literal) => {
-                preceded(
-                    tag($op),
-                    terminated(
-                        separated_pair(Version::parse, tag(","), Version::parse),
-                        tag($cl),
-                    ),
-                )
-            };
-        }
-
-        single!("(," x "]")
-            .map(Self::LessEq)
-            .or(single!("(," x ")").map(Self::Less))
-            .or(single!("[" x "]").map(Self::Exact))
-            .or(single!("[" x ",)").map(Self::GreaterEq))
-            .or(single!("(" x ",)").map(Self::Greater))
-            .or(double!("[" x y "]").map(|(x, y)| Self::BetweenInclusive(x, y)))
-            .or(double!("(" x y ")").map(|(x, y)| Self::BetweenUnInclusive(x, y)))
-            .or(map(Version::parse, Self::GreaterEq))
+        // 1. Try just version
+        // 2. Try version in square brackets
+        // 3. Split by comma and process
+        Version::parse
+            .map(Self::Minimum)
+            .or(delimited(tag("["), Version::parse, tag("]")).map(Self::Exact))
+            .or(separated_pair(
+                ComparatorHalf::parse_left,
+                tag(","),
+                ComparatorHalf::parse_right,
+            )
+            .map(|(left, right)| Self::Pair { left, right }))
             .parse(s)
     }
 }
@@ -198,26 +241,53 @@ impl FromStr for Version {
 }
 
 #[cfg(test)]
+mod comparator_halves {
+    use super::*;
+
+    #[test]
+    fn inclusive() {
+        assert!(ComparatorHalf::from_str("[1.20")
+            .is_ok_and(|version| matches!(version, ComparatorHalf::Inclusive(_))));
+        assert!(ComparatorHalf::from_str("1.20]")
+            .is_ok_and(|version| matches!(version, ComparatorHalf::Inclusive(_))));
+    }
+
+    #[test]
+    fn uninclusive() {
+        assert!(ComparatorHalf::from_str("(1.20")
+            .is_ok_and(|version| matches!(version, ComparatorHalf::Uninclusive(_))));
+        assert!(ComparatorHalf::from_str("1.20)")
+            .is_ok_and(|version| matches!(version, ComparatorHalf::Uninclusive(_))));
+    }
+}
+
+#[cfg(test)]
 mod comparators {
     use super::*;
 
     #[test]
-    fn basics() {
-        assert_eq!(
-            Comparator::from_str("1.0").ok(),
-            Some(Comparator::GreaterEq(Version::from_str("1.0").unwrap()))
-        );
+    fn no_commas() {
+        assert!(VersionRange::from_str("1.0").is_ok());
+        assert!(VersionRange::from_str("[1.0]").is_ok());
+    }
 
-        assert!(Comparator::from_str("(,1.0]").is_ok());
-        assert!(Comparator::from_str("(,1.0)").is_ok());
-        assert!(Comparator::from_str("[1.0]").is_ok());
-        assert!(Comparator::from_str("[1.0]").is_ok());
-        assert!(Comparator::from_str("[1.0,)").is_ok());
-        assert!(Comparator::from_str("(1.0,)").is_ok());
-        assert!(Comparator::from_str("(1.0,2.0)")
-            .is_ok_and(|item| matches!(item, Comparator::BetweenUnInclusive(_, _))));
-        assert!(Comparator::from_str("[1.0,2.0]")
-            .is_ok_and(|item| matches!(item, Comparator::BetweenInclusive(_, _))));
+    #[test]
+    fn commas_halves() {
+        assert!(VersionRange::from_str("(,1.0]").is_ok());
+        assert!(VersionRange::from_str("(,1.0)").is_ok());
+        assert!(VersionRange::from_str("[1.0,)").is_ok());
+        assert!(VersionRange::from_str("(1.0,)").is_ok());
+    }
+
+    #[test]
+    fn commas_double() {
+        assert!(VersionRange::from_str("(1.0,2.0)").is_ok());
+        assert!(VersionRange::from_str("[1.0,2.0]").is_ok());
+    }
+
+    #[test]
+    fn mixed() {
+        assert!(VersionRange::from_str("[1.20,1.21)").is_ok());
     }
 
     #[test]
