@@ -1,32 +1,35 @@
+use anyhow::anyhow;
+use std::collections::HashMap;
 use std::{path::Path, str::FromStr};
 
-use crate::{loader::Loaders, version::SingleVersion};
+use crate::{
+    loader::Loaders,
+    version::{ManyVersions, SingleVersion},
+};
 use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
 use serde::{Deserialize, Serialize};
-use serde_json::Value as JsonValue;
-use toml::{Table, Value as TomlValue};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct ModDep {
     #[serde(rename = "modId")]
     id: String,
     #[serde(rename = "versionRange")]
-    versions: String,
+    versions: ManyVersions,
     mandatory: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct ModIncomp {
     id: String,
-    versions: String,
+    versions: ManyVersions,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Mod {
     id: String,
     version: SingleVersion,
-    dependencies: Vec<ModDep>,
+    dependencies: Option<Vec<ModDep>>,
     incompatibilities: Option<Vec<ModIncomp>>,
 }
 
@@ -37,47 +40,34 @@ impl Mod {
             .get("META-INF/mods.toml")
             .context("No META-INF/mods.toml in jar file while processing forge mod")?;
 
-        let table = toml::from_str::<Table>(&String::from_utf8(content.to_vec())?)?;
+        #[derive(Debug, Deserialize)]
+        /// META-INF/mods.toml file
+        struct ForgeToml {
+            mods: [ModInfo; 1],
+            dependencies: HashMap<String, Vec<ModDep>>,
+        }
 
-        let mod_info = table
-            .get("mods")
-            .context("Forge mod spec is expected to have an array `mods`")?
-            .get(0)
-            .context(
-                "Forge `mods` array is expected to have at least (probably the only) one element",
-            )?
-            .as_table()
-            .context("The entry in `mods` array should be a table")?;
+        #[derive(Debug, Deserialize)]
+        struct ModInfo {
+            #[serde(rename = "modId")]
+            mod_id: String,
+            version: SingleVersion,
+        }
 
-        let mod_id = mod_info
-            .get("modId")
-            .context("No key `modId` in forge mod's spec")?
-            .as_str()
-            .context("The key `modId` was not a string")?;
+        let forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
+            .map_err(|e| anyhow!("Error while deserializing toml file META-INF/mods.toml: {e}"))?;
 
-        let mod_version = mod_info
-            .get("version")
-            .context("No key `version` in forge mod's spec")?
-            .as_str()
-            .context("The key `version` was not a string")?;
-
-        let dependencies: anyhow::Result<Vec<ModDep>> = table
-            .get("dependencies")
-            .context("Forge's mod spec didn't have the key `dependencies`")?
-            .as_table()
-            .context("The key `dependencies` in forge mod's spec is expected to be a table")?
-            .get(mod_id)
-            .context("Dependencies table in forge mod's spec is expected to have a key matching the mod id")?
-            .as_array()
-            .context("Dependencies in forge mod's spec weren't in an array")?
-            .iter()
-            .map(|value| TomlValue::try_into(value.clone()).context("Couldn't transform dependency entry"))
-            .collect();
+        let mod_info = forge_toml.mods.into_iter().next().context(
+            "The `mods` array in META-INF/mods.toml file \
+                     is expected to have at least one (probably the only) entry",
+        )?;
+        let dependencies = forge_toml.dependencies;
+        let id = mod_info.mod_id;
 
         Ok(Self {
-            id: mod_id.to_owned(),
-            version: SingleVersion::Forge(crate::version::maven::Version::from_str(mod_version)?),
-            dependencies: dependencies?,
+            dependencies: dependencies.get(&id).map(|slice| slice.to_vec()),
+            id,
+            version: mod_info.version,
             incompatibilities: None,
         })
     }
@@ -88,50 +78,45 @@ impl Mod {
             .get("fabric.mod.json")
             .context("No fabric.mod.json in jar file while processing fabric mod")?;
 
-        let json = serde_json::from_slice::<JsonValue>(content)?;
-        let object = json
-            .as_object()
-            .context("fabric.mod.json file is expected to be an object (map)")?;
+        #[derive(Debug, Deserialize)]
+        struct FabricJson {
+            id: String,
+            version: semver::Version,
+            depends: HashMap<String, ManyVersions>,
+            breaks: HashMap<String, ManyVersions>,
+        }
 
-        let mod_id = object
-            .get("id")
-            .context("Fabric mod's spec didn't contain the key `id`")?
-            .as_str()
-            .context("Fabric mod's id wasn't a string")?;
-
-        let mod_version = object
-            .get("version")
-            .context("Fabric mod's spec didn't contain the key `version`")?
-            .as_str()
-            .context("Fabric mod's version wasn't a string")?;
-
-        let dependencies: Vec<ModDep> = object
-            .get("depends")
-            .context("No key `depends` in fabric mod's spec")?
-            .as_object()
-            .context("The key `depends` wasn't an object (map)")?
-            .into_iter()
-            .map(|(id, versions)| ModDep {
-                id: id.to_string(),
-                versions: versions.to_string(),
-                mandatory: true,
-            })
-            .collect();
-
-        let incompatibilities: Option<Vec<ModIncomp>> = object
-            .get("breaks")
-            .and_then(|value| value.as_object())
-            .map(|object| {
-                object.into_iter().map(|(id, versions)| ModIncomp {
-                    id: id.to_string(),
-                    versions: versions.to_string(),
-                })
-            })
-            .map(Iterator::collect);
+        let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
+        let dependencies: Option<Vec<ModDep>> = if fabric_json.depends.is_empty() {
+            None
+        } else {
+            Some(
+                fabric_json
+                    .depends
+                    .into_iter()
+                    .map(|(id, versions)| ModDep {
+                        id,
+                        versions,
+                        mandatory: true,
+                    })
+                    .collect::<Vec<_>>(),
+            )
+        };
+        let incompatibilities: Option<Vec<ModIncomp>> = if fabric_json.breaks.is_empty() {
+            None
+        } else {
+            Some(
+                fabric_json
+                    .breaks
+                    .into_iter()
+                    .map(|(id, versions)| ModIncomp { id, versions })
+                    .collect(),
+            )
+        };
 
         Ok(Self {
-            id: mod_id.to_string(),
-            version: SingleVersion::Fabric(semver::Version::from_str(mod_version)?),
+            id: fabric_json.id,
+            version: SingleVersion::Fabric(fabric_json.version),
             dependencies,
             incompatibilities,
         })
