@@ -107,8 +107,8 @@ impl Mod {
         struct FabricJson {
             id: String,
             version: semver::Version,
-            depends: HashMap<String, ManyVersions>,
-            breaks: HashMap<String, ManyVersions>,
+            depends: HashMap<String, semver::VersionReq>,
+            breaks: HashMap<String, semver::VersionReq>,
         }
 
         let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
@@ -121,7 +121,7 @@ impl Mod {
                     .into_iter()
                     .map(|(id, versions)| ModDep {
                         id,
-                        versions,
+                        versions: ManyVersions::Fabric(versions),
                         mandatory: true,
                     })
                     .collect::<Vec<_>>(),
@@ -134,7 +134,10 @@ impl Mod {
                 fabric_json
                     .breaks
                     .into_iter()
-                    .map(|(id, versions)| ModIncomp { id, versions })
+                    .map(|(id, versions)| ModIncomp {
+                        id,
+                        versions: ManyVersions::Fabric(versions),
+                    })
                     .collect(),
             )
         };
