@@ -220,7 +220,7 @@ impl Version {
             .parse(s)
     }
 
-    fn new(items: Vec<VersionItem>) -> Self {
+    pub fn new(items: Vec<VersionItem>) -> Self {
         Self { items }
     }
 }
