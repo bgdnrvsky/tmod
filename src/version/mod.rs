@@ -1,5 +1,11 @@
 pub mod maven;
 
+use nom::{
+    character::complete::{alpha1, digit1},
+    combinator::map_res,
+    IResult, Parser,
+};
+
 use std::fmt::Display;
 
 use maven::Version as ForgeVersion;
@@ -51,5 +57,31 @@ impl Display for ManyVersions {
             ManyVersions::Fabric(version) => write!(f, "{version}"),
             ManyVersions::Forge(version) => write!(f, "{version}"),
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum VersionItem {
+    Numeric(usize),
+    Textual(String),
+}
+
+impl std::fmt::Display for VersionItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VersionItem::Numeric(number) => write!(f, "{number}"),
+            VersionItem::Textual(text) => write!(f, "{text}"),
+        }
+    }
+}
+
+impl VersionItem {
+    fn parse(s: &str) -> IResult<&str, Self> {
+        map_res(digit1, str::parse::<usize>)
+            .map(Self::Numeric)
+            .or(alpha1
+                .map(|value: &str| value.to_lowercase())
+                .map(Self::Textual))
+            .parse(s)
     }
 }

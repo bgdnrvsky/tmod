@@ -1,9 +1,11 @@
+use super::VersionItem;
+
 use anyhow::anyhow;
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
-    character::complete::{alpha1, digit1, one_of},
-    combinator::{map_res, opt},
+    character::complete::one_of,
+    combinator::opt,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
@@ -169,32 +171,6 @@ impl FromStr for VersionRange {
             }
             Err(e) => Err(anyhow!("Error while parsing Comparator: {e}")),
         }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum VersionItem {
-    Numeric(usize),
-    Textual(String),
-}
-
-impl std::fmt::Display for VersionItem {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            VersionItem::Numeric(number) => write!(f, "{number}"),
-            VersionItem::Textual(text) => write!(f, "{text}"),
-        }
-    }
-}
-
-impl VersionItem {
-    fn parse(s: &str) -> IResult<&str, Self> {
-        map_res(digit1, str::parse::<usize>)
-            .map(Self::Numeric)
-            .or(alpha1
-                .map(|value: &str| value.to_lowercase())
-                .map(Self::Textual))
-            .parse(s)
     }
 }
 

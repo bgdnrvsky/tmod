@@ -1,4 +1,6 @@
-use tmod::version::maven::{Version, VersionItem};
+use std::str::FromStr;
+
+use tmod::version::maven::Version;
 use tmod::{minecraft_mod::Mod, version::SingleVersion};
 
 #[test]
@@ -9,11 +11,7 @@ fn load_forge() -> anyhow::Result<()> {
 
     assert_eq!(
         btp.version(),
-        SingleVersion::Forge(Version::new(vec![
-            VersionItem::Numeric(1),
-            VersionItem::Numeric(9),
-            VersionItem::Numeric(0),
-        ]))
+        SingleVersion::Forge(Version::from_str("1.9.0").unwrap())
     );
 
     // TODO: Remove minecraft and forge
