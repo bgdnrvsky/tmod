@@ -25,6 +25,19 @@ impl Display for SingleVersion {
     }
 }
 
+impl PartialEq<SingleVersion> for &SingleVersion {
+    fn eq(&self, other: &SingleVersion) -> bool {
+        match (self, other) {
+            (SingleVersion::Fabric(a), SingleVersion::Fabric(b)) => a.eq(b),
+            (SingleVersion::Forge(a), SingleVersion::Forge(b)) => a.eq(b),
+            (SingleVersion::Fabric(_), SingleVersion::Forge(_))
+            | (SingleVersion::Forge(_), SingleVersion::Fabric(_)) => {
+                unimplemented!("Comparing versions of two different breeds is not yet implemented")
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum ManyVersions {
