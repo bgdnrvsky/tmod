@@ -11,7 +11,7 @@ use jars::{jar, Jar, JarOptionBuilder};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-struct ModDep {
+pub struct ModDep {
     #[serde(rename = "modId")]
     id: String,
     #[serde(rename = "versionRange")]
@@ -20,7 +20,7 @@ struct ModDep {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-struct ModIncomp {
+pub struct ModIncomp {
     id: String,
     versions: ManyVersions,
 }
@@ -141,5 +141,21 @@ impl Mod {
         } else {
             None
         }
+    }
+
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn version(&self) -> &SingleVersion {
+        &self.version
+    }
+
+    pub fn dependencies(&self) -> Option<&Vec<ModDep>> {
+        self.dependencies.as_ref()
+    }
+
+    pub fn incompatibilities(&self) -> Option<&Vec<ModIncomp>> {
+        self.incompatibilities.as_ref()
     }
 }
