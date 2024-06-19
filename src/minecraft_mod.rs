@@ -25,6 +25,7 @@ pub struct ModIncomp {
     versions: ManyVersions,
 }
 
+// TODO: Extract minecraft and forge from dependencies and make it a separate field
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Mod {
     id: String,
@@ -44,14 +45,34 @@ impl Mod {
         /// META-INF/mods.toml file
         struct ForgeToml {
             mods: [ModInfo; 1],
-            dependencies: HashMap<String, Vec<ModDep>>,
+            dependencies: HashMap<String, Vec<ForgeModDep>>,
         }
 
+        // NOTE: Might also include `displayName`
         #[derive(Debug, Deserialize)]
         struct ModInfo {
             #[serde(rename = "modId")]
             mod_id: String,
-            version: SingleVersion,
+            version: crate::version::maven::Version,
+        }
+
+        #[derive(Clone, Debug, Deserialize)]
+        struct ForgeModDep {
+            #[serde(rename = "modId")]
+            id: String,
+            #[serde(rename = "versionRange")]
+            versions: crate::version::maven::VersionRange,
+            mandatory: bool,
+        }
+
+        impl From<ForgeModDep> for ModDep {
+            fn from(forge_dep: ForgeModDep) -> Self {
+                Self {
+                    id: forge_dep.id,
+                    versions: ManyVersions::Forge(forge_dep.versions),
+                    mandatory: true,
+                }
+            }
         }
 
         let forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
@@ -61,13 +82,17 @@ impl Mod {
             "The `mods` array in META-INF/mods.toml file \
                      is expected to have at least one (probably the only) entry",
         )?;
-        let dependencies = forge_toml.dependencies;
-        let id = mod_info.mod_id;
+        let all_dependencies = forge_toml.dependencies;
+        let mod_id = mod_info.mod_id;
+        let mod_dependencies: Option<Vec<ModDep>> = all_dependencies
+            .get(&mod_id)
+            .map(|deps| deps.iter().map(|dep| dep.clone().into()).collect());
 
         Ok(Self {
-            dependencies: dependencies.get(&id).map(|slice| slice.to_vec()),
-            id,
-            version: mod_info.version,
+            // TODO: Ignore dependencies that are not needed for client
+            dependencies: mod_dependencies,
+            id: mod_id,
+            version: SingleVersion::Forge(mod_info.version),
             incompatibilities: None,
         })
     }
