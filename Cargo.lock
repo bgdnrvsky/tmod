@@ -1491,6 +1491,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "strum",
+ "strum_macros",
  "toml",
 ]
 
