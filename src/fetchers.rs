@@ -147,51 +147,6 @@ where
 /// }
 /// ```
 pub struct MinecraftId(usize);
-/// Example JSON:
-/// ```json
-/// {
-///     "result":
-///     [
-///         "1.20.1",
-///         "1.20",
-///         "1.19.4",
-///         "1.19.3",
-///         "1.19.2",
-///         "1.19.1",
-///         "1.19",
-///         "..."
-///     ]
-/// }
-/// ```
-pub struct MinecraftVersions(Vec<ManyVersions>);
-/// Example JSON:
-/// ```json
-/// {
-///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
-/// }
-/// ```
-pub struct ForgeVersions(HashMap<SingleVersion, Vec<SingleVersion>>);
-/// Example JSON:
-/// ```json
-/// {
-///   "data": [
-///     {
-///       "id": 0,
-///       "gameId": 0,
-///       "name": "string",
-///       "slug": "string",
-///       "url": "string",
-///       "iconUrl": "string",
-///       "dateModified": "2019-08-24T14:15:22Z",
-///       "isClass": true,
-///       "classId": 0,
-///       "parentCategoryId": 0,
-///       "displayIndex": 0
-///     }
-///   ]
-/// }
-/// ```
-pub struct CurseForgeCategories(HashMap<String, usize>);
 
 impl Fetchable for MinecraftId {
     fn link() -> anyhow::Result<Url> {
@@ -228,6 +183,24 @@ impl Fetchable for MinecraftId {
     }
 }
 
+/// Example JSON:
+/// ```json
+/// {
+///     "result":
+///     [
+///         "1.20.1",
+///         "1.20",
+///         "1.19.4",
+///         "1.19.3",
+///         "1.19.2",
+///         "1.19.1",
+///         "1.19",
+///         "..."
+///     ]
+/// }
+/// ```
+pub struct MinecraftVersions(Vec<ManyVersions>);
+
 impl Fetchable for MinecraftVersions {
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/java")
@@ -252,6 +225,14 @@ impl Fetchable for MinecraftVersions {
     }
 }
 
+/// Example JSON:
+/// ```json
+/// {
+///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
+/// }
+/// ```
+pub struct ForgeVersions(HashMap<SingleVersion, Vec<SingleVersion>>);
+
 impl Fetchable for ForgeVersions {
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://mc-versions-api.net/api/forge")
@@ -275,6 +256,28 @@ impl Fetchable for ForgeVersions {
         "Getting Forge versions from CurseForge"
     }
 }
+
+/// Example JSON:
+/// ```json
+/// {
+///   "data": [
+///     {
+///       "id": 0,
+///       "gameId": 0,
+///       "name": "string",
+///       "slug": "string",
+///       "url": "string",
+///       "iconUrl": "string",
+///       "dateModified": "2019-08-24T14:15:22Z",
+///       "isClass": true,
+///       "classId": 0,
+///       "parentCategoryId": 0,
+///       "displayIndex": 0
+///     }
+///   ]
+/// }
+/// ```
+pub struct CurseForgeCategories(HashMap<String, usize>);
 
 impl Fetchable for CurseForgeCategories {
     fn link() -> anyhow::Result<Url> {
@@ -319,6 +322,12 @@ impl Fetchable for CurseForgeCategories {
     }
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ModSearchList {
+    #[serde(rename = "data")]
+    mods: BTreeSet<Reverse<SearchedMod>>,
+}
+
 impl Fetchable for ModSearchList {
     fn link() -> anyhow::Result<Url> {
         let mut url = Url::parse("https://api.curseforge.com/v1/mods/search")
@@ -346,31 +355,6 @@ impl Fetchable for ModSearchList {
     fn info() -> impl Display {
         "Searching for mod"
     }
-}
-
-impl Fetchable for SearchedMod {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://api.curseforge.com/v1/mods")
-            .context("Parsing Url for fetching mod by it's id")
-    }
-
-    fn parse(response: Response) -> anyhow::Result<Self> {
-        #[derive(Debug, Clone, Deserialize)]
-        struct Data {
-            data: SearchedMod,
-        }
-
-        response
-            .json::<Data>()
-            .context("Deserializing response")
-            .map(|data| data.data)
-    }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ModSearchList {
-    #[serde(rename = "data")]
-    mods: BTreeSet<Reverse<SearchedMod>>,
 }
 
 impl Display for ModSearchList {
@@ -584,6 +568,25 @@ pub struct SearchedMod {
     files: Vec<ModFile>,
     #[serde(rename = "latestFilesIndexes")]
     indexes: Vec<ModFileIndex>,
+}
+
+impl Fetchable for SearchedMod {
+    fn link() -> anyhow::Result<Url> {
+        Url::parse("https://api.curseforge.com/v1/mods")
+            .context("Parsing Url for fetching mod by it's id")
+    }
+
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Clone, Deserialize)]
+        struct Data {
+            data: SearchedMod,
+        }
+
+        response
+            .json::<Data>()
+            .context("Deserializing response")
+            .map(|data| data.data)
+    }
 }
 
 impl SearchedMod {
