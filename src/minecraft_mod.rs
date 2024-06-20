@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use std::collections::HashMap;
-use std::{path::Path, str::FromStr};
+use std::path::Path;
 
 use crate::{
     loader::Loaders,
@@ -106,9 +106,9 @@ impl Mod {
         #[derive(Debug, Deserialize)]
         struct FabricJson {
             id: String,
-            version: semver::Version,
-            depends: HashMap<String, semver::VersionReq>,
-            breaks: HashMap<String, semver::VersionReq>,
+            version: crate::version::fabric::Version,
+            depends: HashMap<String, crate::version::fabric::VersionReq>,
+            breaks: HashMap<String, crate::version::fabric::VersionReq>,
         }
 
         let fabric_json = serde_json::from_slice::<FabricJson>(content)?;

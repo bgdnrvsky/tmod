@@ -1,3 +1,4 @@
+pub mod fabric;
 pub mod maven;
 
 use nom::{
@@ -8,11 +9,11 @@ use nom::{
 
 use std::fmt::Display;
 
+use fabric::Version as FabricVersion;
 use maven::Version as ForgeVersion;
-use semver::Version as FabricVersion;
 
 use maven::VersionRange as ForgeVersionRange;
-use semver::VersionReq as FabricVersionRange;
+use fabric::VersionReq as FabricVersionRange;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq, Hash)]

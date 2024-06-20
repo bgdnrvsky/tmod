@@ -190,7 +190,7 @@ impl std::fmt::Display for Version {
 }
 
 impl Version {
-    fn parse(s: &str) -> IResult<&str, Self> {
+    pub(super) fn parse(s: &str) -> IResult<&str, Self> {
         separated_list1(one_of(".-"), VersionItem::parse)
             .map(|items| Self { items })
             .parse(s)
