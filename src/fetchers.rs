@@ -26,6 +26,7 @@ pub struct Fetcher {
 
 impl Fetcher {
     pub fn new() -> anyhow::Result<Self> {
+        #[inline]
         fn fetch_no_params<T: Fetchable>() -> anyhow::Result<T> {
             T::fetch(AdditionalFetchParameters::default())
         }
