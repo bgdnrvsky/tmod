@@ -31,11 +31,23 @@ impl Fetcher {
             T::fetch(AdditionalFetchParameters::default())
         }
 
+        let minecraft_id = fetch_no_params::<MinecraftId>()?;
+        let minecraft_versions = fetch_no_params::<MinecraftVersions>()?;
+        let forge_versions = fetch_no_params::<ForgeVersions>()?;
+        let curseforge_categories = {
+            let mut params = AdditionalFetchParameters::default();
+
+            params.add_query(("gameId", minecraft_id.to_string()));
+            params.add_query(("classesOnly", "true"));
+
+            CurseForgeCategories::fetch(params)
+        }?;
+
         Ok(Self {
-            minecraft_id: fetch_no_params::<MinecraftId>()?,
-            minecraft_versions: fetch_no_params::<MinecraftVersions>()?,
-            forge_versions: fetch_no_params::<ForgeVersions>()?,
-            curseforge_categories: fetch_no_params::<CurseForgeCategories>()?,
+            minecraft_id,
+            minecraft_versions,
+            forge_versions,
+            curseforge_categories,
         })
     }
 
@@ -334,19 +346,8 @@ pub type CurseForgeCategories = HashMap<String, usize>;
 
 impl Fetchable for CurseForgeCategories {
     fn link() -> anyhow::Result<Url> {
-        let mut url = Url::parse("https://api.curseforge.com/v1/categories")
-            .context("Url parsing for getting all categories")?;
-
-        {
-            let mut queries = url.query_pairs_mut();
-
-            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
-
-            queries.append_pair("gameId", &format!("{id}"));
-            queries.append_pair("classesOnly", "true");
-        }
-
-        Ok(url)
+        Url::parse("https://api.curseforge.com/v1/categories")
+            .context("Url parsing for getting all categories")
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
@@ -382,22 +383,7 @@ pub struct ModSearchList {
 
 impl Fetchable for ModSearchList {
     fn link() -> anyhow::Result<Url> {
-        let mut url = Url::parse("https://api.curseforge.com/v1/mods/search")
-            .context("Parsing search mods url")?;
-
-        {
-            let mut queries = url.query_pairs_mut();
-
-            let game_id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
-            let categories = CurseForgeCategories::fetch(AdditionalFetchParameters::default())?;
-
-            let class_id = categories.get("Mods").context("No category `Mods` found")?;
-
-            queries.append_pair("gameId", &format!("{game_id}"));
-            queries.append_pair("classId", &format!("{class_id}"));
-        }
-
-        Ok(url)
+        Url::parse("https://api.curseforge.com/v1/mods/search").context("Parsing search mods url")
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
