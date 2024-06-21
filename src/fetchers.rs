@@ -18,6 +18,50 @@ use crate::version::{ManyVersions, SingleVersion};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
+pub struct Fetcher {
+    minecraft_id: MinecraftId,
+    minecraft_versions: MinecraftVersions,
+    forge_versions: ForgeVersions,
+    curseforge_categories: CurseForgeCategories,
+}
+
+impl Fetcher {
+    pub fn new() -> anyhow::Result<Self> {
+        fn fetch_no_params<T: Fetchable>() -> anyhow::Result<T> {
+            T::fetch(AdditionalFetchParameters::default())
+        }
+
+        Ok(Self {
+            minecraft_id: fetch_no_params::<MinecraftId>()?,
+            minecraft_versions: fetch_no_params::<MinecraftVersions>()?,
+            forge_versions: fetch_no_params::<ForgeVersions>()?,
+            curseforge_categories: fetch_no_params::<CurseForgeCategories>()?,
+        })
+    }
+
+    pub fn minecraft_id(&self) -> MinecraftId {
+        self.minecraft_id
+    }
+
+    pub fn minecraft_versions(&self) -> &MinecraftVersions {
+        &self.minecraft_versions
+    }
+
+    pub fn forge_versions(&self) -> &ForgeVersions {
+        &self.forge_versions
+    }
+
+    pub fn curseforge_categories(&self) -> &CurseForgeCategories {
+        &self.curseforge_categories
+    }
+
+    pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
+        let mut params = AdditionalFetchParameters::default();
+        params.add_segment(format!("{id}"));
+        SearchedMod::fetch(params)
+    }
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct AdditionalFetchParameters {
     queries: Option<HashMap<String, String>>,
