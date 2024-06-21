@@ -73,7 +73,7 @@ impl Fetcher {
         SearchedMod::fetch(params)
     }
 
-    pub fn search_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
+    pub fn search_mod_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
         let mut params = AdditionalFetchParameters::default();
         let mods_class = self
             .curseforge_categories
