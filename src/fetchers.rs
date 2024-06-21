@@ -40,11 +40,23 @@ impl AdditionalFetchParameters {
         }
     }
 
+    pub fn add_query(&mut self, query: (String, String)) {
+        self.queries
+            .get_or_insert_with(|| HashMap::new())
+            .insert(query.0, query.1);
+    }
+
     pub fn with_segments(self, segments: Vec<String>) -> Self {
         Self {
             queries: self.queries,
             path_segments: Some(segments),
         }
+    }
+
+    pub fn add_segment(&mut self, segment: String) {
+        self.path_segments
+            .get_or_insert_with(|| Vec::new())
+            .push(segment);
     }
 }
 
