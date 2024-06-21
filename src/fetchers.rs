@@ -1,8 +1,7 @@
-use std::fmt::Formatter;
 use std::{
     cmp::Reverse,
     collections::{BTreeSet, HashMap},
-    fmt::Display,
+    fmt::{Display, Formatter},
 };
 
 use anyhow::Context;
@@ -112,7 +111,7 @@ impl AdditionalFetchParameters {
 
     pub fn add_query(&mut self, query: (impl AsRef<str>, impl AsRef<str>)) {
         self.queries
-            .get_or_insert_with(|| HashMap::new())
+            .get_or_insert_with(HashMap::new)
             .insert(query.0.as_ref().to_string(), query.1.as_ref().to_string());
     }
 
@@ -125,7 +124,7 @@ impl AdditionalFetchParameters {
 
     pub fn add_segment(&mut self, segment: String) {
         self.path_segments
-            .get_or_insert_with(|| Vec::new())
+            .get_or_insert_with(Vec::new)
             .push(segment);
     }
 }
