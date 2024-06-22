@@ -1,5 +1,6 @@
+use crate::version::SingleVersion;
+
 use anyhow::anyhow;
-use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
@@ -16,11 +17,11 @@ pub enum Loaders {
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Loader {
     kind: Loaders,
-    version: VersionReq,
+    version: SingleVersion,
 }
 
 impl Loader {
-    pub fn explicit(kind: Loaders, version: VersionReq) -> anyhow::Result<Self> {
+    pub fn new(kind: Loaders, version: SingleVersion) -> anyhow::Result<Self> {
         // TODO: Check if version exists
         Ok(Self { kind, version })
     }
