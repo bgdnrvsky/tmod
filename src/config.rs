@@ -1,4 +1,4 @@
-use semver::Version;
+use crate::version::SingleVersion as Version;
 use serde::Deserialize;
 
 use crate::loader::Loader;
@@ -23,10 +23,12 @@ pub struct Config {
 
 #[cfg(test)]
 mod config_deserializer_tests {
-    use semver::VersionReq;
+    use std::str::FromStr;
 
     use super::Config;
     use crate::loader::{Loader, Loaders};
+    use crate::version::maven::Version;
+    use crate::version::SingleVersion;
 
     #[test]
     fn valid() {
@@ -43,9 +45,12 @@ mod config_deserializer_tests {
         assert_eq!(
             config,
             Ok(Config {
-                loader: Loader::explicit(Loaders::Forge, VersionReq::parse("47.2.0").unwrap())
-                    .unwrap(),
-                game_version: semver::Version::new(1, 20, 1)
+                loader: Loader::new(
+                    Loaders::Forge,
+                    SingleVersion::Forge(Version::from_str("47.2.0").unwrap())
+                )
+                .unwrap(),
+                game_version: SingleVersion::Forge(Version::from_str("1.20.1").unwrap())
             })
         );
     }
