@@ -24,13 +24,6 @@ impl Loader {
         // TODO: Check if version exists
         Ok(Self { kind, version })
     }
-
-    pub fn any(kind: Loaders) -> Self {
-        Self {
-            kind,
-            version: VersionReq::STAR,
-        }
-    }
 }
 
 impl TryFrom<usize> for Loaders {
