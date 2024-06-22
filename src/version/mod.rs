@@ -12,15 +12,15 @@ use std::fmt::Display;
 use fabric::Version as FabricVersion;
 use maven::Version as ForgeVersion;
 
-use maven::VersionRange as ForgeVersionRange;
 use fabric::VersionReq as FabricVersionRange;
+use maven::VersionRange as ForgeVersionRange;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq, Hash)]
 #[serde(untagged)]
 pub enum SingleVersion {
-    Fabric(FabricVersion),
     Forge(ForgeVersion),
+    Fabric(FabricVersion),
 }
 
 impl Display for SingleVersion {
