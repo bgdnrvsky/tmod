@@ -3,9 +3,21 @@ use serde::Deserialize;
 
 use crate::loader::Loader;
 
+/// Basic configuration including: loader (forge or fabric) and the goal game version
+///
+/// Example configuration:
+/// ```toml
+/// game_version = "1.20.1"
+///
+/// [loader]
+/// kind = "forge"
+/// version = "47.2.0"
+/// ```
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Config {
+    /// Minecraft mod loader (forge or fabric)
     loader: Loader,
+    /// Minecraft version target
     game_version: Version,
 }
 
