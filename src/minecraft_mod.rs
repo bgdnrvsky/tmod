@@ -82,11 +82,11 @@ impl Mod {
             "The `mods` array in META-INF/mods.toml file \
                      is expected to have at least one (probably the only) entry",
         )?;
-        let all_dependencies = forge_toml.dependencies;
+        let mut all_dependencies = forge_toml.dependencies;
         let mod_id = mod_info.mod_id;
         let mod_dependencies: Option<Vec<ModDep>> = all_dependencies
-            .get(&mod_id)
-            .map(|deps| deps.iter().map(|dep| dep.clone().into()).collect());
+            .remove(&mod_id)
+            .map(|deps| deps.into_iter().map(ModDep::from).collect());
 
         Ok(Self {
             // TODO: Ignore dependencies that are not needed for client
