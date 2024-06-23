@@ -47,16 +47,16 @@ impl PartialEq<SingleVersion> for &SingleVersion {
 
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(untagged)]
-pub enum ManyVersions {
+pub enum MultiVersion {
     Fabric(FabricVersionRange),
     Forge(ForgeVersionRange),
 }
 
-impl Display for ManyVersions {
+impl Display for MultiVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ManyVersions::Fabric(version) => write!(f, "{version}"),
-            ManyVersions::Forge(version) => write!(f, "{version}"),
+            MultiVersion::Fabric(version) => write!(f, "{version}"),
+            MultiVersion::Forge(version) => write!(f, "{version}"),
         }
     }
 }

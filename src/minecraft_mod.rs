@@ -4,7 +4,7 @@ use std::path::Path;
 
 use crate::{
     loader::Loaders,
-    version::{ManyVersions, SingleVersion},
+    version::{MultiVersion, SingleVersion},
 };
 use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
@@ -15,14 +15,14 @@ pub struct ModDep {
     #[serde(rename = "modId")]
     id: String,
     #[serde(rename = "versionRange")]
-    versions: ManyVersions,
+    versions: MultiVersion,
     mandatory: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ModIncomp {
     id: String,
-    versions: ManyVersions,
+    versions: MultiVersion,
 }
 
 // TODO: Extract minecraft and forge from dependencies and make it a separate field
@@ -69,7 +69,7 @@ impl Mod {
             fn from(forge_dep: ForgeModDep) -> Self {
                 Self {
                     id: forge_dep.id,
-                    versions: ManyVersions::Forge(forge_dep.versions),
+                    versions: MultiVersion::Forge(forge_dep.versions),
                     mandatory: true,
                 }
             }
@@ -121,7 +121,7 @@ impl Mod {
                     .into_iter()
                     .map(|(id, versions)| ModDep {
                         id,
-                        versions: ManyVersions::Fabric(versions),
+                        versions: MultiVersion::Fabric(versions),
                         mandatory: true,
                     })
                     .collect::<Vec<_>>(),
@@ -136,7 +136,7 @@ impl Mod {
                     .into_iter()
                     .map(|(id, versions)| ModIncomp {
                         id,
-                        versions: ManyVersions::Fabric(versions),
+                        versions: MultiVersion::Fabric(versions),
                     })
                     .collect(),
             )

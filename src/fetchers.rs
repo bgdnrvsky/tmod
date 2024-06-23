@@ -13,7 +13,7 @@ use rq::Url;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
 
-use crate::version::{ManyVersions, SingleVersion};
+use crate::version::{MultiVersion, SingleVersion};
 use std::cell::OnceCell;
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
@@ -289,7 +289,7 @@ impl Fetchable for MinecraftId {
 ///     ]
 /// }
 /// ```
-pub type MinecraftVersions = Vec<ManyVersions>;
+pub type MinecraftVersions = Vec<MultiVersion>;
 
 impl Fetchable for MinecraftVersions {
     fn link() -> anyhow::Result<Url> {
@@ -300,7 +300,7 @@ impl Fetchable for MinecraftVersions {
     fn parse(response: Response) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Deserialize)]
         struct Data {
-            result: Vec<ManyVersions>,
+            result: Vec<MultiVersion>,
         }
 
         response
