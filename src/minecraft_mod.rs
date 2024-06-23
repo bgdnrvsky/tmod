@@ -77,6 +77,7 @@ impl Mod {
             id: String,
             #[serde(rename = "versionRange")]
             versions: crate::version::maven::VersionRange,
+            side: Side,
             mandatory: bool,
         }
 
@@ -99,9 +100,12 @@ impl Mod {
         )?;
         let mut all_dependencies = forge_toml.dependencies;
         let mod_id = mod_info.mod_id;
-        let mod_dependencies: Option<Vec<ModDep>> = all_dependencies
-            .remove(&mod_id)
-            .map(|deps| deps.into_iter().map(ModDep::from).collect());
+        let mod_dependencies: Option<Vec<ModDep>> = all_dependencies.remove(&mod_id).map(|deps| {
+            deps.into_iter()
+                .filter(|dep| dep.side.is_needed_for_client())
+                .map(ModDep::from)
+                .collect()
+        });
 
         Ok(Self {
             // TODO: Ignore dependencies that are not needed for client
