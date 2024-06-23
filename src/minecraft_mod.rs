@@ -108,7 +108,6 @@ impl Mod {
         });
 
         Ok(Self {
-            // TODO: Ignore dependencies that are not needed for client
             dependencies: mod_dependencies,
             id: mod_id,
             version: SingleVersion::Forge(mod_info.version),
