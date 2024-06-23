@@ -14,57 +14,66 @@ use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
 
 use crate::version::{ManyVersions, SingleVersion};
+use std::cell::OnceCell;
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
+#[derive(Default)]
 pub struct Fetcher {
-    minecraft_id: MinecraftId,
-    minecraft_versions: MinecraftVersions,
-    forge_versions: ForgeVersions,
-    curseforge_categories: CurseForgeCategories,
+    minecraft_id: OnceCell<MinecraftId>,
+    minecraft_versions: OnceCell<MinecraftVersions>,
+    forge_versions: OnceCell<ForgeVersions>,
+    curseforge_categories: OnceCell<CurseForgeCategories>,
 }
 
 impl Fetcher {
-    pub fn new() -> anyhow::Result<Self> {
-        #[inline]
-        fn fetch_no_params<T: Fetchable>() -> anyhow::Result<T> {
-            T::fetch(AdditionalFetchParameters::default())
-        }
+    pub fn new() -> Self {
+        Self::default()
+    }
 
-        let minecraft_id = fetch_no_params::<MinecraftId>()?;
-        let minecraft_versions = fetch_no_params::<MinecraftVersions>()?;
-        let forge_versions = fetch_no_params::<ForgeVersions>()?;
-        let curseforge_categories = {
+    pub fn minecraft_id(&self) -> anyhow::Result<&MinecraftId> {
+        if let Some(id) = self.minecraft_id.get() {
+            Ok(id)
+        } else {
+            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
+            debug_assert!(self.minecraft_id.set(id).is_ok());
+            Ok(self.minecraft_id.get().unwrap())
+        }
+    }
+
+    pub fn minecraft_versions(&self) -> anyhow::Result<&MinecraftVersions> {
+        if let Some(versions) = self.minecraft_versions.get() {
+            Ok(versions)
+        } else {
+            let versions = MinecraftVersions::fetch(AdditionalFetchParameters::default())?;
+            debug_assert!(self.minecraft_versions.set(versions).is_ok());
+            Ok(self.minecraft_versions.get().unwrap())
+        }
+    }
+
+    pub fn forge_versions(&self) -> anyhow::Result<&ForgeVersions> {
+        if let Some(versions) = self.forge_versions.get() {
+            Ok(versions)
+        } else {
+            let versions = ForgeVersions::fetch(AdditionalFetchParameters::default())?;
+            debug_assert!(self.forge_versions.set(versions).is_ok());
+            Ok(self.forge_versions.get().unwrap())
+        }
+    }
+
+    pub fn curseforge_categories(&self) -> anyhow::Result<&CurseForgeCategories> {
+        if let Some(categories) = self.curseforge_categories.get() {
+            Ok(categories)
+        } else {
             let mut params = AdditionalFetchParameters::default();
 
-            params.add_query(("gameId", minecraft_id.to_string()));
+            params.add_query(("gameId", self.minecraft_id()?.to_string()));
             params.add_query(("classesOnly", "true"));
 
-            CurseForgeCategories::fetch(params)
-        }?;
-
-        Ok(Self {
-            minecraft_id,
-            minecraft_versions,
-            forge_versions,
-            curseforge_categories,
-        })
-    }
-
-    pub fn minecraft_id(&self) -> MinecraftId {
-        self.minecraft_id
-    }
-
-    pub fn minecraft_versions(&self) -> &MinecraftVersions {
-        &self.minecraft_versions
-    }
-
-    pub fn forge_versions(&self) -> &ForgeVersions {
-        &self.forge_versions
-    }
-
-    pub fn curseforge_categories(&self) -> &CurseForgeCategories {
-        &self.curseforge_categories
+            let categories = CurseForgeCategories::fetch(params)?;
+            debug_assert!(self.curseforge_categories.set(categories).is_ok());
+            Ok(self.curseforge_categories.get().unwrap())
+        }
     }
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
@@ -76,11 +85,11 @@ impl Fetcher {
     pub fn search_mod_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
         let mut params = AdditionalFetchParameters::default();
         let mods_class = self
-            .curseforge_categories
+            .curseforge_categories()?
             .get("Mods")
             .context("No category `Mods` found")?;
 
-        params.add_query(("gameId", self.minecraft_id.to_string()));
+        params.add_query(("gameId", self.minecraft_id()?.to_string()));
         params.add_query(("classId", mods_class.to_string()));
         params.add_query(("slug", slug));
 
