@@ -1,14 +1,15 @@
-use anyhow::anyhow;
-use std::collections::HashMap;
-use std::path::Path;
-
 use crate::{
     loader::Loaders,
     version::{MultiVersion, SingleVersion},
 };
+use anyhow::anyhow;
 use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
 use serde::{Deserialize, Serialize};
+use serde_with::DeserializeFromStr;
+use std::collections::HashMap;
+use std::path::Path;
+use strum::EnumString;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ModDep {
@@ -32,6 +33,20 @@ pub struct Mod {
     version: SingleVersion,
     dependencies: Option<Vec<ModDep>>,
     incompatibilities: Option<Vec<ModIncomp>>,
+}
+
+#[derive(Debug, Clone, EnumString, DeserializeFromStr, PartialEq, Eq)]
+#[strum(ascii_case_insensitive)]
+enum Side {
+    Both,
+    Client,
+    Server,
+}
+
+impl Side {
+    fn is_needed_for_client(&self) -> bool {
+        matches!(self, Self::Both | Self::Client)
+    }
 }
 
 impl Mod {
@@ -185,5 +200,31 @@ impl Mod {
 
     pub fn incompatibilities(&self) -> Option<&Vec<ModIncomp>> {
         self.incompatibilities.as_ref()
+    }
+}
+
+#[cfg(test)]
+mod side {
+    use std::str::FromStr;
+
+    use super::Side;
+
+    #[test]
+    fn from_str() {
+        assert_eq!(Side::from_str("both"), Ok(Side::Both));
+        assert_eq!(Side::from_str("BOTH"), Ok(Side::Both));
+
+        assert_eq!(Side::from_str("client"), Ok(Side::Client));
+        assert_eq!(Side::from_str("CLIENT"), Ok(Side::Client));
+
+        assert_eq!(Side::from_str("server"), Ok(Side::Server));
+        assert_eq!(Side::from_str("SERVER"), Ok(Side::Server));
+    }
+
+    #[test]
+    fn is_needed() {
+        assert!(Side::Both.is_needed_for_client());
+        assert!(Side::Client.is_needed_for_client());
+        assert!(!Side::Server.is_needed_for_client());
     }
 }
