@@ -27,6 +27,8 @@ pub struct ModIncomp {
 pub struct Mod {
     id: String,
     version: SingleVersion,
+    loader_version_needed: MultiVersion,
+    minecraft_version_needed: MultiVersion,
     /// Key: name of the mod dep (slug), value: dep info
     dependencies: Option<HashMap<String, ModDepInfo>>,
     incompatibilities: Option<Vec<ModIncomp>>,
@@ -87,7 +89,8 @@ impl Mod {
         )?;
 
         let mod_id = mod_info.mod_id;
-        let dependencies = forge_toml.dependencies.remove(&mod_id).map(|dependencies| {
+
+        let mut dependencies = forge_toml.dependencies.remove(&mod_id).map(|dependencies| {
             dependencies
                 .into_iter()
                 .filter(|dependency| dependency.side.is_needed_for_client())
@@ -103,11 +106,25 @@ impl Mod {
                 .collect::<HashMap<String, _>>()
         });
 
+        let loader_version_needed = dependencies
+            .as_mut()
+            .and_then(|deps| deps.remove("forge"))
+            .map(|dep| dep.versions)
+            .context("Jar mod config didn't specify the required loader version range")?;
+
+        let minecraft_version_needed = dependencies
+            .as_mut()
+            .and_then(|deps| deps.remove("minecraft"))
+            .map(|dep| dep.versions)
+            .context("Jar mod config didn't specify the required loader version range")?;
+
         Ok(Self {
             dependencies,
             id: mod_id,
             version: SingleVersion::Forge(mod_info.version),
             incompatibilities: None,
+            loader_version_needed,
+            minecraft_version_needed,
         })
     }
 
