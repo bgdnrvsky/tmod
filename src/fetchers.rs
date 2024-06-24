@@ -18,12 +18,35 @@ use std::cell::OnceCell;
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
+struct FetchCell<T> {
+    cell: OnceCell<T>,
+}
+
+impl<T> FetchCell<T>
+where
+    T: Fetchable,
+{
+    fn get_or_fetch<F>(&self, fetcher: &Fetcher, f: F) -> anyhow::Result<&T>
+    where
+        F: FnOnce(&Fetcher) -> anyhow::Result<AdditionalFetchParameters>,
+    {
+        if let Some(item) = self.cell.get() {
+            Ok(item)
+        } else {
+            let item = T::fetch(f(fetcher)?)?;
+            debug_assert!(self.cell.set(item).is_ok());
+            Ok(self.cell.get().unwrap())
+        }
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct Fetcher {
-    minecraft_id: OnceCell<MinecraftId>,
-    minecraft_versions: OnceCell<MinecraftVersions>,
-    forge_versions: OnceCell<ForgeVersions>,
-    curseforge_categories: OnceCell<CurseForgeCategories>,
+    minecraft_id: FetchCell<MinecraftId>,
+    minecraft_versions: FetchCell<MinecraftVersions>,
+    forge_versions: FetchCell<ForgeVersions>,
+    curseforge_categories: FetchCell<CurseForgeCategories>,
 }
 
 impl Fetcher {
@@ -32,48 +55,29 @@ impl Fetcher {
     }
 
     pub fn minecraft_id(&self) -> anyhow::Result<&MinecraftId> {
-        if let Some(id) = self.minecraft_id.get() {
-            Ok(id)
-        } else {
-            let id = MinecraftId::fetch(AdditionalFetchParameters::default())?;
-            debug_assert!(self.minecraft_id.set(id).is_ok());
-            Ok(self.minecraft_id.get().unwrap())
-        }
+        self.minecraft_id
+            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
     }
 
     pub fn minecraft_versions(&self) -> anyhow::Result<&MinecraftVersions> {
-        if let Some(versions) = self.minecraft_versions.get() {
-            Ok(versions)
-        } else {
-            let versions = MinecraftVersions::fetch(AdditionalFetchParameters::default())?;
-            debug_assert!(self.minecraft_versions.set(versions).is_ok());
-            Ok(self.minecraft_versions.get().unwrap())
-        }
+        self.minecraft_versions
+            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
     }
 
     pub fn forge_versions(&self) -> anyhow::Result<&ForgeVersions> {
-        if let Some(versions) = self.forge_versions.get() {
-            Ok(versions)
-        } else {
-            let versions = ForgeVersions::fetch(AdditionalFetchParameters::default())?;
-            debug_assert!(self.forge_versions.set(versions).is_ok());
-            Ok(self.forge_versions.get().unwrap())
-        }
+        self.forge_versions
+            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
     }
 
     pub fn curseforge_categories(&self) -> anyhow::Result<&CurseForgeCategories> {
-        if let Some(categories) = self.curseforge_categories.get() {
-            Ok(categories)
-        } else {
+        self.curseforge_categories.get_or_fetch(self, |fetcher| {
             let mut params = AdditionalFetchParameters::default();
 
-            params.add_query(("gameId", self.minecraft_id()?.to_string()));
+            params.add_query(("gameId", fetcher.minecraft_id()?.to_string()));
             params.add_query(("classesOnly", "true"));
 
-            let categories = CurseForgeCategories::fetch(params)?;
-            debug_assert!(self.curseforge_categories.set(categories).is_ok());
-            Ok(self.curseforge_categories.get().unwrap())
-        }
+            Ok(params)
+        })
     }
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
