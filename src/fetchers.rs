@@ -35,7 +35,7 @@ where
             Ok(item)
         } else {
             let item = T::fetch(f(fetcher)?)?;
-            debug_assert!(self.cell.set(item).is_ok());
+            assert!(self.cell.set(item).is_ok());
             Ok(self.cell.get().unwrap())
         }
     }
