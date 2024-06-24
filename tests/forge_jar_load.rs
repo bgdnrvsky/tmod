@@ -14,10 +14,6 @@ fn load_forge() -> anyhow::Result<()> {
         SingleVersion::Forge(Version::from_str("1.9.0").unwrap())
     );
 
-    // TODO: Remove minecraft and forge
-    // from general dependencies and make
-    // it separate fields in `Mod` struct
-
     assert!(btp.dependencies().is_some_and(|deps| deps.len() == 2));
     assert!(btp.incompatibilities().is_none());
 

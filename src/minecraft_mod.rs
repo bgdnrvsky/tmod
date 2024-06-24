@@ -12,10 +12,7 @@ use std::path::Path;
 use strum::EnumString;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ModDep {
-    #[serde(rename = "modId")]
-    id: String,
-    #[serde(rename = "versionRange")]
+pub struct ModDepInfo {
     versions: MultiVersion,
     mandatory: bool,
 }
@@ -26,12 +23,12 @@ pub struct ModIncomp {
     versions: MultiVersion,
 }
 
-// TODO: Extract minecraft and forge from dependencies and make it a separate field
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Mod {
     id: String,
     version: SingleVersion,
-    dependencies: Option<Vec<ModDep>>,
+    /// Key: name of the mod dep (slug), value: dep info
+    dependencies: Option<HashMap<String, ModDepInfo>>,
     incompatibilities: Option<Vec<ModIncomp>>,
 }
 
@@ -81,34 +78,33 @@ impl Mod {
             mandatory: bool,
         }
 
-        impl From<ForgeModDep> for ModDep {
-            fn from(forge_dep: ForgeModDep) -> Self {
-                Self {
-                    id: forge_dep.id,
-                    versions: MultiVersion::Forge(forge_dep.versions),
-                    mandatory: true,
-                }
-            }
-        }
-
-        let forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
+        let mut forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
             .map_err(|e| anyhow!("Error while deserializing toml file META-INF/mods.toml: {e}"))?;
 
         let mod_info = forge_toml.mods.into_iter().next().context(
             "The `mods` array in META-INF/mods.toml file \
                      is expected to have at least one (probably the only) entry",
         )?;
-        let mut all_dependencies = forge_toml.dependencies;
+
         let mod_id = mod_info.mod_id;
-        let mod_dependencies: Option<Vec<ModDep>> = all_dependencies.remove(&mod_id).map(|deps| {
-            deps.into_iter()
-                .filter(|dep| dep.side.is_needed_for_client())
-                .map(ModDep::from)
-                .collect()
+        let dependencies = forge_toml.dependencies.remove(&mod_id).map(|dependencies| {
+            dependencies
+                .into_iter()
+                .filter(|dependency| dependency.side.is_needed_for_client())
+                .map(|dependency| {
+                    (
+                        dependency.id,
+                        ModDepInfo {
+                            versions: MultiVersion::Forge(dependency.versions),
+                            mandatory: dependency.mandatory,
+                        },
+                    )
+                })
+                .collect::<HashMap<String, _>>()
         });
 
         Ok(Self {
-            dependencies: mod_dependencies,
+            dependencies,
             id: mod_id,
             version: SingleVersion::Forge(mod_info.version),
             incompatibilities: None,
@@ -130,21 +126,26 @@ impl Mod {
         }
 
         let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
-        let dependencies: Option<Vec<ModDep>> = if fabric_json.depends.is_empty() {
+        let dependencies = if fabric_json.depends.is_empty() {
             None
         } else {
             Some(
                 fabric_json
                     .depends
                     .into_iter()
-                    .map(|(id, versions)| ModDep {
-                        id,
-                        versions: MultiVersion::Fabric(versions),
-                        mandatory: true,
+                    .map(|(id, versions)| {
+                        (
+                            id,
+                            ModDepInfo {
+                                versions: MultiVersion::Fabric(versions),
+                                mandatory: true,
+                            },
+                        )
                     })
-                    .collect::<Vec<_>>(),
+                    .collect(),
             )
         };
+
         let incompatibilities: Option<Vec<ModIncomp>> = if fabric_json.breaks.is_empty() {
             None
         } else {
@@ -197,7 +198,7 @@ impl Mod {
         &self.version
     }
 
-    pub fn dependencies(&self) -> Option<&Vec<ModDep>> {
+    pub fn dependencies(&self) -> Option<&HashMap<String, ModDepInfo>> {
         self.dependencies.as_ref()
     }
 
