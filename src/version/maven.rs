@@ -30,6 +30,14 @@ enum ComparatorHalf {
 }
 
 impl ComparatorHalf {
+    fn get(&self) -> Option<&Version> {
+        match self {
+            ComparatorHalf::Inclusive(version) | ComparatorHalf::Uninclusive(version) => {
+                version.as_ref()
+            }
+        }
+    }
+
     fn parse_left(s: &str) -> IResult<&str, Self> {
         preceded(tag("("), opt(Version::parse))
             .map(Self::Uninclusive)
@@ -46,6 +54,20 @@ impl ComparatorHalf {
 
     fn parse(s: &str) -> IResult<&str, Self> {
         Self::parse_left.or(Self::parse_right).parse(s)
+    }
+
+    /// Returns `true` if the comparator half is [`Inclusive`].
+    ///
+    /// [`Inclusive`]: ComparatorHalf::Inclusive
+    fn is_inclusive(&self) -> bool {
+        matches!(self, Self::Inclusive(..))
+    }
+
+    /// Returns `true` if the comparator half is [`Uninclusive`].
+    ///
+    /// [`Uninclusive`]: ComparatorHalf::Uninclusive
+    fn is_uninclusive(&self) -> bool {
+        matches!(self, Self::Uninclusive(..))
     }
 }
 
@@ -70,27 +92,21 @@ impl std::fmt::Display for Comparator {
             Comparator::Minimum(version) => write!(f, "{version}"),
             Comparator::Exact(version) => write!(f, "[{version}]"),
             Comparator::Pair { left, right } => {
-                match left {
-                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "[{version}"),
-                        None => write!(f, "["),
-                    },
-                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "({version}"),
-                        None => write!(f, "("),
-                    },
-                }?;
+                let left_bracket: char = if left.is_inclusive() { '[' } else { '(' };
+                let right_bracket: char = if right.is_uninclusive() { ')' } else { ']' };
 
-                match right {
-                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "{version}]"),
-                        None => write!(f, "]"),
-                    },
-                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "{version})"),
-                        None => write!(f, ")"),
-                    },
+                let (left_version, right_version) = (left.get(), right.get());
+
+                if left_version.is_none() && right_version.is_none() {
+                    unimplemented!("Both sides of comparator can't be None");
                 }
+
+                write!(
+                    f,
+                    "{left_bracket}{left_version},{right_version}{right_bracket}",
+                    left_version = left_version.map(Version::to_string).unwrap_or_default(),
+                    right_version = right_version.map(Version::to_string).unwrap_or_default(),
+                )
             }
         }
     }
