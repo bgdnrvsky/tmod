@@ -7,11 +7,11 @@ use std::{
 use anyhow::Context;
 use colored::Colorize;
 use loading::{Loading, Spinner};
-use reqwest as rq;
-use rq::blocking::Response;
-use rq::Url;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
+use ureq as rq;
+use ureq::Response;
+use url::Url;
 
 use crate::version::{MultiVersion, SingleVersion};
 use std::cell::OnceCell;
@@ -200,14 +200,10 @@ where
 
     /// Performs plain GET
     fn download(url: Url) -> anyhow::Result<Response> {
-        let mut req = rq::blocking::Request::new(rq::Method::GET, url);
-
-        // Even if we don't need it
-        let header_map = req.headers_mut();
-        header_map.insert("x-api-key", rq::header::HeaderValue::from_static(TOKEN));
-
-        let client = rq::blocking::Client::new();
-        client.execute(req).context("Getting response from API")
+        rq::get(url.as_str())
+            .set("x-api-key", TOKEN)
+            .call()
+            .context("Getting response from API")
     }
 
     fn loading_end(loading: Loading) {
@@ -262,7 +258,7 @@ impl Fetchable for MinecraftId {
             slug: String,
         }
 
-        let games: GamesList = response.json()?;
+        let games: GamesList = response.into_json()?;
 
         games
             .data
@@ -308,7 +304,7 @@ impl Fetchable for MinecraftVersions {
         }
 
         response
-            .json::<Data>()
+            .into_json::<Data>()
             .context("Parsing Minecraft versions")
             .map(|v| v.result)
     }
@@ -339,7 +335,7 @@ impl Fetchable for ForgeVersions {
         }
 
         response
-            .json::<Data>()
+            .into_json::<Data>()
             .context("Deserializing Forge versions")
             .map(|Data { result: [version] }| version)
     }
@@ -389,7 +385,7 @@ impl Fetchable for CurseForgeCategories {
             id: usize,
         }
 
-        let data = response.json::<Data>()?.data;
+        let data = response.into_json::<Data>()?.data;
 
         Ok(data
             .into_iter()
@@ -414,7 +410,7 @@ impl Fetchable for ModSearchList {
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
-        response.json().context("Deserializing searched mods")
+        response.into_json().context("Deserializing searched mods")
     }
 
     fn info() -> impl Display {
@@ -648,7 +644,7 @@ impl Fetchable for SearchedMod {
         }
 
         response
-            .json::<Data>()
+            .into_json::<Data>()
             .context("Deserializing response")
             .map(|data| data.data)
     }
