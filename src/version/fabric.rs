@@ -169,8 +169,9 @@ mod comparators {
     }
 
     #[test]
+    #[should_panic]
     fn invalid() {
-        assert!(Comparator::from_str("@1.1.1").is_err());
+        Comparator::from_str("@1.1.1").expect("Should fail because '@' is not a valid comparator");
     }
 }
 
@@ -179,12 +180,15 @@ mod multiversion {
     use super::*;
 
     #[test]
+    #[should_panic]
     fn empty() {
-        assert!(VersionReq::from_str("").is_err());
+        VersionReq::from_str("").expect("Should fail because empty string is not a valid version");
     }
 
     #[test]
-    fn basic() {
-        assert!(VersionReq::from_str(">=1.2.3, <1.8.0").is_ok());
+    fn basic() -> anyhow::Result<()> {
+        VersionReq::from_str(">=1.2.3, <1.8.0")?;
+
+        Ok(())
     }
 }

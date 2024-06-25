@@ -39,7 +39,7 @@ mod config_deserializer_tests {
             [loader]
             kind = "forge"
             version = "47.2.0"
-"#,
+            "#,
         );
 
         assert_eq!(
@@ -56,15 +56,14 @@ mod config_deserializer_tests {
     }
 
     #[test]
+    #[should_panic]
     fn missing() {
-        let config = toml::from_str::<Config>(
+        toml::from_str::<Config>(
             r#"
             [loader]
             kind = "forge"
             version = "47.2.0"
-"#,
-        );
-
-        assert!(config.is_err());
+            "#,
+        ).expect("Should fail since game version is missing");
     }
 }

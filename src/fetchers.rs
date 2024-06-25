@@ -743,25 +743,29 @@ pub struct ModFile {
 }
 
 #[cfg(test)]
-mod fetchers_test {
+mod fetchers {
     use crate::fetchers::*;
 
     #[test]
-    fn minecraft_id() {
-        assert!(MinecraftId::fetch(AdditionalFetchParameters::default()).is_ok());
+    fn minecraft_id() -> anyhow::Result<()> {
+        MinecraftId::fetch(AdditionalFetchParameters::default())?;
+
+        Ok(())
     }
 
     #[test]
-    fn minecraft_versions() {
-        assert!(
-            MinecraftVersions::fetch(AdditionalFetchParameters::default())
-                .is_ok_and(|versions| !versions.is_empty())
-        );
+    fn minecraft_versions() -> anyhow::Result<()> {
+        let versions = MinecraftVersions::fetch(AdditionalFetchParameters::default())?;
+        assert!(!versions.is_empty());
+
+        Ok(())
     }
 
     #[test]
-    fn forge_versions() {
-        assert!(ForgeVersions::fetch(AdditionalFetchParameters::default())
-            .is_ok_and(|map| map.keys().count() > 0));
+    fn forge_versions() -> anyhow::Result<()> {
+        let versions = ForgeVersions::fetch(AdditionalFetchParameters::default())?;
+        assert!(!versions.is_empty());
+
+        Ok(())
     }
 }

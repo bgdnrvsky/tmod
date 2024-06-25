@@ -46,38 +46,43 @@ impl TryFrom<usize> for Loaders {
 }
 
 #[cfg(test)]
-mod loader_deserializing_tests {
+mod loader_deserializing {
+    use anyhow::Context;
+
     use super::Loader;
 
     #[test]
-    fn valid() {
-        let config = toml::from_str::<Loader>(
+    fn valid() -> anyhow::Result<()> {
+        toml::from_str::<Loader>(
             r#"
             kind = "forge"
             version = "47.2.2"
-"#,
-        );
-
-        assert!(config.is_ok());
+            "#,
+        )
+        .map(|_| ())
+        .context("Failed to deserialize a valid loader config")
     }
 
     #[test]
-    fn missing_part() {
-        let config = toml::from_str::<Loader>(
+    #[should_panic]
+    fn missing_version() {
+        toml::from_str::<Loader>(
             r#"
             kind = "fabric"
-"#,
-        );
+            "#,
+        )
+        .expect("Missing version in loader config");
+    }
 
-        assert!(config.is_err());
-
-        let config = toml::from_str::<Loader>(
+    #[test]
+    #[should_panic]
+    fn missing_kind() {
+        toml::from_str::<Loader>(
             r#"
             version = "47.2.2"
-"#,
-        );
-
-        assert!(config.is_err());
+            "#,
+        )
+        .expect("Missing kind in loader config");
     }
 }
 
