@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
-    character::complete::one_of,
+    character::complete::{one_of, space0},
     combinator::opt,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
@@ -122,7 +122,7 @@ impl Comparator {
             .or(delimited(tag("["), Version::parse, tag("]")).map(Self::Exact))
             .or(separated_pair(
                 ComparatorHalf::parse_left,
-                tag(","),
+                terminated(tag(","), space0),
                 ComparatorHalf::parse_right,
             )
             .map(|(left, right)| Self::Pair { left, right }))
@@ -169,7 +169,7 @@ impl std::fmt::Display for VersionRange {
 
 impl VersionRange {
     fn parse(s: &str) -> IResult<&str, Self> {
-        separated_list1(tag(","), Comparator::parse)
+        separated_list1(terminated(tag(","), space0), Comparator::parse)
             .map(|comparators| Self { comparators })
             .parse(s)
     }
@@ -289,7 +289,13 @@ mod comparators {
         Ok(())
     }
 
-    // TODO: Add support for spaces after comma (e.g. '(1.0, 2.0)')
+    #[test]
+    fn double_comma_spaces() -> anyhow::Result<()> {
+        VersionRange::from_str("(1.0, 2.0)")?;
+        VersionRange::from_str("[1.0,            2.0]")?;
+
+        Ok(())
+    }
 
     #[test]
     fn mixed() -> anyhow::Result<()> {
