@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
 
+/// Various mod management systems for Minecraft
 #[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
 #[strum(ascii_case_insensitive)]
 pub enum Loaders {
@@ -14,6 +15,13 @@ pub enum Loaders {
     NeoForge,
 }
 
+/// Configuration unit for describing the mod management system used and its version
+///
+/// Example config:
+/// ```toml
+/// kind = "forge" # any case accepted (e.g. FORGE, FoRgE)
+/// version = "47.2.2" # Either semver version or maven version
+/// ```
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Loader {
     kind: Loaders,
