@@ -62,8 +62,9 @@ impl Display for MultiVersion {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum VersionItem {
+pub enum VersionItem {
     Numeric(usize),
+    /// e.g. snapshot or beta
     Textual(String),
 }
 
