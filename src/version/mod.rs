@@ -16,6 +16,7 @@ use fabric::VersionReq as FabricVersionRange;
 use maven::VersionRange as ForgeVersionRange;
 use serde::{Deserialize, Serialize};
 
+/// Describes a specific version following either maven's or semver's syntax
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq, Hash)]
 #[serde(untagged)]
 pub enum SingleVersion {
@@ -45,10 +46,13 @@ impl PartialEq<SingleVersion> for &SingleVersion {
     }
 }
 
+/// Describes a version range following either maven's or semver's syntax
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(untagged)]
 pub enum MultiVersion {
+    /// See: `https://semver.org`
     Fabric(FabricVersionRange),
+    /// See: `https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html`
     Forge(ForgeVersionRange),
 }
 
