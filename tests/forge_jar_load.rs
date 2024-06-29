@@ -17,8 +17,8 @@ fn load_forge() -> anyhow::Result<()> {
         SingleVersion::Forge(Version::from_str("1.9.0").unwrap())
     );
 
-    assert!(btp.dependencies().is_some_and(|deps| deps.is_empty()));
-    assert!(btp.incompatibilities().is_none());
+    assert!(btp.dependencies().is_empty());
+    assert!(btp.incompatibilities().is_empty());
 
     assert_eq!(
         btp.minecraft_version_needed(),
