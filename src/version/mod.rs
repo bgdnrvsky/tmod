@@ -52,6 +52,19 @@ pub enum MultiVersion {
     Forge(ForgeVersionRange),
 }
 
+impl PartialEq<MultiVersion> for &MultiVersion {
+    fn eq(&self, other: &MultiVersion) -> bool {
+        match (self, other) {
+            (MultiVersion::Fabric(a), MultiVersion::Fabric(b)) => a.eq(b),
+            (MultiVersion::Forge(a), MultiVersion::Forge(b)) => a.eq(b),
+            (MultiVersion::Fabric(_), MultiVersion::Forge(_))
+            | (MultiVersion::Forge(_), MultiVersion::Fabric(_)) => {
+                unimplemented!("Comparing version ranges of two different breeds is not yet implemented")
+            }
+        }
+    }
+}
+
 impl Display for MultiVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
