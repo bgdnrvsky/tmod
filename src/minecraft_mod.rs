@@ -144,7 +144,7 @@ impl Mod {
         }
 
         let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
-        let dependencies = fabric_json
+        let mut dependencies = fabric_json
             .depends
             .into_iter()
             .map(|(id, versions)| {
@@ -156,7 +156,7 @@ impl Mod {
                     },
                 )
             })
-            .collect();
+            .collect::<HashMap<_, _>>();
 
         let incompatibilities = fabric_json
             .breaks
@@ -167,11 +167,23 @@ impl Mod {
             })
             .collect();
 
+        let loader_version_needed = dependencies
+            .remove("fabricloader")
+            .map(|dep| dep.versions)
+            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
+
+        let minecraft_version_needed = dependencies
+            .remove("minecraft")
+            .map(|dep| dep.versions)
+            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
+
         Ok(Self {
             id: fabric_json.id,
             version: SingleVersion::Fabric(fabric_json.version),
             dependencies,
             incompatibilities,
+            loader_version_needed,
+            minecraft_version_needed,
         })
     }
 
