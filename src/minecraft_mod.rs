@@ -222,6 +222,14 @@ impl Mod {
     pub fn incompatibilities(&self) -> Option<&Vec<ModIncomp>> {
         self.incompatibilities.as_ref()
     }
+
+    pub fn loader_version_needed(&self) -> &MultiVersion {
+        &self.loader_version_needed
+    }
+
+    pub fn minecraft_version_needed(&self) -> &MultiVersion {
+        &self.minecraft_version_needed
+    }
 }
 
 #[cfg(test)]
