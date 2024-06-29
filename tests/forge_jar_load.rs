@@ -1,7 +1,10 @@
 use std::str::FromStr;
 
 use tmod::version::maven::Version;
-use tmod::{minecraft_mod::Mod, version::SingleVersion};
+use tmod::{
+    minecraft_mod::Mod,
+    version::{MultiVersion, SingleVersion},
+};
 
 #[test]
 fn load_forge() -> anyhow::Result<()> {
@@ -14,8 +17,18 @@ fn load_forge() -> anyhow::Result<()> {
         SingleVersion::Forge(Version::from_str("1.9.0").unwrap())
     );
 
-    assert!(btp.dependencies().is_some_and(|deps| deps.len() == 2));
+    assert!(btp.dependencies().is_some_and(|deps| deps.is_empty()));
     assert!(btp.incompatibilities().is_none());
+
+    assert_eq!(
+        btp.minecraft_version_needed(),
+        MultiVersion::Forge(tmod::version::maven::VersionRange::from_str("[1.20,1.21)")?)
+    );
+
+    assert_eq!(
+        btp.loader_version_needed(),
+        MultiVersion::Forge(tmod::version::maven::VersionRange::from_str("[46,)")?)
+    );
 
     Ok(())
 }
