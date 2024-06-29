@@ -12,10 +12,7 @@ use std::path::Path;
 use strum::EnumString;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ModDep {
-    #[serde(rename = "modId")]
-    id: String,
-    #[serde(rename = "versionRange")]
+pub struct ModDepInfo {
     versions: MultiVersion,
     mandatory: bool,
 }
@@ -26,13 +23,15 @@ pub struct ModIncomp {
     versions: MultiVersion,
 }
 
-// TODO: Extract minecraft and forge from dependencies and make it a separate field
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Mod {
     id: String,
     version: SingleVersion,
-    dependencies: Option<Vec<ModDep>>,
-    incompatibilities: Option<Vec<ModIncomp>>,
+    loader_version_needed: MultiVersion,
+    minecraft_version_needed: MultiVersion,
+    /// Key: name of the mod dep (slug), value: dep info
+    dependencies: HashMap<String, ModDepInfo>,
+    incompatibilities: Vec<ModIncomp>,
 }
 
 #[derive(Debug, Clone, EnumString, DeserializeFromStr, PartialEq, Eq)]
@@ -81,37 +80,52 @@ impl Mod {
             mandatory: bool,
         }
 
-        impl From<ForgeModDep> for ModDep {
-            fn from(forge_dep: ForgeModDep) -> Self {
-                Self {
-                    id: forge_dep.id,
-                    versions: MultiVersion::Forge(forge_dep.versions),
-                    mandatory: true,
-                }
-            }
-        }
-
-        let forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
+        let mut forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
             .map_err(|e| anyhow!("Error while deserializing toml file META-INF/mods.toml: {e}"))?;
 
         let mod_info = forge_toml.mods.into_iter().next().context(
             "The `mods` array in META-INF/mods.toml file \
                      is expected to have at least one (probably the only) entry",
         )?;
-        let mut all_dependencies = forge_toml.dependencies;
+
         let mod_id = mod_info.mod_id;
-        let mod_dependencies: Option<Vec<ModDep>> = all_dependencies.remove(&mod_id).map(|deps| {
-            deps.into_iter()
-                .filter(|dep| dep.side.is_needed_for_client())
-                .map(ModDep::from)
-                .collect()
-        });
+
+        let mod_deps = forge_toml
+            .dependencies
+            .remove(&mod_id)
+            .unwrap_or_else(Vec::new);
+
+        let mut dependencies = mod_deps
+            .into_iter()
+            .filter(|dependency| dependency.side.is_needed_for_client())
+            .map(|dependency| {
+                (
+                    dependency.id,
+                    ModDepInfo {
+                        versions: MultiVersion::Forge(dependency.versions),
+                        mandatory: dependency.mandatory,
+                    },
+                )
+            })
+            .collect::<HashMap<_, _>>();
+
+        let loader_version_needed = dependencies
+            .remove("forge")
+            .map(|dep| dep.versions)
+            .context("Jar mod config didn't specify the required loader version range")?;
+
+        let minecraft_version_needed = dependencies
+            .remove("minecraft")
+            .map(|dep| dep.versions)
+            .context("Jar mod config didn't specify the required loader version range")?;
 
         Ok(Self {
-            dependencies: mod_dependencies,
+            dependencies,
             id: mod_id,
             version: SingleVersion::Forge(mod_info.version),
-            incompatibilities: None,
+            incompatibilities: Vec::new(),
+            loader_version_needed,
+            minecraft_version_needed,
         })
     }
 
@@ -130,41 +144,46 @@ impl Mod {
         }
 
         let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
-        let dependencies: Option<Vec<ModDep>> = if fabric_json.depends.is_empty() {
-            None
-        } else {
-            Some(
-                fabric_json
-                    .depends
-                    .into_iter()
-                    .map(|(id, versions)| ModDep {
-                        id,
+        let mut dependencies = fabric_json
+            .depends
+            .into_iter()
+            .map(|(id, versions)| {
+                (
+                    id,
+                    ModDepInfo {
                         versions: MultiVersion::Fabric(versions),
                         mandatory: true,
-                    })
-                    .collect::<Vec<_>>(),
-            )
-        };
-        let incompatibilities: Option<Vec<ModIncomp>> = if fabric_json.breaks.is_empty() {
-            None
-        } else {
-            Some(
-                fabric_json
-                    .breaks
-                    .into_iter()
-                    .map(|(id, versions)| ModIncomp {
-                        id,
-                        versions: MultiVersion::Fabric(versions),
-                    })
-                    .collect(),
-            )
-        };
+                    },
+                )
+            })
+            .collect::<HashMap<_, _>>();
+
+        let incompatibilities = fabric_json
+            .breaks
+            .into_iter()
+            .map(|(id, versions)| ModIncomp {
+                id,
+                versions: MultiVersion::Fabric(versions),
+            })
+            .collect();
+
+        let loader_version_needed = dependencies
+            .remove("fabricloader")
+            .map(|dep| dep.versions)
+            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
+
+        let minecraft_version_needed = dependencies
+            .remove("minecraft")
+            .map(|dep| dep.versions)
+            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
 
         Ok(Self {
             id: fabric_json.id,
             version: SingleVersion::Fabric(fabric_json.version),
             dependencies,
             incompatibilities,
+            loader_version_needed,
+            minecraft_version_needed,
         })
     }
 
@@ -197,12 +216,20 @@ impl Mod {
         &self.version
     }
 
-    pub fn dependencies(&self) -> Option<&Vec<ModDep>> {
-        self.dependencies.as_ref()
+    pub fn dependencies(&self) -> &HashMap<String, ModDepInfo> {
+        &self.dependencies
     }
 
-    pub fn incompatibilities(&self) -> Option<&Vec<ModIncomp>> {
-        self.incompatibilities.as_ref()
+    pub fn incompatibilities(&self) -> &Vec<ModIncomp> {
+        &self.incompatibilities
+    }
+
+    pub fn loader_version_needed(&self) -> &MultiVersion {
+        &self.loader_version_needed
+    }
+
+    pub fn minecraft_version_needed(&self) -> &MultiVersion {
+        &self.minecraft_version_needed
     }
 }
 
