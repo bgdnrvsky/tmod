@@ -98,7 +98,7 @@ impl std::fmt::Display for Comparator {
                 let (left_version, right_version) = (left.get(), right.get());
 
                 if left_version.is_none() && right_version.is_none() {
-                    unimplemented!("Both sides of comparator can't be None");
+                    panic!("Both sides of comparator can't be None");
                 }
 
                 write!(
