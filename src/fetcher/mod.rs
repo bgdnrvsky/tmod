@@ -1,6 +1,6 @@
 mod items;
 mod mod_search;
-mod searcher;
+pub mod searcher;
 
 use std::{collections::HashMap, fmt::Display};
 
