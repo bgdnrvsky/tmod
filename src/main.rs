@@ -9,6 +9,7 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Add minecraft mod to the `pool`
     Add {
         #[command(subcommand)]
         subadd: AddCommandTypes,
@@ -17,13 +18,13 @@ enum Commands {
 
 #[derive(Debug, Subcommand)]
 enum AddCommandTypes {
+    /// By CurseForge link
     Url {
         #[arg(value_parser = valid_curse_forge_url)]
         curse_forge_url: url::Url,
     },
-    Id {
-        mod_id: usize,
-    },
+    /// By CurseForge mod id
+    Id { mod_id: usize },
 }
 
 fn valid_curse_forge_url(s: &str) -> Result<url::Url, String> {
