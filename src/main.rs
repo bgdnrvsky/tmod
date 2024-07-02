@@ -21,6 +21,9 @@ enum AddCommandTypes {
         #[arg(value_parser = valid_curse_forge_url)]
         curse_forge_url: url::Url,
     },
+    Id {
+        mod_id: usize,
+    },
 }
 
 fn valid_curse_forge_url(s: &str) -> Result<url::Url, String> {
@@ -74,6 +77,11 @@ fn main() -> anyhow::Result<()> {
             AddCommandTypes::Url { curse_forge_url } => {
                 let mod_name = extract_mod_name_from_url(&curse_forge_url);
                 let the_mod = searcher.search_mod_by_name(mod_name)?;
+
+                println!("{the_mod}");
+            }
+            AddCommandTypes::Id { mod_id } => {
+                let the_mod = searcher.search_mod_by_id(mod_id)?;
 
                 println!("{the_mod}");
             }
