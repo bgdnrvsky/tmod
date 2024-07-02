@@ -1,9 +1,9 @@
 use std::fmt::{Display, Formatter};
 
 use anyhow::Context;
+use colored::Colorize;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
-use colored::Colorize;
 
 use super::super::rq::*;
 use super::super::{Fetchable, Url};
@@ -173,6 +173,10 @@ pub struct SearchedMod {
 }
 
 impl Fetchable for SearchedMod {
+    fn info() -> impl Display {
+        "Fetching Minecraft mod"
+    }
+
     fn link() -> anyhow::Result<Url> {
         Url::parse("https://api.curseforge.com/v1/mods")
             .context("Parsing Url for fetching mod by it's id")
