@@ -1,4 +1,7 @@
+use std::{fs, path::Path};
+
 use crate::version::SingleVersion as Version;
+use anyhow::Context;
 use serde::Deserialize;
 
 use crate::loader::Loader;
@@ -19,6 +22,14 @@ pub struct Config {
     loader: Loader,
     /// Minecraft version target
     game_version: Version,
+}
+
+impl Config {
+    pub fn from_toml<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
+        let content = fs::read_to_string(path).context("Reading file content")?;
+
+        toml::from_str(&content).context("Deserializing")
+    }
 }
 
 #[cfg(test)]
