@@ -10,14 +10,14 @@ use anyhow::Context;
 use crate::config::Config;
 
 #[derive(Debug)]
-struct Pool {
+pub struct Pool {
     config: Config,
     remotes: ReadDir,
     locals: ReadDir,
 }
 
 impl Pool {
-    fn new(path: PathBuf) -> anyhow::Result<Self> {
+    pub fn new(path: PathBuf) -> anyhow::Result<Self> {
         // Check that the path is a directory
         if !fs::metadata(&path).context("Getting metadata")?.is_dir() {
             return Err(anyhow::anyhow!(
