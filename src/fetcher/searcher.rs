@@ -85,7 +85,8 @@ where
             Ok(item)
         } else {
             let item = T::fetch(f(fetcher)?)?;
-            assert!(self.cell.set(item).is_ok());
+            let prev = self.cell.set(item);
+            debug_assert!(prev.is_ok());
             Ok(self.cell.get().unwrap())
         }
     }
