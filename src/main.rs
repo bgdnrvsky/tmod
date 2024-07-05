@@ -77,9 +77,9 @@ fn main() -> anyhow::Result<()> {
         Commands::Add { subadd } => match subadd {
             AddCommandTypes::Url { curse_forge_url } => {
                 let mod_name = extract_mod_name_from_url(&curse_forge_url);
-                let the_mod = searcher.search_mod_by_name(mod_name)?;
+                let mod_list = searcher.search_mod_by_name(mod_name)?;
 
-                println!("{the_mod}");
+                println!("{mod_list}");
             }
             AddCommandTypes::Id { mod_id } => {
                 let the_mod = searcher.search_mod_by_id(mod_id)?;

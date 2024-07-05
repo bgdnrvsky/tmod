@@ -48,4 +48,8 @@ impl ModSearchList {
     pub fn mods(&self) -> &BTreeSet<Reverse<SearchedMod>> {
         &self.mods
     }
+
+    pub fn count(&self) -> usize {
+        self.mods.len()
+    }
 }
