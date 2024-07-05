@@ -110,11 +110,32 @@ impl Fetchable for MinecraftVersions {
     }
 }
 
+/// Mapping from a Minecraft version to available Forge versions
+///
 /// Example JSON:
 /// ```json
-/// {
-///     "result":["47.1.0", "47.0.50", "47.0.49", "47.0.46", "..."]
-/// }
+///{
+///  "result": [
+///    {
+///     "1.21": [
+///       "51.0.21",
+///       "51.0.18",
+///       "51.0.17",
+///       "51.0.16",
+///       "51.0.15",
+///       "51.0.13",
+///       "51.0.8",
+///       "51.0.7",
+///       "51.0.6",
+///       "51.0.5",
+///       "51.0.4",
+///       "51.0.3",
+///       "51.0.1",
+///       "51.0.0"
+///      ]
+///    }
+///  ]
+///}
 /// ```
 pub type ForgeVersions = HashMap<SingleVersion, Vec<SingleVersion>>;
 
