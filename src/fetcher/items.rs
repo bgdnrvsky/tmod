@@ -85,7 +85,7 @@ impl Fetchable for MinecraftId {
 ///     ]
 /// }
 /// ```
-pub type MinecraftVersions = Vec<MultiVersion>;
+pub type MinecraftVersions = Vec<SingleVersion>;
 
 impl Fetchable for MinecraftVersions {
     fn link() -> anyhow::Result<Url> {
@@ -96,7 +96,7 @@ impl Fetchable for MinecraftVersions {
     fn parse(response: Response) -> anyhow::Result<Self> {
         #[derive(Debug, Clone, Deserialize)]
         struct Data {
-            result: Vec<MultiVersion>,
+            result: Vec<SingleVersion>,
         }
 
         response
