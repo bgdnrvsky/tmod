@@ -79,7 +79,15 @@ fn main() -> anyhow::Result<()> {
                 let mod_name = extract_mod_name_from_url(&curse_forge_url);
                 let mod_list = searcher.search_mod_by_name(mod_name)?;
 
-                println!("{mod_list}");
+                if mod_list.count() == 0 {
+                    println!("Sorry, no mod {mod_name} found");
+                } else {
+                    if mod_list.count() > 1 {
+                        println!("Multiple mods found! Printing them:");
+                    }
+
+                    println!("{mod_list}");
+                }
             }
             AddCommandTypes::Id { mod_id } => {
                 let the_mod = searcher.search_mod_by_id(mod_id)?;
