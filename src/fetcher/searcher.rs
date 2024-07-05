@@ -49,7 +49,7 @@ impl Searcher {
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
         let mut params = AdditionalFetchParameters::default();
-        params.add_segment(format!("{id}"));
+        params.add_segment(id.to_string());
         SearchedMod::fetch(params)
     }
 
