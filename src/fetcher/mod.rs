@@ -104,10 +104,10 @@ impl AdditionalFetchParameters {
         }
     }
 
-    pub fn add_query(&mut self, query: (impl AsRef<str>, impl AsRef<str>)) {
+    pub fn add_query(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) {
         self.queries
             .get_or_insert_with(HashMap::new)
-            .insert(query.0.as_ref().to_string(), query.1.as_ref().to_string());
+            .insert(name.as_ref().to_string(), value.as_ref().to_string());
     }
 
     pub fn with_segments(self, segments: Vec<String>) -> Self {

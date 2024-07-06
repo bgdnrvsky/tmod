@@ -40,8 +40,8 @@ impl Searcher {
         self.curseforge_categories.get_or_fetch(self, |fetcher| {
             let mut params = AdditionalFetchParameters::default();
 
-            params.add_query(("gameId", fetcher.minecraft_id()?.to_string()));
-            params.add_query(("classesOnly", "true"));
+            params.add_query("gameId", fetcher.minecraft_id()?.to_string());
+            params.add_query("classesOnly", "true");
 
             Ok(params)
         })
@@ -60,9 +60,9 @@ impl Searcher {
             .get("Mods")
             .context("No category `Mods` found")?;
 
-        params.add_query(("gameId", self.minecraft_id()?.to_string()));
-        params.add_query(("classId", mods_class.to_string()));
-        params.add_query(("slug", slug));
+        params.add_query("gameId", self.minecraft_id()?.to_string());
+        params.add_query("classId", mods_class.to_string());
+        params.add_query("slug", slug);
 
         ModSearchList::fetch(params)
     }
