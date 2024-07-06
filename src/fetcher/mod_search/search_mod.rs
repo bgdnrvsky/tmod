@@ -161,6 +161,7 @@ pub struct SearchedMod {
     id: usize,
     name: String,
     slug: String,
+    summary: String,
     links: ModLinks,
     #[serde(rename = "thumbsUpCount")]
     thumbs_up_count: usize,
