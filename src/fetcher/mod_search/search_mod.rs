@@ -230,10 +230,10 @@ impl Display for SearchedMod {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "(id: {mod_id}) {mod_name} - {website_url}",
+            "(id: {mod_id}) {mod_name} - {summary}",
             mod_id = self.id.to_string().bold(),
             mod_name = self.name.blue(),
-            website_url = self.links.website().as_str().italic()
+            summary = self.summary.italic()
         )
     }
 }
