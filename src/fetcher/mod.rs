@@ -83,7 +83,7 @@ where
 }
 
 #[derive(Debug, Clone, Default)]
-struct AdditionalFetchParameters {
+pub struct AdditionalFetchParameters {
     queries: Option<HashMap<String, String>>,
     path_segments: Option<Vec<String>>,
 }
