@@ -230,9 +230,9 @@ impl Display for SearchedMod {
         write!(
             f,
             "(id: {mod_id}) {mod_name} - {website_url}",
-            mod_id = format!("{}", self.id).bold(),
+            mod_id = self.id.to_string().bold(),
             mod_name = self.name.blue(),
-            website_url = format!("{}", self.links.website()).italic()
+            website_url = self.links.website().as_str().italic()
         )
     }
 }
