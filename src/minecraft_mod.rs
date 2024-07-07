@@ -55,8 +55,8 @@ impl Mod {
             .get("META-INF/mods.toml")
             .context("No META-INF/mods.toml in jar file while processing forge mod")?;
 
-        #[derive(Debug, Deserialize)]
         /// META-INF/mods.toml file
+        #[derive(Debug, Deserialize)]
         struct ForgeToml {
             mods: [ModInfo; 1],
             dependencies: HashMap<String, Vec<ForgeModDep>>,
