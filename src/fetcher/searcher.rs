@@ -48,9 +48,7 @@ impl Searcher {
     }
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
-        let mut params = AdditionalFetchParameters::default();
-        params.add_segment(id.to_string());
-        SearchedMod::fetch(params)
+        SearchedMod::fetch(AdditionalFetchParameters::default().with_segment(id.to_string()))
     }
 
     pub fn search_mod_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
