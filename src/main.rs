@@ -25,6 +25,8 @@ enum AddCommandTypes {
     },
     /// By CurseForge mod id
     Id { mod_id: usize },
+    /// Using mod's 'slug'
+    Slug { mod_slug: String },
 }
 
 fn valid_curse_forge_url(s: &str) -> Result<url::Url, String> {
@@ -91,6 +93,11 @@ fn main() -> anyhow::Result<()> {
             }
             AddCommandTypes::Id { mod_id } => {
                 let the_mod = searcher.search_mod_by_id(mod_id)?;
+
+                println!("{the_mod}");
+            }
+            AddCommandTypes::Slug { mod_slug } => {
+                let the_mod = searcher.search_mod_by_name(mod_slug)?;
 
                 println!("{the_mod}");
             }
