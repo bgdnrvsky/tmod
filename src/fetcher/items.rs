@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Display};
 use anyhow::Context;
 use serde::Deserialize;
 
-use crate::version::{MultiVersion, SingleVersion};
+use crate::version::SingleVersion;
 
 use super::{rq::*, Fetchable, Url};
 

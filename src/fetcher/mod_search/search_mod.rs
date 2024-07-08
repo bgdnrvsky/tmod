@@ -160,6 +160,7 @@ use super::mod_links::ModLinks;
 pub struct SearchedMod {
     id: usize,
     name: String,
+    #[allow(unused)]
     slug: String,
     summary: String,
     links: ModLinks,
@@ -262,6 +263,7 @@ impl Ord for SearchedMod {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModFileIndex {
+    #[allow(unused)]
     #[serde(rename = "fileId")]
     id: usize,
 }
@@ -269,9 +271,11 @@ pub struct ModFileIndex {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModDependency {
     #[serde(rename = "modId")]
+    #[allow(unused)]
     id: usize,
 }
 
+#[allow(unused)]
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModFile {
