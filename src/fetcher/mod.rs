@@ -97,11 +97,9 @@ impl AdditionalFetchParameters {
         self.queries.as_ref()
     }
 
-    pub fn with_queries(self, queries: HashMap<String, String>) -> Self {
-        Self {
-            queries: Some(queries),
-            path_segments: self.path_segments,
-        }
+    pub fn with_query(mut self, name: impl AsRef<str>, value: impl AsRef<str>) -> Self {
+        self.add_query(name, value);
+        self
     }
 
     pub fn add_query(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) {
@@ -110,11 +108,9 @@ impl AdditionalFetchParameters {
             .insert(name.as_ref().to_string(), value.as_ref().to_string());
     }
 
-    pub fn with_segments(self, segments: Vec<String>) -> Self {
-        Self {
-            queries: self.queries,
-            path_segments: Some(segments),
-        }
+    pub fn with_segment(mut self, segment: String) -> Self {
+        self.add_segment(segment);
+        self
     }
 
     pub fn add_segment(&mut self, segment: String) {
