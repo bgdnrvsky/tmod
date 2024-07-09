@@ -162,6 +162,33 @@ impl Fetchable for ForgeVersions {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct FabricVersions(pub Vec<SingleVersion>);
+
+impl Fetchable for FabricVersions {
+    fn link() -> anyhow::Result<Url> {
+        Url::parse("https://meta.fabricmc.net/v2/versions/loader")
+            .context("Url parsing for getting fabric versions")
+    }
+
+    fn parse(response: Response) -> anyhow::Result<Self> {
+        #[derive(Debug, Clone, Deserialize)]
+        struct Item {
+            version: SingleVersion,
+        }
+
+        response
+            .into_json::<Vec<Item>>()
+            .context("Deserializing Fabric versions")
+            .map(|items| items.into_iter().map(|item| item.version).collect())
+            .map(Self)
+    }
+
+    fn info() -> impl Display {
+        "Getting Fabric versions"
+    }
+}
+
 /// Example JSON:
 /// ```json
 /// {

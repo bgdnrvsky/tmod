@@ -148,4 +148,12 @@ mod fetchers {
 
         Ok(())
     }
+
+    #[test]
+    fn fabric_versions() -> anyhow::Result<()> {
+        let versions = FabricVersions::fetch(AdditionalFetchParameters::default())?;
+        assert!(!versions.0.is_empty());
+
+        Ok(())
+    }
 }

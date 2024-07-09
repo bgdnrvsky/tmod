@@ -13,6 +13,7 @@ pub struct Searcher {
     minecraft_id: FetchCell<MinecraftId>,
     minecraft_versions: FetchCell<MinecraftVersions>,
     forge_versions: FetchCell<ForgeVersions>,
+    fabric_versions: FetchCell<FabricVersions>,
     curseforge_categories: FetchCell<CurseForgeCategories>,
 }
 
@@ -33,6 +34,11 @@ impl Searcher {
 
     pub fn forge_versions(&self) -> anyhow::Result<&ForgeVersions> {
         self.forge_versions
+            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
+    }
+
+    pub fn fabric_versions(&self) -> anyhow::Result<&FabricVersions> {
+        self.fabric_versions
             .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
     }
 
