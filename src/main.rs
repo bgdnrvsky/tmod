@@ -97,9 +97,9 @@ fn main() -> anyhow::Result<()> {
                 println!("{the_mod}");
             }
             AddCommandTypes::Slug { mod_slug } => {
-                let the_mod = searcher.search_mod_by_name(mod_slug)?;
+                let mod_list = searcher.search_mod_by_name(mod_slug)?;
 
-                println!("{the_mod}");
+                println!("{mod_list}");
             }
         },
     }
