@@ -34,7 +34,7 @@ impl Fetchable for ModSearchList {
 
 impl Display for ModSearchList {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if self.mods.len() == 0 {
+        if self.mods.is_empty() {
             return write!(f, "No mods were found!");
         }
 
