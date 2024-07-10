@@ -170,12 +170,12 @@ impl Mod {
         let loader_version_needed = dependencies
             .remove("fabricloader")
             .map(|dep| dep.versions)
-            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
+            .unwrap_or_else(|| MultiVersion::Fabric(crate::version::fabric::VersionReq::any()));
 
         let minecraft_version_needed = dependencies
             .remove("minecraft")
             .map(|dep| dep.versions)
-            .unwrap_or_else(|| unimplemented!("Implement any version for multiversion"));
+            .unwrap_or_else(|| MultiVersion::Fabric(crate::version::fabric::VersionReq::any()));
 
         Ok(Self {
             id: fabric_json.id,
