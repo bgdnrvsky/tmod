@@ -18,20 +18,20 @@ use strum_macros::Display;
 
 #[derive(Display, Debug, Clone, PartialEq, Eq, SerializeDisplay, DeserializeFromStr)]
 enum Op {
-    #[strum(to_string = "=")]
-    Exact,
-    #[strum(to_string = ">")]
-    Greater,
-    #[strum(to_string = ">=")]
-    GreaterEq,
-    #[strum(to_string = "<")]
-    Less,
-    #[strum(to_string = "<=")]
-    LessEq,
-    #[strum(to_string = "~")]
-    Tilde,
-    #[strum(to_string = "^")]
-    Caret,
+    #[strum(to_string = "={0}")]
+    Exact(super::FabricVersion),
+    #[strum(to_string = ">{0}")]
+    Greater(super::FabricVersion),
+    #[strum(to_string = ">={0}")]
+    GreaterEq(super::FabricVersion),
+    #[strum(to_string = "<{0}")]
+    Less(super::FabricVersion),
+    #[strum(to_string = "<={0}")]
+    LessEq(super::FabricVersion),
+    #[strum(to_string = "~{0}")]
+    Tilde(super::FabricVersion),
+    #[strum(to_string = "^{0}")]
+    Caret(super::FabricVersion),
     #[strum(to_string = "*")]
     Wildcard,
 }
@@ -39,13 +39,14 @@ enum Op {
 impl Op {
     fn parse(s: &str) -> IResult<&str, Self> {
         alt((
-            tag(">=").map(|_| Self::GreaterEq),
-            tag("<=").map(|_| Self::LessEq),
-            tag("=").map(|_| Self::Exact),
-            tag(">").map(|_| Self::Greater),
-            tag("<").map(|_| Self::Less),
-            tag("~").map(|_| Self::Tilde),
-            tag("^").map(|_| Self::Caret),
+            pair(tag(">="), super::FabricVersion::parse)
+                .map(|(_, version)| Self::GreaterEq(version)),
+            pair(tag("<="), super::FabricVersion::parse).map(|(_, version)| Self::LessEq(version)),
+            pair(tag("="), super::FabricVersion::parse).map(|(_, version)| Self::Exact(version)),
+            pair(tag(">"), super::FabricVersion::parse).map(|(_, version)| Self::Greater(version)),
+            pair(tag("<"), super::FabricVersion::parse).map(|(_, version)| Self::Less(version)),
+            pair(tag("~"), super::FabricVersion::parse).map(|(_, version)| Self::Tilde(version)),
+            pair(tag("^"), super::FabricVersion::parse).map(|(_, version)| Self::Caret(version)),
             tag("*").map(|_| Self::Wildcard),
         ))
         .parse(s)
@@ -70,17 +71,11 @@ impl FromStr for Op {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 struct Comparator {
     operation: Op,
-    version: super::FabricVersion,
 }
 
 impl Comparator {
     fn parse(s: &str) -> IResult<&str, Self> {
-        pair(Op::parse, super::FabricVersion::parse)
-            .map(|(op, version)| Self {
-                operation: op,
-                version,
-            })
-            .parse(s)
+        Op::parse.map(|operation| Self { operation }).parse(s)
     }
 }
 
@@ -101,12 +96,7 @@ impl FromStr for Comparator {
 
 impl Display for Comparator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{op}{version}",
-            op = self.operation,
-            version = self.version
-        )
+        write!(f, "{op}", op = self.operation,)
     }
 }
 
@@ -188,6 +178,14 @@ mod multiversion {
     #[test]
     fn basic() -> anyhow::Result<()> {
         VersionReq::from_str(">=1.2.3, <1.8.0")?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn any() -> anyhow::Result<()> {
+        VersionReq::from_str("*")?;
+        VersionReq::from_str(">=1.2.3, *")?;
 
         Ok(())
     }
