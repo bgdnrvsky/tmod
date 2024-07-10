@@ -112,6 +112,14 @@ impl VersionReq {
             .map(|comps| Self { comparators: comps })
             .parse(s)
     }
+
+    pub fn any() -> VersionReq {
+        Self {
+            comparators: vec![Comparator {
+                operation: Op::Wildcard,
+            }],
+        }
+    }
 }
 
 impl FromStr for VersionReq {
