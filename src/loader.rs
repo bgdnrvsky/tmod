@@ -1,9 +1,11 @@
+use crate::version::SingleVersion;
+
 use anyhow::anyhow;
-use semver::VersionReq;
 use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use strum::{Display, EnumString};
 
+/// Various mod management systems for Minecraft
 #[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
 #[strum(ascii_case_insensitive)]
 pub enum Loaders {
@@ -13,23 +15,23 @@ pub enum Loaders {
     NeoForge,
 }
 
+/// Configuration unit for describing the mod management system used and its version
+///
+/// Example config:
+/// ```toml
+/// kind = "forge" # any case accepted (e.g. FORGE, FoRgE)
+/// version = "47.2.2" # Either semver version or maven version
+/// ```
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub struct Loader {
     kind: Loaders,
-    version: VersionReq,
+    version: SingleVersion,
 }
 
 impl Loader {
-    pub fn explicit(kind: Loaders, version: VersionReq) -> anyhow::Result<Self> {
+    pub fn new(kind: Loaders, version: SingleVersion) -> anyhow::Result<Self> {
         // TODO: Check if version exists
         Ok(Self { kind, version })
-    }
-
-    pub fn any(kind: Loaders) -> Self {
-        Self {
-            kind,
-            version: VersionReq::STAR,
-        }
     }
 }
 
@@ -52,38 +54,43 @@ impl TryFrom<usize> for Loaders {
 }
 
 #[cfg(test)]
-mod loader_deserializing_tests {
+mod loader_deserializing {
+    use anyhow::Context;
+
     use super::Loader;
 
     #[test]
-    fn valid() {
-        let config = toml::from_str::<Loader>(
+    fn valid() -> anyhow::Result<()> {
+        toml::from_str::<Loader>(
             r#"
             kind = "forge"
             version = "47.2.2"
-"#,
-        );
-
-        assert!(config.is_ok());
+            "#,
+        )
+        .map(|_| ())
+        .context("Failed to deserialize a valid loader config")
     }
 
     #[test]
-    fn missing_part() {
-        let config = toml::from_str::<Loader>(
+    #[should_panic]
+    fn missing_version() {
+        toml::from_str::<Loader>(
             r#"
             kind = "fabric"
-"#,
-        );
+            "#,
+        )
+        .expect("Missing version in loader config");
+    }
 
-        assert!(config.is_err());
-
-        let config = toml::from_str::<Loader>(
+    #[test]
+    #[should_panic]
+    fn missing_kind() {
+        toml::from_str::<Loader>(
             r#"
             version = "47.2.2"
-"#,
-        );
-
-        assert!(config.is_err());
+            "#,
+        )
+        .expect("Missing kind in loader config");
     }
 }
 

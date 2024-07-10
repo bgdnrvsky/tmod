@@ -4,7 +4,7 @@ use anyhow::anyhow;
 use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
-    character::complete::one_of,
+    character::complete::{one_of, space0},
     combinator::opt,
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
@@ -30,6 +30,14 @@ enum ComparatorHalf {
 }
 
 impl ComparatorHalf {
+    fn get(&self) -> Option<&Version> {
+        match self {
+            ComparatorHalf::Inclusive(version) | ComparatorHalf::Uninclusive(version) => {
+                version.as_ref()
+            }
+        }
+    }
+
     fn parse_left(s: &str) -> IResult<&str, Self> {
         preceded(tag("("), opt(Version::parse))
             .map(Self::Uninclusive)
@@ -46,6 +54,20 @@ impl ComparatorHalf {
 
     fn parse(s: &str) -> IResult<&str, Self> {
         Self::parse_left.or(Self::parse_right).parse(s)
+    }
+
+    /// Returns `true` if the comparator half is [`Inclusive`].
+    ///
+    /// [`Inclusive`]: ComparatorHalf::Inclusive
+    fn is_inclusive(&self) -> bool {
+        matches!(self, Self::Inclusive(..))
+    }
+
+    /// Returns `true` if the comparator half is [`Uninclusive`].
+    ///
+    /// [`Uninclusive`]: ComparatorHalf::Uninclusive
+    fn is_uninclusive(&self) -> bool {
+        matches!(self, Self::Uninclusive(..))
     }
 }
 
@@ -70,27 +92,21 @@ impl std::fmt::Display for Comparator {
             Comparator::Minimum(version) => write!(f, "{version}"),
             Comparator::Exact(version) => write!(f, "[{version}]"),
             Comparator::Pair { left, right } => {
-                match left {
-                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "[{version}"),
-                        None => write!(f, "["),
-                    },
-                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "({version}"),
-                        None => write!(f, "("),
-                    },
-                }?;
+                let left_bracket: char = if left.is_inclusive() { '[' } else { '(' };
+                let right_bracket: char = if right.is_uninclusive() { ')' } else { ']' };
 
-                match right {
-                    ComparatorHalf::Inclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "{version}]"),
-                        None => write!(f, "]"),
-                    },
-                    ComparatorHalf::Uninclusive(maybe_version) => match maybe_version {
-                        Some(version) => write!(f, "{version})"),
-                        None => write!(f, ")"),
-                    },
+                let (left_version, right_version) = (left.get(), right.get());
+
+                if left_version.is_none() && right_version.is_none() {
+                    panic!("Both sides of comparator can't be None");
                 }
+
+                write!(
+                    f,
+                    "{left_bracket}{left_version},{right_version}{right_bracket}",
+                    left_version = left_version.map(Version::to_string).unwrap_or_default(),
+                    right_version = right_version.map(Version::to_string).unwrap_or_default(),
+                )
             }
         }
     }
@@ -106,7 +122,7 @@ impl Comparator {
             .or(delimited(tag("["), Version::parse, tag("]")).map(Self::Exact))
             .or(separated_pair(
                 ComparatorHalf::parse_left,
-                tag(","),
+                terminated(tag(","), space0),
                 ComparatorHalf::parse_right,
             )
             .map(|(left, right)| Self::Pair { left, right }))
@@ -153,7 +169,7 @@ impl std::fmt::Display for VersionRange {
 
 impl VersionRange {
     fn parse(s: &str) -> IResult<&str, Self> {
-        separated_list1(tag(","), Comparator::parse)
+        separated_list1(terminated(tag(","), space0), Comparator::parse)
             .map(|comparators| Self { comparators })
             .parse(s)
     }
@@ -221,19 +237,25 @@ mod comparator_halves {
     use super::*;
 
     #[test]
-    fn inclusive() {
-        assert!(ComparatorHalf::from_str("[1.20")
-            .is_ok_and(|version| matches!(version, ComparatorHalf::Inclusive(_))));
-        assert!(ComparatorHalf::from_str("1.20]")
-            .is_ok_and(|version| matches!(version, ComparatorHalf::Inclusive(_))));
+    fn inclusive() -> anyhow::Result<()> {
+        let left = ComparatorHalf::from_str("[1.20")?;
+        assert!(left.is_inclusive());
+
+        let right = ComparatorHalf::from_str("1.20]")?;
+        assert!(right.is_inclusive());
+
+        Ok(())
     }
 
     #[test]
-    fn uninclusive() {
-        assert!(ComparatorHalf::from_str("(1.20")
-            .is_ok_and(|version| matches!(version, ComparatorHalf::Uninclusive(_))));
-        assert!(ComparatorHalf::from_str("1.20)")
-            .is_ok_and(|version| matches!(version, ComparatorHalf::Uninclusive(_))));
+    fn uninclusive() -> anyhow::Result<()> {
+        let left = ComparatorHalf::from_str("(1.20")?;
+        assert!(left.is_uninclusive());
+
+        let right = ComparatorHalf::from_str("1.20)")?;
+        assert!(right.is_uninclusive());
+
+        Ok(())
     }
 }
 
@@ -242,34 +264,52 @@ mod comparators {
     use super::*;
 
     #[test]
-    fn no_commas() {
-        assert!(VersionRange::from_str("1.0").is_ok());
-        assert!(VersionRange::from_str("[1.0]").is_ok());
+    fn no_commas() -> anyhow::Result<()> {
+        VersionRange::from_str("1.0")?;
+        VersionRange::from_str("[1.0]")?;
+
+        Ok(())
     }
 
     #[test]
-    fn commas_halves() {
-        assert!(VersionRange::from_str("(,1.0]").is_ok());
-        assert!(VersionRange::from_str("(,1.0)").is_ok());
-        assert!(VersionRange::from_str("[1.0,)").is_ok());
-        assert!(VersionRange::from_str("(1.0,)").is_ok());
+    fn commas_halves() -> anyhow::Result<()> {
+        VersionRange::from_str("(,1.0]")?;
+        VersionRange::from_str("(,1.0)")?;
+        VersionRange::from_str("[1.0,)")?;
+        VersionRange::from_str("(1.0,)")?;
+
+        Ok(())
     }
 
     #[test]
-    fn commas_double() {
-        assert!(VersionRange::from_str("(1.0,2.0)").is_ok());
-        assert!(VersionRange::from_str("[1.0,2.0]").is_ok());
+    fn commas_double() -> anyhow::Result<()> {
+        VersionRange::from_str("(1.0,2.0)")?;
+        VersionRange::from_str("[1.0,2.0]")?;
+
+        Ok(())
     }
 
     #[test]
-    fn mixed() {
-        assert!(VersionRange::from_str("[1.20,1.21)").is_ok());
+    fn double_comma_spaces() -> anyhow::Result<()> {
+        VersionRange::from_str("(1.0, 2.0)")?;
+        VersionRange::from_str("[1.0,            2.0]")?;
+
+        Ok(())
     }
 
     #[test]
-    fn multiple() {
-        assert!(VersionRange::from_str("(,1.0],[1.2,)").is_ok());
-        assert!(VersionRange::from_str("(,1.1),(1.1,)").is_ok());
+    fn mixed() -> anyhow::Result<()> {
+        VersionRange::from_str("[1.20,1.21)")?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn multiple() -> anyhow::Result<()> {
+        VersionRange::from_str("(,1.0],[1.2,)")?;
+        VersionRange::from_str("(,1.1),(1.1,)")?;
+
+        Ok(())
     }
 }
 
