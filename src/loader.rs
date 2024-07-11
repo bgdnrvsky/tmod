@@ -29,8 +29,30 @@ pub struct Loader {
 }
 
 impl Loader {
-    pub fn new(kind: Loaders, version: SingleVersion) -> anyhow::Result<Self> {
-        // TODO: Check if version exists
+    pub fn new_unchecked(kind: Loaders, version: SingleVersion) -> Self {
+        Self { kind, version }
+    }
+
+    pub fn new_checked(
+        kind: Loaders,
+        version: SingleVersion,
+        searcher: crate::fetcher::searcher::Searcher,
+    ) -> anyhow::Result<Self> {
+        // Check if version exists
+        let exists: bool = match version {
+            SingleVersion::Forge(_) => searcher
+                .forge_versions()?
+                .values()
+                .any(|versions| versions.contains(&version)),
+            SingleVersion::Fabric(_) => searcher.fabric_versions()?.0.contains(&version),
+        };
+
+        if !exists {
+            return Err(anyhow::anyhow!(
+                "The version {version} of the loader doesn't exist"
+            ));
+        }
+
         Ok(Self { kind, version })
     }
 }

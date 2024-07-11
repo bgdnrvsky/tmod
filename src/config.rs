@@ -45,11 +45,10 @@ mod config_deserializer_tests {
         assert_eq!(
             config,
             Ok(Config {
-                loader: Loader::new(
+                loader: Loader::new_unchecked(
                     Loaders::Forge,
                     SingleVersion::Forge(Version::from_str("47.2.0").unwrap())
-                )
-                .unwrap(),
+                ),
                 game_version: SingleVersion::Forge(Version::from_str("1.20.1").unwrap())
             })
         );
@@ -64,6 +63,7 @@ mod config_deserializer_tests {
             kind = "forge"
             version = "47.2.0"
             "#,
-        ).expect("Should fail since game version is missing");
+        )
+        .expect("Should fail since game version is missing");
     }
 }
