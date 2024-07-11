@@ -12,7 +12,6 @@ use nom::{
     sequence::{pair, terminated},
     Finish, IResult, Parser,
 };
-use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum_macros::Display;
 
@@ -63,61 +62,27 @@ impl FromStr for Op {
                 eprintln!("The Op was parsed, but remaining input is left: `{rest}`");
                 Ok(item)
             }
-            Err(e) => Err(anyhow::anyhow!("Error while parsing Comparator: {e}")),
+            Err(e) => Err(anyhow::anyhow!("Error while parsing Operation: {e}")),
         }
-    }
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-struct Comparator {
-    operation: Op,
-}
-
-impl Comparator {
-    fn parse(s: &str) -> IResult<&str, Self> {
-        Op::parse.map(|operation| Self { operation }).parse(s)
-    }
-}
-
-impl FromStr for Comparator {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok(("", item)) => Ok(item),
-            Ok((rest, item)) => {
-                eprintln!("The Comparator was parsed, but remaining input is left: `{rest}`");
-                Ok(item)
-            }
-            Err(e) => Err(anyhow::anyhow!("Error while parsing Comparator: {e}")),
-        }
-    }
-}
-
-impl Display for Comparator {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{op}", op = self.operation,)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, DeserializeFromStr, SerializeDisplay, Eq)]
 pub struct VersionReq {
-    comparators: Vec<Comparator>,
+    operations: Vec<Op>,
 }
 
 impl VersionReq {
     fn parse(s: &str) -> IResult<&str, Self> {
         let separator = terminated(tag(","), space0);
-        separated_list1(separator, Comparator::parse)
-            .map(|comps| Self { comparators: comps })
+        separated_list1(separator, Op::parse)
+            .map(|operations| Self { operations })
             .parse(s)
     }
 
     pub fn any() -> VersionReq {
         Self {
-            comparators: vec![Comparator {
-                operation: Op::Wildcard,
-            }],
+            operations: vec![Op::Wildcard],
         }
     }
 }
@@ -132,7 +97,7 @@ impl FromStr for VersionReq {
                 eprintln!("The VersionReq was parsed, but remaining input is left: `{rest}`");
                 Ok(item)
             }
-            Err(e) => Err(anyhow::anyhow!("Error while parsing Comparator: {e}")),
+            Err(e) => Err(anyhow::anyhow!("Error while parsing VersionReq: {e}")),
         }
     }
 }
@@ -142,34 +107,34 @@ impl Display for VersionReq {
         write!(
             f,
             "{}",
-            self.comparators
+            self.operations
                 .iter()
-                .map(|comp| comp.to_string())
+                .map(|op| op.to_string())
                 .join(",")
         )
     }
 }
 
 #[cfg(test)]
-mod comparators {
+mod operations {
     use super::*;
 
     #[test]
     fn valid() {
-        assert!(Comparator::from_str("=1.1.1").is_ok());
-        assert!(Comparator::from_str(">1.1.1").is_ok());
-        assert!(Comparator::from_str(">=1.1.1").is_ok());
-        assert!(Comparator::from_str("<1.1.1").is_ok());
-        assert!(Comparator::from_str("<=1.1.1").is_ok());
-        assert!(Comparator::from_str("~1.1.1").is_ok());
-        assert!(Comparator::from_str("^1.1.1").is_ok());
-        assert!(Comparator::from_str("*1.1.1").is_ok());
+        assert!(Op::from_str("=1.1.1").is_ok());
+        assert!(Op::from_str(">1.1.1").is_ok());
+        assert!(Op::from_str(">=1.1.1").is_ok());
+        assert!(Op::from_str("<1.1.1").is_ok());
+        assert!(Op::from_str("<=1.1.1").is_ok());
+        assert!(Op::from_str("~1.1.1").is_ok());
+        assert!(Op::from_str("^1.1.1").is_ok());
+        assert!(Op::from_str("*1.1.1").is_ok());
     }
 
     #[test]
     #[should_panic]
     fn invalid() {
-        Comparator::from_str("@1.1.1").expect("Should fail because '@' is not a valid comparator");
+        Op::from_str("@1.1.1").expect("Should fail because '@' is not a valid operation");
     }
 }
 
