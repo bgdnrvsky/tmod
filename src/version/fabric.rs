@@ -9,7 +9,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::space0,
     multi::separated_list1,
-    sequence::{pair, terminated},
+    sequence::{preceded, terminated},
     Finish, IResult, Parser,
 };
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -37,15 +37,15 @@ enum Op {
 
 impl Op {
     fn parse(s: &str) -> IResult<&str, Self> {
+        let paired_op = |input| preceded(tag(input), super::FabricVersion::parse);
         alt((
-            pair(tag(">="), super::FabricVersion::parse)
-                .map(|(_, version)| Self::GreaterEq(version)),
-            pair(tag("<="), super::FabricVersion::parse).map(|(_, version)| Self::LessEq(version)),
-            pair(tag("="), super::FabricVersion::parse).map(|(_, version)| Self::Exact(version)),
-            pair(tag(">"), super::FabricVersion::parse).map(|(_, version)| Self::Greater(version)),
-            pair(tag("<"), super::FabricVersion::parse).map(|(_, version)| Self::Less(version)),
-            pair(tag("~"), super::FabricVersion::parse).map(|(_, version)| Self::Tilde(version)),
-            pair(tag("^"), super::FabricVersion::parse).map(|(_, version)| Self::Caret(version)),
+            paired_op(">=").map(Self::GreaterEq),
+            paired_op("<=").map(Self::LessEq),
+            paired_op("=").map(Self::Exact),
+            paired_op(">").map(Self::Greater),
+            paired_op("<").map(Self::Less),
+            paired_op("~").map(Self::Tilde),
+            paired_op("^").map(Self::Caret),
             tag("*").map(|_| Self::Wildcard),
         ))
         .parse(s)
@@ -107,10 +107,7 @@ impl Display for VersionReq {
         write!(
             f,
             "{}",
-            self.operations
-                .iter()
-                .map(|op| op.to_string())
-                .join(",")
+            self.operations.iter().map(|op| op.to_string()).join(",")
         )
     }
 }
