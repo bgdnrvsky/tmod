@@ -206,6 +206,10 @@ impl SearchedMod {
         &self.name
     }
 
+    pub fn slug(&self) -> &str {
+        &self.slug
+    }
+
     pub fn thumbs_up_count(&self) -> usize {
         self.thumbs_up_count
     }
@@ -224,6 +228,10 @@ impl SearchedMod {
 
     pub fn links(&self) -> &ModLinks {
         &self.links
+    }
+
+    pub fn summary(&self) -> &str {
+        &self.summary
     }
 }
 
