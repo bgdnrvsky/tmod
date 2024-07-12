@@ -1,3 +1,4 @@
+use anyhow::{bail, ensure};
 use clap::{Parser, Subcommand};
 use tmod::fetcher::searcher::Searcher;
 
@@ -29,38 +30,27 @@ enum AddCommandTypes {
     Slug { mod_slug: String },
 }
 
-fn valid_curse_forge_url(s: &str) -> Result<url::Url, String> {
-    let url = url::Url::parse(s).map_err(|e| e.to_string())?;
+fn valid_curse_forge_url(s: &str) -> anyhow::Result<url::Url> {
+    let url = url::Url::parse(s)?;
 
-    if !url
-        .host_str()
-        .is_some_and(|host| host == "www.curseforge.com")
-    {
-        return Err(String::from(
-            "The url's host is expected to be `www.curseforge.com`",
-        ));
-    }
+    ensure!(
+        url.host_str()
+            .is_some_and(|host| host == "www.curseforge.com"),
+        "The url's host is expected to be `www.curseforge.com`"
+    );
 
     if let Some(mut segments) = url.path_segments() {
-        if !segments.next().is_some_and(|seg| seg == "minecraft") {
-            return Err(String::from(
-                "First in curseforge url should be `minecraft`",
-            ));
-        }
-
-        if !segments.next().is_some_and(|seg| seg == "mc-mods") {
-            return Err(String::from(
-                "Second segment in curseforge url should be `mc-mods`",
-            ));
-        }
-
-        if segments.next().is_none() {
-            return Err(String::from("Missing mod name in segments"));
-        }
+        ensure!(
+            segments.next().is_some_and(|seg| seg == "minecraft"),
+            "First in curseforge url should be `minecraft`"
+        );
+        ensure!(
+            segments.next().is_some_and(|seg| seg == "mc-mods"),
+            "Second segment in curseforge url should be `mc-mods`"
+        );
+        ensure!(segments.next().is_none(), "Missing mod name in segments");
     } else {
-        return Err(String::from(
-            "The url's path segments didn't match the expected `/minecraft/mc-mods/MOD_NAME`",
-        ));
+        bail!("The url's path segments didn't match the expected `/minecraft/mc-mods/MOD_NAME`")
     }
 
     Ok(url)
