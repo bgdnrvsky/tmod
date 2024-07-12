@@ -56,11 +56,6 @@ fn valid_curse_forge_url(s: &str) -> anyhow::Result<url::Url> {
     Ok(url)
 }
 
-fn extract_mod_name_from_url(url: &url::Url) -> &str {
-    // Given that `valid_curse_forge_url` didn't fail, no need for checking anymore
-    url.path_segments().unwrap().nth(2).unwrap()
-}
-
 fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
     let searcher = Searcher::new();
@@ -68,7 +63,8 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Commands::Add { subadd } => match subadd {
             AddCommandTypes::Url { curse_forge_url } => {
-                let mod_name = extract_mod_name_from_url(&curse_forge_url);
+                // Given that `valid_curse_forge_url` didn't fail, no need for checking anymore
+                let mod_name = curse_forge_url.path_segments().unwrap().nth(2).unwrap();
                 let mod_list = searcher.search_mod_by_name(mod_name)?;
 
                 println!("{mod_list}");
