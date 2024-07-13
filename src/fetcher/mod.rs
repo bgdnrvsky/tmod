@@ -1,5 +1,5 @@
 mod items;
-mod mod_search;
+pub mod mod_search;
 pub mod searcher;
 
 use std::{collections::HashMap, fmt::Display};
