@@ -302,7 +302,7 @@ pub mod display_builder {
     use super::SearchedMod;
 
     /// Options to include while printing the searched mod
-    #[derive(Debug, Clone, Copy, Default)]
+    #[derive(Debug, Clone, Copy)]
     pub struct DisplayOptions {
         with_id: bool,
         with_name: bool,
@@ -314,6 +314,23 @@ pub mod display_builder {
         with_files: bool,
         with_indexes: bool,
         links_options: Option<ModLinksDisplayOptions>,
+    }
+
+    impl Default for DisplayOptions {
+        fn default() -> Self {
+            Self {
+                with_id: true,
+                with_name: true,
+                with_slug: false,
+                with_summary: true,
+                with_links: false,
+                with_thumbs_up_count: false,
+                with_download_count: false,
+                with_files: false,
+                with_indexes: false,
+                links_options: None,
+            }
+        }
     }
 
     #[derive(Debug, Clone)]
