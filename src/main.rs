@@ -66,18 +66,23 @@ fn main() -> anyhow::Result<()> {
                 // Given that `valid_curse_forge_url` didn't fail, no need for checking anymore
                 let mod_name = curse_forge_url.path_segments().unwrap().nth(2).unwrap();
                 let mod_list = searcher.search_mod_by_name(mod_name)?;
+                let builder =
+                    tmod::fetcher::mod_search::search_list::display_builder::ModSearchListDisplayBuilder::new(&mod_list);
 
-                println!("{mod_list}");
+                println!("{}", builder);
             }
             AddCommandTypes::Id { mod_id } => {
                 let the_mod = searcher.search_mod_by_id(mod_id)?;
+                let builder = tmod::fetcher::mod_search::search_mod::display_builder::SearchedModDisplayBuilder::new(&the_mod);
 
-                println!("{the_mod}");
+                println!("{}", builder);
             }
             AddCommandTypes::Slug { mod_slug } => {
                 let mod_list = searcher.search_mod_by_name(mod_slug)?;
+                let builder =
+                    tmod::fetcher::mod_search::search_list::display_builder::ModSearchListDisplayBuilder::new(&mod_list);
 
-                println!("{mod_list}");
+                println!("{}", builder);
             }
         },
     }
