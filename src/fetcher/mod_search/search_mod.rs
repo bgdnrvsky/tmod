@@ -294,13 +294,14 @@ pub struct ModFile {
 pub mod display_builder {
     use colored::Colorize;
     use std::fmt::Display;
-    use url::Url;
+
+    use crate::fetcher::mod_search::mod_links::display_builder::ModLinksDisplayBuilder;
 
     use super::SearchedMod;
 
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Default)]
-    struct DisplayOptions {
+    struct DisplayOptions<'a> {
         with_id: bool,
         with_name: bool,
         with_slug: bool,
@@ -310,12 +311,13 @@ pub mod display_builder {
         with_download_count: bool,
         with_files: bool,
         with_indexes: bool,
+        links_options: Option<ModLinksDisplayBuilder<'a>>,
     }
 
     #[derive(Debug, Clone)]
     pub struct SearchedModDisplayBuilder<'a> {
         the_mod: &'a SearchedMod,
-        options: DisplayOptions,
+        options: DisplayOptions<'a>,
     }
 
     impl<'a> SearchedModDisplayBuilder<'a> {
@@ -373,6 +375,11 @@ pub mod display_builder {
             self.options.with_indexes = value;
             self
         }
+
+        pub fn with_links_builder(mut self, builder: ModLinksDisplayBuilder<'a>) -> Self {
+            self.options.links_options = Some(builder);
+            self
+        }
     }
 
     impl Display for SearchedModDisplayBuilder<'_> {
@@ -413,44 +420,8 @@ pub mod display_builder {
                 write!(f, "- {}", self.the_mod.summary().italic())?;
             }
 
-            if self.options.with_links {
-                let links = self.the_mod.links();
-                let no_source = || "No source!";
-
-                // NOTE: Maybe builder for links as well?
-
-                writeln!(f, "\nLinks:")?;
-                writeln!(f, "Website: {}", links.website().as_str().italic())?;
-
-                writeln!(
-                    f,
-                    "Wiki: {}",
-                    links
-                        .wiki_url()
-                        .map(Url::as_str)
-                        .unwrap_or_else(no_source)
-                        .italic()
-                )?;
-
-                writeln!(
-                    f,
-                    "Issues: {}",
-                    links
-                        .issues_url()
-                        .map(Url::as_str)
-                        .unwrap_or_else(no_source)
-                        .italic()
-                )?;
-
-                writeln!(
-                    f,
-                    "Source: {}",
-                    links
-                        .source_url()
-                        .map(Url::as_str)
-                        .unwrap_or_else(no_source)
-                        .italic()
-                )?;
+            if let Some(links_builder) = &self.options.links_options {
+                links_builder.fmt(f)?;
             }
 
             if self.options.with_files {
