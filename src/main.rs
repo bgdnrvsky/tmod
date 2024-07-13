@@ -48,7 +48,7 @@ fn valid_curse_forge_url(s: &str) -> anyhow::Result<url::Url> {
             segments.next().is_some_and(|seg| seg == "mc-mods"),
             "Second segment in curseforge url should be `mc-mods`"
         );
-        ensure!(segments.next().is_none(), "Missing mod name in segments");
+        ensure!(segments.next().is_some(), "Missing mod name in segments");
     } else {
         bail!("The url's path segments didn't match the expected `/minecraft/mc-mods/MOD_NAME`")
     }
