@@ -1,7 +1,6 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::Display;
 
 use anyhow::Context;
-use colored::Colorize;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
 
@@ -233,17 +232,9 @@ impl SearchedMod {
     pub fn summary(&self) -> &str {
         &self.summary
     }
-}
 
-impl Display for SearchedMod {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "(id: {mod_id}) {mod_name} - {summary}",
-            mod_id = self.id.to_string().bold(),
-            mod_name = self.name.blue(),
-            summary = self.summary.italic()
-        )
+    pub fn display(&self) -> display_builder::SearchedModDisplayBuilder {
+        display_builder::SearchedModDisplayBuilder::new(self)
     }
 }
 
@@ -298,4 +289,183 @@ pub struct ModFile {
     #[serde(rename = "gameVersions")]
     versions: Vec<String>,
     dependencies: Vec<ModDependency>,
+}
+
+pub mod display_builder {
+    use colored::Colorize;
+    use std::fmt::Display;
+    use url::Url;
+
+    use super::SearchedMod;
+
+    /// Options to include while printing the searched mod
+    #[derive(Debug, Clone, Default)]
+    struct DisplayOptions {
+        with_id: bool,
+        with_name: bool,
+        with_slug: bool,
+        with_summary: bool,
+        with_links: bool,
+        with_thumbs_up_count: bool,
+        with_download_count: bool,
+        with_files: bool,
+        with_indexes: bool,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct SearchedModDisplayBuilder<'a> {
+        the_mod: &'a SearchedMod,
+        options: DisplayOptions,
+    }
+
+    impl<'a> SearchedModDisplayBuilder<'a> {
+        pub fn new(searched_mod: &'a SearchedMod) -> Self {
+            Self {
+                the_mod: searched_mod,
+                options: DisplayOptions::default(),
+            }
+            .with_id(true)
+            .with_name(true)
+            .with_summary(true)
+        }
+
+        pub fn with_id(mut self, value: bool) -> Self {
+            self.options.with_id = value;
+            self
+        }
+
+        pub fn with_name(mut self, value: bool) -> Self {
+            self.options.with_name = value;
+            self
+        }
+
+        pub fn with_slug(mut self, value: bool) -> Self {
+            self.options.with_slug = value;
+            self
+        }
+
+        pub fn with_summary(mut self, value: bool) -> Self {
+            self.options.with_summary = value;
+            self
+        }
+
+        pub fn with_links(mut self, value: bool) -> Self {
+            self.options.with_links = value;
+            self
+        }
+
+        pub fn with_thumbs_up_count(mut self, value: bool) -> Self {
+            self.options.with_thumbs_up_count = value;
+            self
+        }
+
+        pub fn with_download_count(mut self, value: bool) -> Self {
+            self.options.with_download_count = value;
+            self
+        }
+
+        pub fn with_files(mut self, value: bool) -> Self {
+            self.options.with_files = value;
+            self
+        }
+
+        pub fn with_indexes(mut self, value: bool) -> Self {
+            self.options.with_indexes = value;
+            self
+        }
+    }
+
+    impl Display for SearchedModDisplayBuilder<'_> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            if self.options.with_id {
+                write!(f, "(id: {}) ", self.the_mod.id().to_string().bold())?;
+            }
+
+            if self.options.with_name {
+                write!(f, "{} ", self.the_mod.name().blue())?;
+            }
+
+            if self.options.with_slug {
+                write!(f, "(slug: {}) ", self.the_mod.slug().bold())?;
+            }
+
+            if self.options.with_thumbs_up_count || self.options.with_download_count {
+                write!(f, "[")?;
+            }
+
+            if self.options.with_thumbs_up_count {
+                write!(f, "likes: {}", self.the_mod.thumbs_up_count)?;
+            }
+
+            if self.options.with_thumbs_up_count && self.options.with_download_count {
+                write!(f, ", ")?;
+            }
+
+            if self.options.with_download_count {
+                write!(f, "downloads: {}", self.the_mod.download_count)?;
+            }
+
+            if self.options.with_thumbs_up_count || self.options.with_download_count {
+                write!(f, "] ")?;
+            }
+
+            if self.options.with_summary {
+                write!(f, "- {}", self.the_mod.summary().italic())?;
+            }
+
+            if self.options.with_links {
+                let links = self.the_mod.links();
+                let no_source = || "No source!";
+
+                // NOTE: Maybe builder for links as well?
+
+                writeln!(f, "\nLinks:")?;
+                writeln!(f, "Website: {}", links.website().as_str().italic())?;
+
+                writeln!(
+                    f,
+                    "Wiki: {}",
+                    links
+                        .wiki_url()
+                        .map(Url::as_str)
+                        .unwrap_or_else(no_source)
+                        .italic()
+                )?;
+
+                writeln!(
+                    f,
+                    "Issues: {}",
+                    links
+                        .issues_url()
+                        .map(Url::as_str)
+                        .unwrap_or_else(no_source)
+                        .italic()
+                )?;
+
+                writeln!(
+                    f,
+                    "Source: {}",
+                    links
+                        .source_url()
+                        .map(Url::as_str)
+                        .unwrap_or_else(no_source)
+                        .italic()
+                )?;
+            }
+
+            if self.options.with_files {
+                writeln!(f, "Files:")?;
+
+                write!(f, "{:?}", self.the_mod.files)?;
+            }
+
+            if self.options.with_indexes {
+                writeln!(f, "Indexes:")?;
+
+                write!(f, "{:?}", self.the_mod.indexes)?;
+            }
+
+            Ok(())
+        }
+    }
 }
