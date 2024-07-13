@@ -51,8 +51,8 @@ pub mod display_builder {
     use super::ModLinks;
 
     /// Options to include while printing the searched mod
-    #[derive(Debug, Clone, Default)]
-    struct DisplayOptions {
+    #[derive(Debug, Clone, Copy, Default)]
+    pub struct DisplayOptions {
         with_website: bool,
         with_wiki: bool,
         with_issues: bool,
@@ -75,6 +75,13 @@ pub mod display_builder {
             .with_website(true)
             .with_wiki(true)
             .with_issues(true)
+        }
+
+        pub fn with_options(links: &'a ModLinks, options: DisplayOptions) -> Self {
+            Self {
+                the_links: links,
+                options,
+            }
         }
 
         pub fn with_website(mut self, value: bool) -> Self {

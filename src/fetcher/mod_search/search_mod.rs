@@ -295,13 +295,15 @@ pub mod display_builder {
     use colored::Colorize;
     use std::fmt::Display;
 
-    use crate::fetcher::mod_search::mod_links::display_builder::ModLinksDisplayBuilder;
+    use crate::fetcher::mod_search::mod_links::display_builder::{
+        DisplayOptions as ModLinksDisplayOptions, ModLinksDisplayBuilder,
+    };
 
     use super::SearchedMod;
 
     /// Options to include while printing the searched mod
-    #[derive(Debug, Clone, Default)]
-    struct DisplayOptions<'a> {
+    #[derive(Debug, Clone, Copy, Default)]
+    pub struct DisplayOptions {
         with_id: bool,
         with_name: bool,
         with_slug: bool,
@@ -311,13 +313,13 @@ pub mod display_builder {
         with_download_count: bool,
         with_files: bool,
         with_indexes: bool,
-        links_options: Option<ModLinksDisplayBuilder<'a>>,
+        links_options: Option<ModLinksDisplayOptions>,
     }
 
     #[derive(Debug, Clone)]
     pub struct SearchedModDisplayBuilder<'a> {
         the_mod: &'a SearchedMod,
-        options: DisplayOptions<'a>,
+        options: DisplayOptions,
     }
 
     impl<'a> SearchedModDisplayBuilder<'a> {
@@ -329,6 +331,13 @@ pub mod display_builder {
             .with_id(true)
             .with_name(true)
             .with_summary(true)
+        }
+
+        pub fn with_options(searched_mod: &'a SearchedMod, options: DisplayOptions) -> Self {
+            Self {
+                the_mod: searched_mod,
+                options,
+            }
         }
 
         pub fn with_id(mut self, value: bool) -> Self {
@@ -376,8 +385,8 @@ pub mod display_builder {
             self
         }
 
-        pub fn with_links_builder(mut self, builder: ModLinksDisplayBuilder<'a>) -> Self {
-            self.options.links_options = Some(builder);
+        pub fn with_links_builder(mut self, options: ModLinksDisplayOptions) -> Self {
+            self.options.links_options = Some(options);
             self
         }
     }
@@ -420,8 +429,11 @@ pub mod display_builder {
                 write!(f, "- {}", self.the_mod.summary().italic())?;
             }
 
-            if let Some(links_builder) = &self.options.links_options {
-                links_builder.fmt(f)?;
+            if let Some(links_options) = self.options.links_options {
+                let builder =
+                    ModLinksDisplayBuilder::with_options(self.the_mod.links(), links_options);
+
+                builder.fmt(f)?;
             }
 
             if self.options.with_files {
