@@ -63,8 +63,11 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Commands::Add { subadd } => match subadd {
             AddCommandTypes::Url { curse_forge_url } => {
-                // Given that `valid_curse_forge_url` didn't fail, no need for checking anymore
-                let mod_name = curse_forge_url.path_segments().unwrap().nth(2).unwrap();
+                let mod_name = curse_forge_url
+                    .path_segments()
+                    .and_then(|mut segs| segs.nth(2))
+                    .expect("Given that `valid_curse_forge_url` didn't fail, no need for checking anymore");
+
                 let mod_list = searcher.search_mod_by_name(mod_name)?;
                 let builder =
                     tmod::fetcher::mod_search::search_list::display_builder::ModSearchListDisplayBuilder::new(&mod_list);
