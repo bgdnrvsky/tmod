@@ -233,8 +233,8 @@ impl SearchedMod {
         &self.summary
     }
 
-    pub fn display(&self) -> display_builder::SearchedModDisplayBuilder {
-        display_builder::SearchedModDisplayBuilder::new(self)
+    pub fn display(&self) -> display_builder::DisplayBuilder {
+        display_builder::DisplayBuilder::new(self)
     }
 }
 
@@ -296,14 +296,14 @@ pub mod display_builder {
     use std::fmt::Display;
 
     use crate::fetcher::mod_search::mod_links::display_builder::{
-        DisplayOptions as ModLinksDisplayOptions, ModLinksDisplayBuilder,
+        DisplayBuilder as DisplayBuilderLinks, DisplayBuilderOptions as DisplayOptionsLinks,
     };
 
     use super::SearchedMod;
 
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Copy)]
-    pub struct DisplayOptions {
+    pub struct DisplayBuilderOptions {
         with_id: bool,
         with_name: bool,
         with_slug: bool,
@@ -313,10 +313,10 @@ pub mod display_builder {
         with_download_count: bool,
         with_files: bool,
         with_indexes: bool,
-        links_options: Option<ModLinksDisplayOptions>,
+        links_options: Option<DisplayOptionsLinks>,
     }
 
-    impl Default for DisplayOptions {
+    impl Default for DisplayBuilderOptions {
         fn default() -> Self {
             Self {
                 with_id: true,
@@ -334,23 +334,23 @@ pub mod display_builder {
     }
 
     #[derive(Debug, Clone)]
-    pub struct SearchedModDisplayBuilder<'a> {
+    pub struct DisplayBuilder<'a> {
         the_mod: &'a SearchedMod,
-        options: DisplayOptions,
+        options: DisplayBuilderOptions,
     }
 
-    impl<'a> SearchedModDisplayBuilder<'a> {
+    impl<'a> DisplayBuilder<'a> {
         pub fn new(searched_mod: &'a SearchedMod) -> Self {
             Self {
                 the_mod: searched_mod,
-                options: DisplayOptions::default(),
+                options: DisplayBuilderOptions::default(),
             }
             .with_id(true)
             .with_name(true)
             .with_summary(true)
         }
 
-        pub fn with_options(searched_mod: &'a SearchedMod, options: DisplayOptions) -> Self {
+        pub fn with_options(searched_mod: &'a SearchedMod, options: DisplayBuilderOptions) -> Self {
             Self {
                 the_mod: searched_mod,
                 options,
@@ -402,13 +402,13 @@ pub mod display_builder {
             self
         }
 
-        pub fn with_links_builder(mut self, options: ModLinksDisplayOptions) -> Self {
+        pub fn with_links_builder(mut self, options: DisplayOptionsLinks) -> Self {
             self.options.links_options = Some(options);
             self
         }
     }
 
-    impl Display for SearchedModDisplayBuilder<'_> {
+    impl Display for DisplayBuilder<'_> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             if self.options.with_id {
                 write!(f, "(id: {}) ", self.the_mod.id().to_string().bold())?;
@@ -448,7 +448,7 @@ pub mod display_builder {
 
             if let Some(links_options) = self.options.links_options {
                 let builder =
-                    ModLinksDisplayBuilder::with_options(self.the_mod.links(), links_options);
+                    DisplayBuilderLinks::with_options(self.the_mod.links(), links_options);
 
                 builder.fmt(f)?;
             }

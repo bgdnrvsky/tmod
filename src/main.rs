@@ -61,33 +61,35 @@ fn main() -> anyhow::Result<()> {
     let searcher = Searcher::new();
 
     match cli.command {
-        Commands::Add { subadd } => match subadd {
-            AddCommandTypes::Url { curse_forge_url } => {
-                let mod_name = curse_forge_url
+        Commands::Add { subadd } => {
+            match subadd {
+                AddCommandTypes::Url { curse_forge_url } => {
+                    let mod_name = curse_forge_url
                     .path_segments()
                     .and_then(|mut segs| segs.nth(2))
                     .expect("Given that `valid_curse_forge_url` didn't fail, no need for checking anymore");
 
-                let mod_list = searcher.search_mod_by_name(mod_name)?;
-                let builder =
-                    tmod::fetcher::mod_search::search_list::display_builder::ModSearchListDisplayBuilder::new(&mod_list);
+                    let mod_list = searcher.search_mod_by_name(mod_name)?;
+                    let builder =
+                    tmod::fetcher::mod_search::search_list::display_builder::DisplayBuilder::new(&mod_list);
 
-                println!("{}", builder);
-            }
-            AddCommandTypes::Id { mod_id } => {
-                let the_mod = searcher.search_mod_by_id(mod_id)?;
-                let builder = tmod::fetcher::mod_search::search_mod::display_builder::SearchedModDisplayBuilder::new(&the_mod);
+                    println!("{}", builder);
+                }
+                AddCommandTypes::Id { mod_id } => {
+                    let the_mod = searcher.search_mod_by_id(mod_id)?;
+                    let builder = tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilder::new(&the_mod);
 
-                println!("{}", builder);
-            }
-            AddCommandTypes::Slug { mod_slug } => {
-                let mod_list = searcher.search_mod_by_name(mod_slug)?;
-                let builder =
-                    tmod::fetcher::mod_search::search_list::display_builder::ModSearchListDisplayBuilder::new(&mod_list);
+                    println!("{}", builder);
+                }
+                AddCommandTypes::Slug { mod_slug } => {
+                    let mod_list = searcher.search_mod_by_name(mod_slug)?;
+                    let builder =
+                    tmod::fetcher::mod_search::search_list::display_builder::DisplayBuilder::new(&mod_list);
 
-                println!("{}", builder);
+                    println!("{}", builder);
+                }
             }
-        },
+        }
     }
 
     Ok(())

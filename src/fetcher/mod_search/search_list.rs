@@ -37,8 +37,8 @@ impl ModSearchList {
         self.mods.len()
     }
 
-    pub fn display(&self) -> display_builder::ModSearchListDisplayBuilder {
-        display_builder::ModSearchListDisplayBuilder::new(self)
+    pub fn display(&self) -> display_builder::DisplayBuilder {
+        display_builder::DisplayBuilder::new(self)
     }
 }
 
@@ -46,34 +46,34 @@ pub mod display_builder {
     use std::{cmp::Reverse, fmt::Display};
 
     use crate::fetcher::mod_search::search_mod::display_builder::{
-        DisplayOptions as SearchedModDisplayOptions, SearchedModDisplayBuilder,
+        DisplayBuilder as DisplayBuilderMod, DisplayBuilderOptions as DisplayOptionsMod,
     };
 
     use super::ModSearchList;
 
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Copy, Default)]
-    pub struct DisplayOptions {
+    pub struct DisplayBuilderOptions {
         with_count: bool,
-        searched_mod_options: Option<SearchedModDisplayOptions>,
+        searched_mod_options: Option<DisplayOptionsMod>,
     }
 
     #[derive(Debug, Clone)]
-    pub struct ModSearchListDisplayBuilder<'a> {
+    pub struct DisplayBuilder<'a> {
         the_list: &'a ModSearchList,
-        options: DisplayOptions,
+        options: DisplayBuilderOptions,
     }
 
-    impl<'a> ModSearchListDisplayBuilder<'a> {
+    impl<'a> DisplayBuilder<'a> {
         pub fn new(list: &'a ModSearchList) -> Self {
             Self {
                 the_list: list,
-                options: DisplayOptions::default(),
+                options: DisplayBuilderOptions::default(),
             }
             .with_count(true)
         }
 
-        pub fn with_options(list: &'a ModSearchList, options: DisplayOptions) -> Self {
+        pub fn with_options(list: &'a ModSearchList, options: DisplayBuilderOptions) -> Self {
             Self {
                 the_list: list,
                 options,
@@ -85,13 +85,13 @@ pub mod display_builder {
             self
         }
 
-        pub fn with_searched_mod_builder(mut self, builder: SearchedModDisplayOptions) -> Self {
+        pub fn with_searched_mod_builder(mut self, builder: DisplayOptionsMod) -> Self {
             self.options.searched_mod_options = Some(builder);
             self
         }
     }
 
-    impl Display for ModSearchListDisplayBuilder<'_> {
+    impl Display for DisplayBuilder<'_> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             if self.options.with_count {
                 if self.the_list.count() == 0 {
@@ -107,7 +107,7 @@ pub mod display_builder {
                 writeln!(
                     f,
                     "- {}",
-                    SearchedModDisplayBuilder::with_options(mmod, search_mod_options)
+                    DisplayBuilderMod::with_options(mmod, search_mod_options)
                 )?;
             }
 

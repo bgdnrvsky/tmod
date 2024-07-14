@@ -38,8 +38,8 @@ impl ModLinks {
         self.source.as_ref()
     }
 
-    pub fn display(&self) -> display_builder::ModLinksDisplayBuilder {
-        display_builder::ModLinksDisplayBuilder::new(self)
+    pub fn display(&self) -> display_builder::DisplayBuilder {
+        display_builder::DisplayBuilder::new(self)
     }
 }
 
@@ -52,7 +52,7 @@ pub mod display_builder {
 
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Copy, Default)]
-    pub struct DisplayOptions {
+    pub struct DisplayBuilderOptions {
         with_website: bool,
         with_wiki: bool,
         with_issues: bool,
@@ -60,16 +60,16 @@ pub mod display_builder {
     }
 
     #[derive(Debug, Clone)]
-    pub struct ModLinksDisplayBuilder<'a> {
+    pub struct DisplayBuilder<'a> {
         the_links: &'a ModLinks,
-        options: DisplayOptions,
+        options: DisplayBuilderOptions,
     }
 
-    impl<'a> ModLinksDisplayBuilder<'a> {
+    impl<'a> DisplayBuilder<'a> {
         pub fn new(links: &'a ModLinks) -> Self {
             Self {
                 the_links: links,
-                options: DisplayOptions::default(),
+                options: DisplayBuilderOptions::default(),
             }
             .with_source(true)
             .with_website(true)
@@ -77,7 +77,7 @@ pub mod display_builder {
             .with_issues(true)
         }
 
-        pub fn with_options(links: &'a ModLinks, options: DisplayOptions) -> Self {
+        pub fn with_options(links: &'a ModLinks, options: DisplayBuilderOptions) -> Self {
             Self {
                 the_links: links,
                 options,
@@ -105,7 +105,7 @@ pub mod display_builder {
         }
     }
 
-    impl Display for ModLinksDisplayBuilder<'_> {
+    impl Display for DisplayBuilder<'_> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             let the = self.the_links;
             let no_source = || "No source!";
