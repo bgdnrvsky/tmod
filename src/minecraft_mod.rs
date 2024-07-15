@@ -139,7 +139,9 @@ impl Mod {
         struct FabricJson {
             id: String,
             version: crate::version::fabric::Version,
+            #[serde(default)]
             depends: HashMap<String, crate::version::fabric::VersionReq>,
+            #[serde(default)]
             breaks: HashMap<String, crate::version::fabric::VersionReq>,
         }
 
