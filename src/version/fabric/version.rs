@@ -1,3 +1,6 @@
+use std::fmt::Display;
+
+use itertools::Itertools;
 use nom::{
     branch::alt,
     character::complete::{char, digit1, one_of},
@@ -16,6 +19,22 @@ pub struct Version {
     patch: usize,
     pre: Option<PreRelease>,
     build: Option<BuildMetadata>,
+}
+
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)?;
+
+        if let Some(pre_release) = &self.pre {
+            write!(f, "-{}", pre_release)?;
+        }
+
+        if let Some(build_meta) = &self.build {
+            write!(f, "+{}", build_meta)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl PartialEq for Version {
@@ -109,6 +128,15 @@ enum Identifier {
     Textual(String),
 }
 
+impl Display for Identifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Identifier::Numeric(num) => write!(f, "{num}"),
+            Identifier::Textual(text) => write!(f, "{text}"),
+        }
+    }
+}
+
 impl PartialOrd for Identifier {
     // 1. Identifiers with letters or hyphens are compared lexically in ASCII sort order.
     // 2. Numeric identifiers always have lower precedence than non-numeric identifiers.
@@ -152,6 +180,16 @@ struct PreRelease {
     idents: Vec<Identifier>,
 }
 
+impl Display for PreRelease {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.idents.iter().map(ToString::to_string).join(".")
+        )
+    }
+}
+
 impl PreRelease {
     fn parse(input: &str) -> IResult<&str, Self> {
         separated_list1(char('.'), Identifier::parse)
@@ -177,6 +215,16 @@ impl std::str::FromStr for PreRelease {
 #[derive(Debug, Clone, Hash)]
 struct BuildMetadata {
     idents: Vec<Identifier>,
+}
+
+impl Display for BuildMetadata {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.idents.iter().map(ToString::to_string).join(".")
+        )
+    }
 }
 
 impl BuildMetadata {
