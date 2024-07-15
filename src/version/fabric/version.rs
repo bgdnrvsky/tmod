@@ -9,7 +9,7 @@ use nom::{
 
 /// Custom implementation of semver Version.
 /// Needed since the `semver` crate isn't flexible enough
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct Version {
     major: usize,
     minor: usize,
@@ -17,6 +17,17 @@ pub struct Version {
     pre: Option<PreRelease>,
     build: Option<BuildMetadata>,
 }
+
+impl PartialEq for Version {
+    fn eq(&self, other: &Self) -> bool {
+        self.major.eq(&other.major)
+            && self.minor.eq(&other.minor)
+            && self.patch.eq(&other.patch)
+            && self.pre.eq(&other.pre)
+    }
+}
+
+impl Eq for Version {}
 
 impl Version {
     fn parse(input: &str) -> IResult<&str, Self> {
@@ -92,10 +103,23 @@ impl std::str::FromStr for Version {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Hash, Ord, Eq)]
 enum Identifier {
     Numeric(usize),
     Textual(String),
+}
+
+impl PartialOrd for Identifier {
+    // 1. Identifiers with letters or hyphens are compared lexically in ASCII sort order.
+    // 2. Numeric identifiers always have lower precedence than non-numeric identifiers.
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (Identifier::Numeric(a), Identifier::Numeric(b)) => a.partial_cmp(b),
+            (Identifier::Numeric(_), Identifier::Textual(_)) => Some(std::cmp::Ordering::Less),
+            (Identifier::Textual(_), Identifier::Numeric(_)) => Some(std::cmp::Ordering::Greater),
+            (Identifier::Textual(a), Identifier::Textual(b)) => a.partial_cmp(b),
+        }
+    }
 }
 
 impl Identifier {
@@ -123,7 +147,7 @@ impl std::str::FromStr for Identifier {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 struct PreRelease {
     idents: Vec<Identifier>,
 }
@@ -150,7 +174,7 @@ impl std::str::FromStr for PreRelease {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 struct BuildMetadata {
     idents: Vec<Identifier>,
 }
