@@ -4,7 +4,7 @@ use nom::{
     combinator::map_res,
     multi::{many1, separated_list1},
     sequence::{separated_pair, tuple},
-    IResult, Parser,
+    Finish, IResult, Parser,
 };
 
 /// Custom implementation of semver Version.
@@ -78,6 +78,20 @@ impl Version {
     }
 }
 
+impl std::str::FromStr for Version {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 enum Identifier {
     Numeric(usize),
@@ -95,6 +109,20 @@ impl Identifier {
     }
 }
 
+impl std::str::FromStr for Identifier {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct PreRelease {
     idents: Vec<Identifier>,
@@ -108,6 +136,20 @@ impl PreRelease {
     }
 }
 
+impl std::str::FromStr for PreRelease {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct BuildMetadata {
     idents: Vec<Identifier>,
@@ -118,6 +160,20 @@ impl BuildMetadata {
         separated_list1(char('.'), Identifier::parse)
             .map(|idents| Self { idents })
             .parse(input)
+    }
+}
+
+impl std::str::FromStr for BuildMetadata {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
     }
 }
 
