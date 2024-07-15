@@ -286,3 +286,212 @@ fn patch(input: &str) -> IResult<&str, usize> {
 fn decimal(input: &str) -> IResult<&str, usize> {
     map_res(digit1, str::parse::<usize>).parse(input)
 }
+
+// Taken and adapted from https://github.com/dtolnay/semver/blob/master/tests/test_version.rs
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::{BuildMetadata, PreRelease as Prerelease, Version};
+
+    fn version(s: &str) -> Version {
+        Version::from_str(s).unwrap()
+    }
+
+    #[test]
+    fn test_parse() {
+        assert!(Version::from_str("").is_err()); // empty string, expected a semver version
+        assert!(Version::from_str("  ").is_err()); // unexpected character ' ' while parsing major version number
+        assert!(Version::from_str("1").is_err()); // unexpected end of input while parsing major version number
+        assert!(Version::from_str("1.2").is_err()); // unexpected end of input while parsing minor version number
+        assert!(Version::from_str("1.2.3-").is_err()); // empty identifier segment in pre-release identifier
+        assert!(Version::from_str("a.b.c").is_err()); // unexpected character 'a' while parsing major version number
+        assert!(Version::from_str("1.2.3 abc").is_err()); // unexpected character ' ' after patch version number
+        assert!(Version::from_str("1.2.3-01").is_err()); // invalid leading zero in pre-release identifier
+        assert!(Version::from_str("1.2.3++").is_err()); // empty identifier segment in build metadata
+        assert!(Version::from_str("07").is_err()); // invalid leading zero in major version number
+        assert!(Version::from_str("111111111111111111111.0.0").is_err()); // value of major version number exceeds u64::MAX
+        assert!(Version::from_str("8\0").is_err()); // unexpected character '\\0' after major version number
+
+        assert_eq!(
+            version("1.2.3"),
+            Version {
+                major: 1,
+                minor: 2,
+                patch: 3,
+                pre: None,
+                build: None
+            }
+        );
+
+        assert_eq!(
+            version("1.2.3-alpha1"),
+            Version {
+                major: 1,
+                minor: 2,
+                patch: 3,
+                pre: Some(Prerelease::from_str("alpha1").unwrap()),
+                build: None
+            }
+        );
+
+        let parsed = version("1.2.3+build5");
+        let expected = Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: None,
+            build: Some(BuildMetadata::from_str("build5").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        let parsed = version("1.2.3+5build");
+        let expected = Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: None,
+            build: Some(BuildMetadata::from_str("5build").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        let parsed = version("1.2.3-alpha1+build5");
+        let expected = Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: Some(Prerelease::from_str("alpha1").unwrap()),
+            build: Some(BuildMetadata::from_str("build5").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        let parsed = version("1.2.3-1.alpha1.9+build5.7.3aedf");
+        let expected = Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: Some(Prerelease::from_str("1.alpha1.9").unwrap()),
+            build: Some(BuildMetadata::from_str("build5.7.3aedf").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        let parsed = version("1.2.3-0a.alpha1.9+05build.7.3aedf");
+        let expected = Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: Some(Prerelease::from_str("0a.alpha1.9").unwrap()),
+            build: Some(BuildMetadata::from_str("05build.7.3aedf").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        let parsed = version("0.4.0-beta.1+0851523");
+        let expected = Version {
+            major: 0,
+            minor: 4,
+            patch: 0,
+            pre: Some(Prerelease::from_str("beta.1").unwrap()),
+            build: Some(BuildMetadata::from_str("0851523").unwrap()),
+        };
+        assert_eq!(parsed, expected);
+
+        // for https://nodejs.org/dist/index.json, where some older npm versions are "1.1.0-beta-10"
+        let parsed = version("1.1.0-beta-10");
+        let expected = Version {
+            major: 1,
+            minor: 1,
+            patch: 0,
+            pre: Some(Prerelease::from_str("beta-10").unwrap()),
+            build: None,
+        };
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn test_eq() {
+        assert_eq!(version("1.2.3"), version("1.2.3"));
+        assert_eq!(version("1.2.3-alpha1"), version("1.2.3-alpha1"));
+        assert_eq!(version("1.2.3+build.42"), version("1.2.3+build.42"));
+        assert_eq!(version("1.2.3-alpha1+42"), version("1.2.3-alpha1+42"));
+    }
+
+    #[test]
+    fn test_ne() {
+        assert_ne!(version("0.0.0"), version("0.0.1"));
+        assert_ne!(version("0.0.0"), version("0.1.0"));
+        assert_ne!(version("0.0.0"), version("1.0.0"));
+        assert_ne!(version("1.2.3-alpha"), version("1.2.3-beta"));
+        assert_ne!(version("1.2.3+23"), version("1.2.3+42"));
+    }
+
+    #[test]
+    fn test_display() {
+        assert_eq!(version("1.2.3").to_string(), "1.2.3");
+        assert_eq!(version("1.2.3-alpha1").to_string(), "1.2.3-alpha1");
+        assert_eq!(version("1.2.3+build.42").to_string(), "1.2.3+build.42");
+        assert_eq!(version("1.2.3-alpha1+42").to_string(), "1.2.3-alpha1+42");
+    }
+
+    #[test]
+    fn test_lt() {
+        assert!(version("0.0.0") < version("1.2.3-alpha2"));
+        assert!(version("1.0.0") < version("1.2.3-alpha2"));
+        assert!(version("1.2.0") < version("1.2.3-alpha2"));
+        assert!(version("1.2.3-alpha1") < version("1.2.3"));
+        assert!(version("1.2.3-alpha1") < version("1.2.3-alpha2"));
+        assert!(!(version("1.2.3-alpha2") < version("1.2.3-alpha2")));
+        assert!(version("1.2.3+23") < version("1.2.3+42"));
+    }
+
+    #[test]
+    fn test_le() {
+        assert!(version("0.0.0") <= version("1.2.3-alpha2"));
+        assert!(version("1.0.0") <= version("1.2.3-alpha2"));
+        assert!(version("1.2.0") <= version("1.2.3-alpha2"));
+        assert!(version("1.2.3-alpha1") <= version("1.2.3-alpha2"));
+        assert!(version("1.2.3-alpha2") <= version("1.2.3-alpha2"));
+        assert!(version("1.2.3+23") <= version("1.2.3+42"));
+    }
+
+    #[test]
+    fn test_gt() {
+        assert!(version("1.2.3-alpha2") > version("0.0.0"));
+        assert!(version("1.2.3-alpha2") > version("1.0.0"));
+        assert!(version("1.2.3-alpha2") > version("1.2.0"));
+        assert!(version("1.2.3-alpha2") > version("1.2.3-alpha1"));
+        assert!(version("1.2.3") > version("1.2.3-alpha2"));
+        assert!(!(version("1.2.3-alpha2") > version("1.2.3-alpha2")));
+        assert!(!(version("1.2.3+23") > version("1.2.3+42")));
+    }
+
+    #[test]
+    fn test_ge() {
+        assert!(version("1.2.3-alpha2") >= version("0.0.0"));
+        assert!(version("1.2.3-alpha2") >= version("1.0.0"));
+        assert!(version("1.2.3-alpha2") >= version("1.2.0"));
+        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha1"));
+        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha2"));
+        assert!(!(version("1.2.3+23") >= version("1.2.3+42")));
+    }
+
+    #[test]
+    fn test_spec_order() {
+        let vs = [
+            "1.0.0-alpha",
+            "1.0.0-alpha.1",
+            "1.0.0-alpha.beta",
+            "1.0.0-beta",
+            "1.0.0-beta.2",
+            "1.0.0-beta.11",
+            "1.0.0-rc.1",
+            "1.0.0",
+        ];
+        let mut i = 1;
+        while i < vs.len() {
+            let a = version(vs[i - 1]);
+            let b = version(vs[i]);
+            assert!(a < b, "nope {:?} < {:?}", a, b);
+            i += 1;
+        }
+    }
+}
