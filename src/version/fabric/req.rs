@@ -8,14 +8,15 @@ use nom::{
     combinator::opt,
     multi::separated_list1,
     sequence::{preceded, terminated},
-    IResult, Parser,
+    Finish, IResult, Parser,
 };
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum_macros::Display;
 
 use super::utils::*;
 use super::version::PreRelease;
 
-#[derive(Display, Debug, Clone, PartialEq, Eq)]
+#[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 enum VersionPart {
     #[strum(to_string = "{major}")]
     Single { major: usize },
@@ -65,7 +66,21 @@ impl VersionPart {
     }
 }
 
-#[derive(Display, Debug, Clone, PartialEq, Eq)]
+impl std::str::FromStr for VersionPart {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
+#[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 enum Op {
     #[strum(to_string = "={0}")]
     Exact(VersionPart),
@@ -102,7 +117,21 @@ impl Op {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+impl std::str::FromStr for Op {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 pub struct VersionReq {
     ops: Vec<Op>,
 }
@@ -119,6 +148,20 @@ impl VersionReq {
         separated_list1(separator, Op::parse)
             .map(|ops| Self { ops })
             .parse(input)
+    }
+}
+
+impl std::str::FromStr for VersionReq {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match Self::parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
     }
 }
 
