@@ -15,7 +15,7 @@ use strum_macros::Display;
 use super::utils::*;
 use super::version::PreRelease;
 
-#[derive(Display, Debug, Clone)]
+#[derive(Display, Debug, Clone, PartialEq, Eq)]
 enum VersionPart {
     #[strum(to_string = "{major}")]
     Single { major: usize },
@@ -65,7 +65,7 @@ impl VersionPart {
     }
 }
 
-#[derive(Display, Debug, Clone)]
+#[derive(Display, Debug, Clone, PartialEq, Eq)]
 enum Op {
     #[strum(to_string = "={0}")]
     Exact(VersionPart),
@@ -102,7 +102,7 @@ impl Op {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VersionReq {
     ops: Vec<Op>,
 }
