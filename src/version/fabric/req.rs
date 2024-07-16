@@ -1,3 +1,6 @@
+use std::fmt::Display;
+
+use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -116,5 +119,11 @@ impl VersionReq {
         separated_list1(separator, Op::parse)
             .map(|ops| Self { ops })
             .parse(input)
+    }
+}
+
+impl Display for VersionReq {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.ops.iter().map(ToString::to_string).join(", "))
     }
 }
