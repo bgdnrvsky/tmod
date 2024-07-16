@@ -1,3 +1,5 @@
+use super::utils::*;
+
 use std::fmt::Display;
 
 use itertools::Itertools;
@@ -263,28 +265,6 @@ impl std::str::FromStr for BuildMetadata {
             }),
         }
     }
-}
-
-fn version_core(input: &str) -> IResult<&str, (usize, usize, usize)> {
-    tuple((major, char('.'), minor, char('.'), patch))
-        .map(|(maj, _, min, _, pat)| (maj, min, pat))
-        .parse(input)
-}
-
-fn major(input: &str) -> IResult<&str, usize> {
-    decimal(input)
-}
-
-fn minor(input: &str) -> IResult<&str, usize> {
-    decimal(input)
-}
-
-fn patch(input: &str) -> IResult<&str, usize> {
-    decimal(input)
-}
-
-fn decimal(input: &str) -> IResult<&str, usize> {
-    map_res(digit1, str::parse::<usize>).parse(input)
 }
 
 // Taken and adapted from https://github.com/dtolnay/semver/blob/master/tests/test_version.rs
