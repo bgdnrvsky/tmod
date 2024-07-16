@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse() {
+    fn parse() {
         assert!(Version::from_str("").is_err()); // empty string, expected a semver version
         assert!(Version::from_str("  ").is_err()); // unexpected character ' ' while parsing major version number
         assert!(Version::from_str("1").is_err()); // unexpected end of input while parsing major version number
@@ -344,7 +344,7 @@ mod tests {
     }
 
     #[test]
-    fn test_eq() {
+    fn eq() {
         assert_eq!(version("1.2.3"), version("1.2.3"));
         assert_eq!(version("1.2.3-alpha1"), version("1.2.3-alpha1"));
         assert_eq!(version("1.2.3+build.42"), version("1.2.3+build.42"));
@@ -352,7 +352,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ne() {
+    fn ne() {
         assert_ne!(version("0.0.0"), version("0.0.1"));
         assert_ne!(version("0.0.0"), version("0.1.0"));
         assert_ne!(version("0.0.0"), version("1.0.0"));
@@ -361,7 +361,7 @@ mod tests {
     }
 
     #[test]
-    fn test_display() {
+    fn display() {
         assert_eq!(version("1.2.3").to_string(), "1.2.3");
         assert_eq!(version("1.2.3-alpha1").to_string(), "1.2.3-alpha1");
         assert_eq!(version("1.2.3+build.42").to_string(), "1.2.3+build.42");
@@ -369,7 +369,7 @@ mod tests {
     }
 
     #[test]
-    fn test_lt() {
+    fn lt() {
         assert!(version("0.0.0") < version("1.2.3-alpha2"));
         assert!(version("1.0.0") < version("1.2.3-alpha2"));
         assert!(version("1.2.0") < version("1.2.3-alpha2"));
@@ -380,7 +380,7 @@ mod tests {
     }
 
     #[test]
-    fn test_le() {
+    fn le() {
         assert!(version("0.0.0") <= version("1.2.3-alpha2"));
         assert!(version("1.0.0") <= version("1.2.3-alpha2"));
         assert!(version("1.2.0") <= version("1.2.3-alpha2"));
@@ -390,7 +390,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gt() {
+    fn gt() {
         assert!(version("1.2.3-alpha2") > version("0.0.0"));
         assert!(version("1.2.3-alpha2") > version("1.0.0"));
         assert!(version("1.2.3-alpha2") > version("1.2.0"));
@@ -401,7 +401,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ge() {
+    fn ge() {
         assert!(version("1.2.3-alpha2") >= version("0.0.0"));
         assert!(version("1.2.3-alpha2") >= version("1.0.0"));
         assert!(version("1.2.3-alpha2") >= version("1.2.0"));
@@ -411,7 +411,7 @@ mod tests {
     }
 
     #[test]
-    fn test_spec_order() {
+    fn spec_order() {
         let vs = [
             "1.0.0-alpha",
             "1.0.0-alpha.1",
