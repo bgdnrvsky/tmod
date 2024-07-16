@@ -20,8 +20,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Deserialize, Serialize, Eq, PartialEq, Hash)]
 #[serde(untagged)]
 pub enum SingleVersion {
-    Forge(ForgeVersion),
     Fabric(FabricVersion),
+    Forge(ForgeVersion),
 }
 
 impl Display for SingleVersion {
