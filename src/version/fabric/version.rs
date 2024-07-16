@@ -4,11 +4,10 @@ use std::fmt::Display;
 
 use itertools::Itertools;
 use nom::{
-    branch::alt,
     character::complete::{char, digit1, one_of},
-    combinator::map_res,
+    combinator::{map_res, opt},
     multi::{many1, separated_list1},
-    sequence::{separated_pair, tuple},
+    sequence::preceded,
     Finish, IResult, Parser,
 };
 
@@ -68,61 +67,17 @@ impl Eq for Version {}
 
 impl Version {
     fn parse(input: &str) -> IResult<&str, Self> {
-        fn simple_semver(input: &str) -> IResult<&str, Version> {
-            version_core
-                .map(|(major, minor, patch)| Version {
-                    major,
-                    minor,
-                    patch,
-                    pre: None,
-                    build: None,
-                })
-                .parse(input)
-        }
-
-        fn core_and_release(input: &str) -> IResult<&str, Version> {
-            separated_pair(version_core, char('-'), PreRelease::parse)
-                .map(|((major, minor, patch), pre)| Version {
-                    major,
-                    minor,
-                    patch,
-                    pre: Some(pre),
-                    build: None,
-                })
-                .parse(input)
-        }
-
-        fn core_and_build(input: &str) -> IResult<&str, Version> {
-            separated_pair(version_core, char('+'), BuildMetadata::parse)
-                .map(|((major, minor, patch), build)| Version {
-                    major,
-                    minor,
-                    patch,
-                    pre: None,
-                    build: Some(build),
-                })
-                .parse(input)
-        }
-
-        fn full_semver(input: &str) -> IResult<&str, Version> {
-            tuple((
-                version_core,
-                char('-'),
-                PreRelease::parse,
-                char('+'),
-                BuildMetadata::parse,
-            ))
-            .map(|((major, minor, patch), _, pre, _, build)| Version {
+        version_core
+            .and(opt(PreRelease::parse))
+            .and(opt(BuildMetadata::parse))
+            .map(|(((major, minor, patch), pre), build)| Self {
                 major,
                 minor,
                 patch,
-                pre: Some(pre),
-                build: Some(build),
+                pre,
+                build,
             })
             .parse(input)
-        }
-
-        alt((full_semver, simple_semver, core_and_release, core_and_build)).parse(input)
     }
 }
 
@@ -210,7 +165,7 @@ impl Display for PreRelease {
 
 impl PreRelease {
     pub(crate) fn parse(input: &str) -> IResult<&str, Self> {
-        separated_list1(char('.'), Identifier::parse)
+        preceded(char('-'), separated_list1(char('.'), Identifier::parse))
             .map(|idents| Self { idents })
             .parse(input)
     }
@@ -247,7 +202,7 @@ impl Display for BuildMetadata {
 
 impl BuildMetadata {
     fn parse(input: &str) -> IResult<&str, Self> {
-        separated_list1(char('.'), Identifier::parse)
+        preceded(char('+'), separated_list1(char('.'), Identifier::parse))
             .map(|idents| Self { idents })
             .parse(input)
     }
