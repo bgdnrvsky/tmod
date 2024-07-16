@@ -194,7 +194,7 @@ impl std::str::FromStr for Identifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-struct PreRelease {
+pub(crate) struct PreRelease {
     idents: Vec<Identifier>,
 }
 
@@ -209,7 +209,7 @@ impl Display for PreRelease {
 }
 
 impl PreRelease {
-    fn parse(input: &str) -> IResult<&str, Self> {
+    pub(crate) fn parse(input: &str) -> IResult<&str, Self> {
         separated_list1(char('.'), Identifier::parse)
             .map(|idents| Self { idents })
             .parse(input)
