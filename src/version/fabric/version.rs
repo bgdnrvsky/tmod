@@ -10,10 +10,11 @@ use nom::{
     sequence::preceded,
     Finish, IResult, Parser,
 };
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// Custom implementation of semver Version.
 /// Needed since the `semver` crate isn't flexible enough
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, DeserializeFromStr, SerializeDisplay)]
 pub struct Version {
     major: usize,
     minor: usize,
