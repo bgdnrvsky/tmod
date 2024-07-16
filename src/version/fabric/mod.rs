@@ -1,5 +1,7 @@
+mod req;
 mod version;
 
+pub use req::VersionReq;
 pub use version::Version;
 
 pub(crate) mod utils {
