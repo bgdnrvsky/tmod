@@ -128,7 +128,7 @@ impl Identifier {
     fn parse(s: &str) -> IResult<&str, Self> {
         let numeric = map_res(digit1, str::parse::<usize>).map(Self::Numeric);
         let textual = many1(one_of("abcdefghijklmnopqrstuvwxyz-"))
-            .map(|chars| String::from_iter(chars))
+            .map(String::from_iter)
             .map(Self::Textual);
 
         numeric.or(textual).parse(s)
@@ -375,7 +375,7 @@ mod tests {
         assert!(version("1.2.0") < version("1.2.3-alpha2"));
         assert!(version("1.2.3-alpha1") < version("1.2.3"));
         assert!(version("1.2.3-alpha1") < version("1.2.3-alpha2"));
-        assert!(!(version("1.2.3-alpha2") < version("1.2.3-alpha2")));
+        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha2"));
         assert!(version("1.2.3+23") < version("1.2.3+42"));
     }
 
@@ -396,8 +396,8 @@ mod tests {
         assert!(version("1.2.3-alpha2") > version("1.2.0"));
         assert!(version("1.2.3-alpha2") > version("1.2.3-alpha1"));
         assert!(version("1.2.3") > version("1.2.3-alpha2"));
-        assert!(!(version("1.2.3-alpha2") > version("1.2.3-alpha2")));
-        assert!(!(version("1.2.3+23") > version("1.2.3+42")));
+        assert!(version("1.2.3-alpha2") <= version("1.2.3-alpha2"));
+        assert!(version("1.2.3+23") <= version("1.2.3+42"));
     }
 
     #[test]
@@ -407,7 +407,7 @@ mod tests {
         assert!(version("1.2.3-alpha2") >= version("1.2.0"));
         assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha1"));
         assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha2"));
-        assert!(!(version("1.2.3+23") >= version("1.2.3+42")));
+        assert!(version("1.2.3+23") < version("1.2.3+42"));
     }
 
     #[test]
