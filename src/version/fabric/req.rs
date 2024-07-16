@@ -105,6 +105,12 @@ pub struct VersionReq {
 }
 
 impl VersionReq {
+    pub fn any() -> Self {
+        Self {
+            ops: vec![Op::Wildcard],
+        }
+    }
+
     fn parse(input: &str) -> IResult<&str, Self> {
         let separator = terminated(char(','), space0);
         separated_list1(separator, Op::parse)
