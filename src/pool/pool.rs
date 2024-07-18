@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::Context;
 
-use crate::config::Config;
+use super::config::Config;
 
 #[derive(Debug)]
 pub struct Pool {

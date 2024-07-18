@@ -1,5 +1,5 @@
 use crate::{
-    loader::Loaders,
+    pool::loader::Loaders,
     version::{MultiVersion, SingleVersion},
 };
 use anyhow::anyhow;

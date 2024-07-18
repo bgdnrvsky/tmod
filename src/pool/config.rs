@@ -4,7 +4,7 @@ use crate::version::SingleVersion as Version;
 use anyhow::Context;
 use serde::Deserialize;
 
-use crate::loader::Loader;
+use super::loader::Loader;
 
 /// Basic configuration including: loader (forge or fabric) and the goal game version
 ///
