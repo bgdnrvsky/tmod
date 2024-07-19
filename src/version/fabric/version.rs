@@ -5,7 +5,7 @@ use std::fmt::Display;
 use itertools::Itertools;
 use nom::{
     character::complete::{char, digit1, one_of},
-    combinator::{map_res, opt},
+    combinator::{all_consuming, cond, map_res},
     multi::{many1, separated_list1},
     sequence::preceded,
     Finish, IResult, Parser,
@@ -86,7 +86,7 @@ impl std::str::FromStr for Version {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
+        match all_consuming(Self::parse).parse(s).finish() {
             Ok((_, version)) => Ok(version),
             Err(nom::error::Error { input, code }) => Err(Self::Err {
                 input: input.to_string(),
@@ -139,7 +139,7 @@ impl std::str::FromStr for Identifier {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
+        match all_consuming(Self::parse).parse(s).finish() {
             Ok((_, version)) => Ok(version),
             Err(nom::error::Error { input, code }) => Err(Self::Err {
                 input: input.to_string(),
@@ -176,7 +176,7 @@ impl std::str::FromStr for PreRelease {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
+        match all_consuming(Self::parse).parse(s).finish() {
             Ok((_, version)) => Ok(version),
             Err(nom::error::Error { input, code }) => Err(Self::Err {
                 input: input.to_string(),
@@ -213,7 +213,7 @@ impl std::str::FromStr for BuildMetadata {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
+        match all_consuming(Self::parse).parse(s).finish() {
             Ok((_, version)) => Ok(version),
             Err(nom::error::Error { input, code }) => Err(Self::Err {
                 input: input.to_string(),
