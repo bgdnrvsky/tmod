@@ -96,6 +96,9 @@ impl std::str::FromStr for Version {
     }
 }
 
+/// Identifiers MUST comprise only ASCII alphanumerics and hyphens [0-9A-Za-z-].
+/// Identifiers MUST NOT be empty.
+/// Numeric identifiers MUST NOT include leading zeroes. (except build metadata)
 #[derive(Debug, Clone, PartialEq, Hash, Ord, Eq)]
 enum Identifier {
     Numeric(usize),
