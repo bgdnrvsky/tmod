@@ -266,7 +266,7 @@ mod tests {
                 major: 1,
                 minor: 2,
                 patch: 3,
-                pre: Some(Prerelease::from_str("alpha1").unwrap()),
+                pre: Some(Prerelease::from_str("-alpha1").unwrap()),
                 build: None
             }
         );
@@ -277,7 +277,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: Some(BuildMetadata::from_str("build5").unwrap()),
+            build: Some(BuildMetadata::from_str("+build5").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -287,7 +287,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: Some(BuildMetadata::from_str("5build").unwrap()),
+            build: Some(BuildMetadata::from_str("+5build").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -296,8 +296,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("alpha1").unwrap()),
-            build: Some(BuildMetadata::from_str("build5").unwrap()),
+            pre: Some(Prerelease::from_str("-alpha1").unwrap()),
+            build: Some(BuildMetadata::from_str("+build5").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -306,8 +306,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("1.alpha1.9").unwrap()),
-            build: Some(BuildMetadata::from_str("build5.7.3aedf").unwrap()),
+            pre: Some(Prerelease::from_str("-1.alpha1.9").unwrap()),
+            build: Some(BuildMetadata::from_str("+build5.7.3aedf").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -316,8 +316,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("0a.alpha1.9").unwrap()),
-            build: Some(BuildMetadata::from_str("05build.7.3aedf").unwrap()),
+            pre: Some(Prerelease::from_str("-0a.alpha1.9").unwrap()),
+            build: Some(BuildMetadata::from_str("+05build.7.3aedf").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -326,8 +326,8 @@ mod tests {
             major: 0,
             minor: 4,
             patch: 0,
-            pre: Some(Prerelease::from_str("beta.1").unwrap()),
-            build: Some(BuildMetadata::from_str("0851523").unwrap()),
+            pre: Some(Prerelease::from_str("-beta.1").unwrap()),
+            build: Some(BuildMetadata::from_str("+0851523").unwrap()),
         };
         assert_eq!(parsed, expected);
 
@@ -337,7 +337,7 @@ mod tests {
             major: 1,
             minor: 1,
             patch: 0,
-            pre: Some(Prerelease::from_str("beta-10").unwrap()),
+            pre: Some(Prerelease::from_str("-beta-10").unwrap()),
             build: None,
         };
         assert_eq!(parsed, expected);
