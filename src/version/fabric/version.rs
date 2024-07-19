@@ -232,9 +232,12 @@ mod tests {
     use std::str::FromStr;
 
     use super::{BuildMetadata, PreRelease as Prerelease, Version};
+    macro_rules! version {
+        ($ver:expr) => {
+            Version::from_str($ver).unwrap()
+        };
+    }
 
-    fn version(s: &str) -> Version {
-        Version::from_str(s).unwrap()
     }
 
     #[test]
@@ -253,7 +256,7 @@ mod tests {
         assert!(Version::from_str("8\0").is_err()); // unexpected character '\\0' after major version number
 
         assert_eq!(
-            version("1.2.3"),
+            version!("1.2.3"),
             Version {
                 major: 1,
                 minor: 2,
@@ -264,7 +267,7 @@ mod tests {
         );
 
         assert_eq!(
-            version("1.2.3-alpha1"),
+            version!("1.2.3-alpha1"),
             Version {
                 major: 1,
                 minor: 2,
@@ -274,7 +277,7 @@ mod tests {
             }
         );
 
-        let parsed = version("1.2.3+build5");
+        let parsed = version!("1.2.3+build5");
         let expected = Version {
             major: 1,
             minor: 2,
@@ -284,7 +287,7 @@ mod tests {
         };
         assert_eq!(parsed, expected);
 
-        let parsed = version("1.2.3+5build");
+        let parsed = version!("1.2.3+5build");
         let expected = Version {
             major: 1,
             minor: 2,
@@ -294,7 +297,7 @@ mod tests {
         };
         assert_eq!(parsed, expected);
 
-        let parsed = version("1.2.3-alpha1+build5");
+        let parsed = version!("1.2.3-alpha1+build5");
         let expected = Version {
             major: 1,
             minor: 2,
@@ -304,7 +307,7 @@ mod tests {
         };
         assert_eq!(parsed, expected);
 
-        let parsed = version("1.2.3-1.alpha1.9+build5.7.3aedf");
+        let parsed = version!("1.2.3-1.alpha1.9+build5.7.3aedf");
         let expected = Version {
             major: 1,
             minor: 2,
@@ -314,7 +317,7 @@ mod tests {
         };
         assert_eq!(parsed, expected);
 
-        let parsed = version("1.2.3-0a.alpha1.9+05build.7.3aedf");
+        let parsed = version!("1.2.3-0a.alpha1.9+05build.7.3aedf");
         let expected = Version {
             major: 1,
             minor: 2,
@@ -324,7 +327,7 @@ mod tests {
         };
         assert_eq!(parsed, expected);
 
-        let parsed = version("0.4.0-beta.1+0851523");
+        let parsed = version!("0.4.0-beta.1+0851523");
         let expected = Version {
             major: 0,
             minor: 4,
@@ -335,7 +338,7 @@ mod tests {
         assert_eq!(parsed, expected);
 
         // for https://nodejs.org/dist/index.json, where some older npm versions are "1.1.0-beta-10"
-        let parsed = version("1.1.0-beta-10");
+        let parsed = version!("1.1.0-beta-10");
         let expected = Version {
             major: 1,
             minor: 1,
@@ -348,69 +351,69 @@ mod tests {
 
     #[test]
     fn eq() {
-        assert_eq!(version("1.2.3"), version("1.2.3"));
-        assert_eq!(version("1.2.3-alpha1"), version("1.2.3-alpha1"));
-        assert_eq!(version("1.2.3+build.42"), version("1.2.3+build.42"));
-        assert_eq!(version("1.2.3-alpha1+42"), version("1.2.3-alpha1+42"));
+        assert_eq!(version!("1.2.3"), version!("1.2.3"));
+        assert_eq!(version!("1.2.3-alpha1"), version!("1.2.3-alpha1"));
+        assert_eq!(version!("1.2.3+build.42"), version!("1.2.3+build.42"));
+        assert_eq!(version!("1.2.3-alpha1+42"), version!("1.2.3-alpha1+42"));
     }
 
     #[test]
     fn ne() {
-        assert_ne!(version("0.0.0"), version("0.0.1"));
-        assert_ne!(version("0.0.0"), version("0.1.0"));
-        assert_ne!(version("0.0.0"), version("1.0.0"));
-        assert_ne!(version("1.2.3-alpha"), version("1.2.3-beta"));
-        assert_ne!(version("1.2.3+23"), version("1.2.3+42"));
+        assert_ne!(version!("0.0.0"), version!("0.0.1"));
+        assert_ne!(version!("0.0.0"), version!("0.1.0"));
+        assert_ne!(version!("0.0.0"), version!("1.0.0"));
+        assert_ne!(version!("1.2.3-alpha"), version!("1.2.3-beta"));
+        assert_ne!(version!("1.2.3+23"), version!("1.2.3+42"));
     }
 
     #[test]
     fn display() {
-        assert_eq!(version("1.2.3").to_string(), "1.2.3");
-        assert_eq!(version("1.2.3-alpha1").to_string(), "1.2.3-alpha1");
-        assert_eq!(version("1.2.3+build.42").to_string(), "1.2.3+build.42");
-        assert_eq!(version("1.2.3-alpha1+42").to_string(), "1.2.3-alpha1+42");
+        assert_eq!(version!("1.2.3").to_string(), "1.2.3");
+        assert_eq!(version!("1.2.3-alpha1").to_string(), "1.2.3-alpha1");
+        assert_eq!(version!("1.2.3+build.42").to_string(), "1.2.3+build.42");
+        assert_eq!(version!("1.2.3-alpha1+42").to_string(), "1.2.3-alpha1+42");
     }
 
     #[test]
     fn lt() {
-        assert!(version("0.0.0") < version("1.2.3-alpha2"));
-        assert!(version("1.0.0") < version("1.2.3-alpha2"));
-        assert!(version("1.2.0") < version("1.2.3-alpha2"));
-        assert!(version("1.2.3-alpha1") < version("1.2.3"));
-        assert!(version("1.2.3-alpha1") < version("1.2.3-alpha2"));
-        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha2"));
-        assert!(version("1.2.3+23") < version("1.2.3+42"));
+        assert!(version!("0.0.0") < version!("1.2.3-alpha2"));
+        assert!(version!("1.0.0") < version!("1.2.3-alpha2"));
+        assert!(version!("1.2.0") < version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3-alpha1") < version!("1.2.3"));
+        assert!(version!("1.2.3-alpha1") < version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3+23") < version!("1.2.3+42"));
     }
 
     #[test]
     fn le() {
-        assert!(version("0.0.0") <= version("1.2.3-alpha2"));
-        assert!(version("1.0.0") <= version("1.2.3-alpha2"));
-        assert!(version("1.2.0") <= version("1.2.3-alpha2"));
-        assert!(version("1.2.3-alpha1") <= version("1.2.3-alpha2"));
-        assert!(version("1.2.3-alpha2") <= version("1.2.3-alpha2"));
-        assert!(version("1.2.3+23") <= version("1.2.3+42"));
+        assert!(version!("0.0.0") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.0.0") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.0") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3-alpha1") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3-alpha2") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3+23") <= version!("1.2.3+42"));
     }
 
     #[test]
     fn gt() {
-        assert!(version("1.2.3-alpha2") > version("0.0.0"));
-        assert!(version("1.2.3-alpha2") > version("1.0.0"));
-        assert!(version("1.2.3-alpha2") > version("1.2.0"));
-        assert!(version("1.2.3-alpha2") > version("1.2.3-alpha1"));
-        assert!(version("1.2.3") > version("1.2.3-alpha2"));
-        assert!(version("1.2.3-alpha2") <= version("1.2.3-alpha2"));
-        assert!(version("1.2.3+23") <= version("1.2.3+42"));
+        assert!(version!("1.2.3-alpha2") > version!("0.0.0"));
+        assert!(version!("1.2.3-alpha2") > version!("1.0.0"));
+        assert!(version!("1.2.3-alpha2") > version!("1.2.0"));
+        assert!(version!("1.2.3-alpha2") > version!("1.2.3-alpha1"));
+        assert!(version!("1.2.3") > version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3-alpha2") <= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3+23") <= version!("1.2.3+42"));
     }
 
     #[test]
     fn ge() {
-        assert!(version("1.2.3-alpha2") >= version("0.0.0"));
-        assert!(version("1.2.3-alpha2") >= version("1.0.0"));
-        assert!(version("1.2.3-alpha2") >= version("1.2.0"));
-        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha1"));
-        assert!(version("1.2.3-alpha2") >= version("1.2.3-alpha2"));
-        assert!(version("1.2.3+23") < version("1.2.3+42"));
+        assert!(version!("1.2.3-alpha2") >= version!("0.0.0"));
+        assert!(version!("1.2.3-alpha2") >= version!("1.0.0"));
+        assert!(version!("1.2.3-alpha2") >= version!("1.2.0"));
+        assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha1"));
+        assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha2"));
+        assert!(version!("1.2.3+23") < version!("1.2.3+42"));
     }
 
     #[test]
@@ -427,8 +430,8 @@ mod tests {
         ];
         let mut i = 1;
         while i < vs.len() {
-            let a = version(vs[i - 1]);
-            let b = version(vs[i]);
+            let a = version!(vs[i - 1]);
+            let b = version!(vs[i]);
             assert!(a < b, "nope {:?} < {:?}", a, b);
             i += 1;
         }
