@@ -4,9 +4,10 @@ use std::fmt::Display;
 
 use itertools::Itertools;
 use nom::{
+    bytes::complete::take_while1,
     character::complete::char,
-    combinator::{all_consuming, cond},
-    multi::separated_list1,
+    combinator::{all_consuming, cond, map_res},
+    multi::{many0, separated_list1},
     sequence::preceded,
     Finish, IResult, Parser,
 };
@@ -131,39 +132,25 @@ impl PartialOrd for Identifier {
 }
 
 impl Identifier {
-    fn parse_with_zeroes(input: &str) -> IResult<&str, Self> {
-        nom::combinator::map_res(
-            nom::bytes::complete::take_while1(|ch: char| ch == '-' || ch.is_ascii_alphanumeric()),
-            |out: &str| {
-                if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
-                    Ok(Self::Textual(out.to_string()))
-                } else {
-                    preceded(nom::multi::many0(char('0')), decimal.map(Self::Numeric))
+    fn parse(accept_zeros: bool) -> impl FnMut(&str) -> IResult<&str, Self> {
+        move |input| {
+            map_res(
+                take_while1(|ch: char| ch == '-' || ch.is_ascii_alphanumeric()),
+                |out: &str| {
+                    if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
+                        Ok(Self::Textual(out.to_string()))
+                    } else {
+                        preceded(
+                            cond(accept_zeros, many0(char('0'))),
+                            decimal.map(Self::Numeric),
+                        )
                         .parse(out)
-                        .finish()
-                        .map(|(_, ident)| ident)
-                }
-            },
-        )
-        .parse(input)
-    }
-
-    fn parse_no_zeroes(input: &str) -> IResult<&str, Self> {
-        nom::combinator::map_res(
-            nom::bytes::complete::take_while1(|ch: char| ch == '-' || ch.is_ascii_alphanumeric()),
-            |out: &str| {
-                if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
-                    Ok(Self::Textual(out.to_string()))
-                } else {
-                    decimal
-                        .map(Self::Numeric)
-                        .parse(out)
-                        .finish()
-                        .map(|(_, ident)| ident)
-                }
-            },
-        )
-        .parse(input)
+                        .map(|(_, numeric)| numeric)
+                    }
+                },
+            )
+            .parse(input)
+        }
     }
 }
 
@@ -186,7 +173,7 @@ impl PreRelease {
     pub(crate) fn parse(input: &str) -> IResult<&str, Self> {
         preceded(
             char('-'),
-            separated_list1(char('.'), Identifier::parse_no_zeroes),
+            separated_list1(char('.'), Identifier::parse(false)),
         )
         .map(|idents| Self { idents })
         .parse(input)
@@ -226,7 +213,7 @@ impl BuildMetadata {
     fn parse(input: &str) -> IResult<&str, Self> {
         preceded(
             char('+'),
-            separated_list1(char('.'), Identifier::parse_with_zeroes),
+            separated_list1(char('.'), Identifier::parse(true)),
         )
         .map(|idents| Self { idents })
         .parse(input)
