@@ -103,7 +103,7 @@ impl std::str::FromStr for Version {
 /// Identifiers MUST comprise only ASCII alphanumerics and hyphens [0-9A-Za-z-].
 /// Identifiers MUST NOT be empty.
 /// Numeric identifiers MUST NOT include leading zeroes. (except build metadata)
-#[derive(Debug, Clone, PartialEq, Hash, Ord, Eq)]
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
 enum Identifier {
     Numeric(usize),
     Textual(String),
@@ -118,16 +118,22 @@ impl Display for Identifier {
     }
 }
 
-impl PartialOrd for Identifier {
+impl Ord for Identifier {
     // 1. Identifiers with letters or hyphens are compared lexically in ASCII sort order.
     // 2. Numeric identifiers always have lower precedence than non-numeric identifiers.
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match (self, other) {
-            (Identifier::Numeric(a), Identifier::Numeric(b)) => a.partial_cmp(b),
-            (Identifier::Numeric(_), Identifier::Textual(_)) => Some(std::cmp::Ordering::Less),
-            (Identifier::Textual(_), Identifier::Numeric(_)) => Some(std::cmp::Ordering::Greater),
-            (Identifier::Textual(a), Identifier::Textual(b)) => a.partial_cmp(b),
+            (Identifier::Numeric(a), Identifier::Numeric(b)) => a.cmp(b),
+            (Identifier::Numeric(_), Identifier::Textual(_)) => std::cmp::Ordering::Less,
+            (Identifier::Textual(_), Identifier::Numeric(_)) => std::cmp::Ordering::Greater,
+            (Identifier::Textual(a), Identifier::Textual(b)) => a.cmp(b),
         }
+    }
+}
+
+impl PartialOrd for Identifier {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
