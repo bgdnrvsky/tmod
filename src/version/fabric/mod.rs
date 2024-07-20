@@ -6,6 +6,7 @@ pub use version::Version;
 
 pub(crate) mod utils {
     use nom::{
+        bytes::complete::take_while,
         character::complete::{char, digit1},
         combinator::map_res,
         sequence::tuple,
@@ -30,7 +31,24 @@ pub(crate) mod utils {
         decimal(input)
     }
 
+    /// Parses a decimal number with no zeroes at the start (except just '0')
     pub fn decimal(input: &str) -> IResult<&str, usize> {
-        map_res(digit1, str::parse::<usize>).parse(input)
+        map_res(take_while(|ch: char| ch.is_ascii_digit()), |out: &str| {
+            if out.starts_with('0') {
+                if out.len() == 1 {
+                    Ok(0)
+                } else {
+                    Err(nom::Err::Failure(nom::error::Error::new(
+                        out,
+                        nom::error::ErrorKind::Satisfy,
+                    )))
+                }
+            } else {
+                out.parse().map_err(|_| {
+                    nom::Err::Failure(nom::error::Error::new(out, nom::error::ErrorKind::Digit))
+                })
+            }
+        })
+        .parse(input)
     }
 }
