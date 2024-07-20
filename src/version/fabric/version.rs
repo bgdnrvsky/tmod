@@ -231,13 +231,33 @@ impl std::str::FromStr for BuildMetadata {
 mod tests {
     use std::str::FromStr;
 
-    use super::{BuildMetadata, PreRelease as Prerelease, Version};
+    use super::{BuildMetadata, Identifier, PreRelease as Prerelease, Version};
+
     macro_rules! version {
         ($ver:expr) => {
             Version::from_str($ver).unwrap()
         };
     }
 
+    macro_rules! ident {
+        (text $txt:literal) => {
+            Identifier::Textual(String::from($txt))
+        };
+        (num $num:literal) => {
+            Identifier::Numeric($num)
+        };
+    }
+
+    macro_rules! pre {
+        [$( $ident:expr ),*] => {
+            Some(Prerelease { idents: vec![ $( $ident ),* ] })
+        };
+    }
+
+    macro_rules! build {
+        [$( $ident:expr ),*] => {
+            Some(BuildMetadata { idents: vec![ $( $ident ),* ] })
+        };
     }
 
     #[test]
@@ -272,7 +292,7 @@ mod tests {
                 major: 1,
                 minor: 2,
                 patch: 3,
-                pre: Some(Prerelease::from_str("-alpha1").unwrap()),
+                pre: pre![ident!(text "alpha1")],
                 build: None
             }
         );
@@ -283,7 +303,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: Some(BuildMetadata::from_str("+build5").unwrap()),
+            build: build![ident!(text "+build5")],
         };
         assert_eq!(parsed, expected);
 
@@ -293,7 +313,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: Some(BuildMetadata::from_str("+5build").unwrap()),
+            build: build![ident!(text "+5build")],
         };
         assert_eq!(parsed, expected);
 
@@ -302,8 +322,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("-alpha1").unwrap()),
-            build: Some(BuildMetadata::from_str("+build5").unwrap()),
+            pre: pre![ident!(text "alpha1")],
+            build: build![ident!(text "build5")],
         };
         assert_eq!(parsed, expected);
 
@@ -312,8 +332,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("-1.alpha1.9").unwrap()),
-            build: Some(BuildMetadata::from_str("+build5.7.3aedf").unwrap()),
+            pre: pre![ident!(num 1), ident!(text "alpha1"), ident!(num 9)],
+            build: build![ident!(text "build5"), ident!(num 7), ident!(text "3aedf")],
         };
         assert_eq!(parsed, expected);
 
@@ -322,8 +342,8 @@ mod tests {
             major: 1,
             minor: 2,
             patch: 3,
-            pre: Some(Prerelease::from_str("-0a.alpha1.9").unwrap()),
-            build: Some(BuildMetadata::from_str("+05build.7.3aedf").unwrap()),
+            pre: pre![ident!(text "0a"), ident!(text "alpha1"), ident!(num 9)],
+            build: build![ident!(text "05build"), ident!(num 7), ident!(text "3aedf")],
         };
         assert_eq!(parsed, expected);
 
@@ -332,8 +352,8 @@ mod tests {
             major: 0,
             minor: 4,
             patch: 0,
-            pre: Some(Prerelease::from_str("-beta.1").unwrap()),
-            build: Some(BuildMetadata::from_str("+0851523").unwrap()),
+            pre: pre![ident!(text "beta"), ident!(num 1)],
+            build: build![ident!(num 851523)],
         };
         assert_eq!(parsed, expected);
 
@@ -343,7 +363,7 @@ mod tests {
             major: 1,
             minor: 1,
             patch: 0,
-            pre: Some(Prerelease::from_str("-beta-10").unwrap()),
+            pre: pre![ident!(text "beta-10")],
             build: None,
         };
         assert_eq!(parsed, expected);
