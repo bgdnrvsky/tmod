@@ -4,9 +4,9 @@ use std::fmt::Display;
 
 use itertools::Itertools;
 use nom::{
-    character::complete::{char, digit1, one_of},
-    combinator::{all_consuming, cond, map_res},
-    multi::{many1, separated_list1},
+    character::complete::char,
+    combinator::{all_consuming, cond},
+    multi::separated_list1,
     sequence::preceded,
     Finish, IResult, Parser,
 };
@@ -68,17 +68,20 @@ impl Eq for Version {}
 
 impl Version {
     fn parse(input: &str) -> IResult<&str, Self> {
-        version_core
-            .and(opt(PreRelease::parse))
-            .and(opt(BuildMetadata::parse))
-            .map(|(((major, minor, patch), pre), build)| Self {
+        let (rest, (major, minor, patch)) = version_core(input)?;
+        let (rest, pre) = cond(rest.starts_with('-'), PreRelease::parse).parse(rest)?;
+        let (rest, build) = cond(rest.starts_with('+'), BuildMetadata::parse).parse(rest)?;
+
+        Ok((
+            rest,
+            Self {
                 major,
                 minor,
                 patch,
                 pre,
                 build,
-            })
-            .parse(input)
+            },
+        ))
     }
 }
 
@@ -128,27 +131,39 @@ impl PartialOrd for Identifier {
 }
 
 impl Identifier {
-    fn parse(s: &str) -> IResult<&str, Self> {
-        let numeric = map_res(digit1, str::parse::<usize>).map(Self::Numeric);
-        let textual = many1(one_of("abcdefghijklmnopqrstuvwxyz-"))
-            .map(String::from_iter)
-            .map(Self::Textual);
-
-        numeric.or(textual).parse(s)
+    fn parse_with_zeroes(input: &str) -> IResult<&str, Self> {
+        nom::combinator::map_res(
+            nom::bytes::complete::take_while1(|ch: char| ch == '-' || ch.is_ascii_alphanumeric()),
+            |out: &str| {
+                if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
+                    Ok(Self::Textual(out.to_string()))
+                } else {
+                    preceded(nom::multi::many0(char('0')), decimal.map(Self::Numeric))
+                        .parse(out)
+                        .finish()
+                        .map(|(_, ident)| ident)
+                }
+            },
+        )
+        .parse(input)
     }
-}
 
-impl std::str::FromStr for Identifier {
-    type Err = nom::error::Error<String>;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match all_consuming(Self::parse).parse(s).finish() {
-            Ok((_, version)) => Ok(version),
-            Err(nom::error::Error { input, code }) => Err(Self::Err {
-                input: input.to_string(),
-                code,
-            }),
-        }
+    fn parse_no_zeroes(input: &str) -> IResult<&str, Self> {
+        nom::combinator::map_res(
+            nom::bytes::complete::take_while1(|ch: char| ch == '-' || ch.is_ascii_alphanumeric()),
+            |out: &str| {
+                if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
+                    Ok(Self::Textual(out.to_string()))
+                } else {
+                    decimal
+                        .map(Self::Numeric)
+                        .parse(out)
+                        .finish()
+                        .map(|(_, ident)| ident)
+                }
+            },
+        )
+        .parse(input)
     }
 }
 
@@ -169,9 +184,12 @@ impl Display for PreRelease {
 
 impl PreRelease {
     pub(crate) fn parse(input: &str) -> IResult<&str, Self> {
-        preceded(char('-'), separated_list1(char('.'), Identifier::parse))
-            .map(|idents| Self { idents })
-            .parse(input)
+        preceded(
+            char('-'),
+            separated_list1(char('.'), Identifier::parse_no_zeroes),
+        )
+        .map(|idents| Self { idents })
+        .parse(input)
     }
 }
 
@@ -206,9 +224,12 @@ impl Display for BuildMetadata {
 
 impl BuildMetadata {
     fn parse(input: &str) -> IResult<&str, Self> {
-        preceded(char('+'), separated_list1(char('.'), Identifier::parse))
-            .map(|idents| Self { idents })
-            .parse(input)
+        preceded(
+            char('+'),
+            separated_list1(char('.'), Identifier::parse_with_zeroes),
+        )
+        .map(|idents| Self { idents })
+        .parse(input)
     }
 }
 
