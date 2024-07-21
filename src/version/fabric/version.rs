@@ -315,7 +315,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: build![ident!(text "+build5")],
+            build: build![ident!(text "build5")],
         };
         assert_eq!(parsed, expected);
 
@@ -325,7 +325,7 @@ mod tests {
             minor: 2,
             patch: 3,
             pre: None,
-            build: build![ident!(text "+5build")],
+            build: build![ident!(text "5build")],
         };
         assert_eq!(parsed, expected);
 
