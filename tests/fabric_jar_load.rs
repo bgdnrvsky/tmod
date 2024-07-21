@@ -16,7 +16,7 @@ fn load_fabric() -> anyhow::Result<()> {
 
     assert_eq!(
         sodium.version(),
-        SingleVersion::Fabric(Version::from_str("0.5.8")?)
+        SingleVersion::Fabric(Version::from_str("0.5.8+mc1.20.4")?)
     );
 
     assert!(!sodium.dependencies().is_empty());
