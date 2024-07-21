@@ -4,7 +4,7 @@ use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{char, space0},
+    character::complete::{char, satisfy, space0},
     combinator::opt,
     multi::separated_list1,
     sequence::{preceded, terminated},
@@ -13,7 +13,7 @@ use nom::{
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum_macros::Display;
 
-use super::utils::*;
+use super::utils::decimal;
 use super::version::PreRelease;
 
 #[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
@@ -111,7 +111,7 @@ impl Op {
             op("<").map(Self::Less),
             op("~").map(Self::Tilde),
             op("^").map(Self::Caret),
-            char('*').map(|_| Self::Wildcard),
+            satisfy(|ch: char| ch == '*' || ch == 'x' || ch == 'X').map(|_| Self::Wildcard),
         ))
         .parse(input)
     }
