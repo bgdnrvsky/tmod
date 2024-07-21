@@ -15,7 +15,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 /// Custom implementation of semver Version.
 /// Needed since the `semver` crate isn't flexible enough
-#[derive(Debug, Clone, Hash, DeserializeFromStr, SerializeDisplay)]
+#[derive(Debug, Clone, DeserializeFromStr, SerializeDisplay)]
 pub struct Version {
     major: usize,
     minor: usize,
@@ -72,6 +72,16 @@ impl PartialEq for Version {
 }
 
 impl Eq for Version {}
+
+impl std::hash::Hash for Version {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.major.hash(state);
+        self.minor.hash(state);
+        self.patch.hash(state);
+        self.pre.hash(state);
+        self.build.hash(state);
+    }
+}
 
 impl Version {
     fn parse(input: &str) -> IResult<&str, Self> {
