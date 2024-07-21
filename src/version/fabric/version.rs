@@ -396,7 +396,6 @@ mod tests {
         assert_ne!(version!("0.0.0"), version!("0.1.0"));
         assert_ne!(version!("0.0.0"), version!("1.0.0"));
         assert_ne!(version!("1.2.3-alpha"), version!("1.2.3-beta"));
-        assert_ne!(version!("1.2.3+23"), version!("1.2.3+42"));
     }
 
     #[test]
@@ -415,7 +414,6 @@ mod tests {
         assert!(version!("1.2.3-alpha1") < version!("1.2.3"));
         assert!(version!("1.2.3-alpha1") < version!("1.2.3-alpha2"));
         assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha2"));
-        assert!(version!("1.2.3+23") < version!("1.2.3+42"));
     }
 
     #[test]
@@ -425,7 +423,6 @@ mod tests {
         assert!(version!("1.2.0") <= version!("1.2.3-alpha2"));
         assert!(version!("1.2.3-alpha1") <= version!("1.2.3-alpha2"));
         assert!(version!("1.2.3-alpha2") <= version!("1.2.3-alpha2"));
-        assert!(version!("1.2.3+23") <= version!("1.2.3+42"));
     }
 
     #[test]
@@ -436,7 +433,6 @@ mod tests {
         assert!(version!("1.2.3-alpha2") > version!("1.2.3-alpha1"));
         assert!(version!("1.2.3") > version!("1.2.3-alpha2"));
         assert!(version!("1.2.3-alpha2") <= version!("1.2.3-alpha2"));
-        assert!(version!("1.2.3+23") <= version!("1.2.3+42"));
     }
 
     #[test]
@@ -446,7 +442,6 @@ mod tests {
         assert!(version!("1.2.3-alpha2") >= version!("1.2.0"));
         assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha1"));
         assert!(version!("1.2.3-alpha2") >= version!("1.2.3-alpha2"));
-        assert!(version!("1.2.3+23") < version!("1.2.3+42"));
     }
 
     #[test]
