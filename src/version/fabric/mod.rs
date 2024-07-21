@@ -37,10 +37,7 @@ pub(crate) mod utils {
                     )))
                 } else {
                     out.parse().map_err(|_| {
-                        nom::Err::Failure(nom::error::Error::new(
-                            out,
-                            nom::error::ErrorKind::Digit,
-                        ))
+                        nom::Err::Failure(nom::error::Error::new(out, nom::error::ErrorKind::Digit))
                     })
                 }
             })
