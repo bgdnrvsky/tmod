@@ -30,20 +30,18 @@ pub(crate) mod utils {
             map_res(digit1, |out: &str| {
                 if out.starts_with('0') && out.len() == 1 {
                     Ok(0)
+                } else if out.starts_with('0') && !accept_zeros {
+                    Err(nom::Err::Failure(nom::error::Error::new(
+                        out,
+                        nom::error::ErrorKind::Satisfy,
+                    )))
                 } else {
-                    if out.starts_with('0') && !accept_zeros {
-                        Err(nom::Err::Failure(nom::error::Error::new(
+                    out.parse().map_err(|_| {
+                        nom::Err::Failure(nom::error::Error::new(
                             out,
-                            nom::error::ErrorKind::Satisfy,
-                        )))
-                    } else {
-                        out.parse().map_err(|_| {
-                            nom::Err::Failure(nom::error::Error::new(
-                                out,
-                                nom::error::ErrorKind::Digit,
-                            ))
-                        })
-                    }
+                            nom::error::ErrorKind::Digit,
+                        ))
+                    })
                 }
             })
             .parse(input)
