@@ -134,6 +134,7 @@ mod fetchers {
     }
 
     #[test]
+    #[ignore = "might be very long (~15 secs)"]
     fn minecraft_versions() -> anyhow::Result<()> {
         let versions = MinecraftVersions::fetch(AdditionalFetchParameters::default())?;
         assert!(!versions.is_empty());
@@ -142,6 +143,7 @@ mod fetchers {
     }
 
     #[test]
+    #[ignore = "might be very long (~15 secs)"]
     fn forge_versions() -> anyhow::Result<()> {
         let versions = ForgeVersions::fetch(AdditionalFetchParameters::default())?;
         assert!(!versions.is_empty());
