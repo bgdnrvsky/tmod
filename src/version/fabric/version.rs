@@ -62,6 +62,7 @@ impl PartialEq for Version {
             && self.minor.eq(&other.minor)
             && self.patch.eq(&other.patch)
             && self.pre.eq(&other.pre)
+            && self.build.eq(&other.build)
     }
 }
 
@@ -198,7 +199,7 @@ impl std::str::FromStr for PreRelease {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 struct BuildMetadata {
     idents: Vec<Identifier>,
 }
