@@ -13,21 +13,9 @@ pub(crate) mod utils {
     };
 
     pub fn version_core(input: &str) -> IResult<&str, (usize, usize, usize)> {
-        tuple((major, char('.'), minor, char('.'), patch))
+        tuple((decimal, char('.'), decimal, char('.'), decimal))
             .map(|(maj, _, min, _, pat)| (maj, min, pat))
             .parse(input)
-    }
-
-    pub fn major(input: &str) -> IResult<&str, usize> {
-        decimal(input)
-    }
-
-    pub fn minor(input: &str) -> IResult<&str, usize> {
-        decimal(input)
-    }
-
-    pub fn patch(input: &str) -> IResult<&str, usize> {
-        decimal(input)
     }
 
     /// Parses a decimal number with no zeroes at the start (except just '0')

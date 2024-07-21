@@ -40,9 +40,9 @@ enum VersionPart {
 impl VersionPart {
     fn parse(input: &str) -> IResult<&str, Self> {
         // TODO: Remake it
-        major
-            .and(opt(minor))
-            .and(opt(patch))
+        decimal
+            .and(opt(decimal))
+            .and(opt(decimal))
             .and(opt(PreRelease::parse))
             .map(|comb| -> Self {
                 match comb {
