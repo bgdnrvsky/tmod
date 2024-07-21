@@ -7,7 +7,7 @@ use nom::{
     bytes::complete::take_while1,
     character::complete::char,
     combinator::{all_consuming, cond, map_res},
-    multi::{many0, separated_list1},
+    multi::separated_list1,
     sequence::preceded,
     Finish, IResult, Parser,
 };
@@ -146,12 +146,10 @@ impl Identifier {
                     if out.contains(|ch: char| ch == '-' || ch.is_ascii_alphabetic()) {
                         Ok(Self::Textual(out.to_string()))
                     } else {
-                        preceded(
-                            cond(accept_zeros, many0(char('0'))),
-                            decimal.map(Self::Numeric),
-                        )
-                        .parse(out)
-                        .map(|(_, numeric)| numeric)
+                        decimal(accept_zeros)
+                            .map(Self::Numeric)
+                            .parse(out)
+                            .map(|(_, numeric)| numeric)
                     }
                 },
             )
