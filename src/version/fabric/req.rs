@@ -18,7 +18,7 @@ use super::version::PreRelease;
 use super::version::{BuildMetadata, PreRelease};
 
 #[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
-enum VersionPart {
+enum VersionPattern {
     #[strum(to_string = "{major}")]
     Single { major: usize },
     #[strum(to_string = "{major}.{minor}")]
@@ -53,7 +53,6 @@ enum VersionPart {
     },
 }
 
-impl VersionPart {
     fn parse(input: &str) -> IResult<&str, Self> {
         // TODO: Remake it
         decimal(false)
@@ -79,10 +78,11 @@ impl VersionPart {
                 }
             })
             .parse(input)
+impl VersionPattern {
     }
 }
 
-impl std::str::FromStr for VersionPart {
+impl std::str::FromStr for VersionPattern {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -99,26 +99,26 @@ impl std::str::FromStr for VersionPart {
 #[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 enum Op {
     #[strum(to_string = "={0}")]
-    Exact(VersionPart),
+    Exact(VersionPattern),
     #[strum(to_string = ">{0}")]
-    Greater(VersionPart),
+    Greater(VersionPattern),
     #[strum(to_string = ">={0}")]
-    GreaterEq(VersionPart),
+    GreaterEq(VersionPattern),
     #[strum(to_string = "<{0}")]
-    Less(VersionPart),
+    Less(VersionPattern),
     #[strum(to_string = "<={0}")]
-    LessEq(VersionPart),
+    LessEq(VersionPattern),
     #[strum(to_string = "~{0}")]
-    Tilde(VersionPart),
+    Tilde(VersionPattern),
     #[strum(to_string = "^{0}")]
-    Caret(VersionPart),
+    Caret(VersionPattern),
     #[strum(to_string = "*")]
     Wildcard,
 }
 
 impl Op {
     fn parse(input: &str) -> IResult<&str, Self> {
-        let op = |prefix| preceded(tag(prefix), VersionPart::parse);
+        let op = |prefix| preceded(tag(prefix), VersionPattern::parse);
         alt((
             op(">=").map(Self::GreaterEq),
             op("<=").map(Self::LessEq),
