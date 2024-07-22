@@ -6,7 +6,7 @@ use nom::{
     bytes::complete::tag,
     character::complete::{char, satisfy, space0},
     multi::separated_list1,
-    sequence::{preceded, terminated},
+    sequence::{delimited, preceded, terminated},
     Finish, IResult, Parser,
 };
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -29,15 +29,21 @@ enum Op {
 
 impl Op {
     fn parse(input: &str) -> IResult<&str, Self> {
+        macro_rules! op {
+            ($parser:expr) => {
+                delimited(space0, $parser, space0)
+            };
+        }
+
         alt((
-            tag(">=").map(|_| Self::GreaterEq),
-            tag("<=").map(|_| Self::LessEq),
-            tag("=").map(|_| Self::Exact),
-            tag(">").map(|_| Self::Greater),
-            tag("<").map(|_| Self::Less),
-            tag("~").map(|_| Self::Tilde),
-            tag("^").map(|_| Self::Caret),
-            satisfy(|ch| ch == '*' || ch == 'x' || ch == 'X').map(|_| Self::Wildcard),
+            op!(tag(">=")).map(|_| Self::GreaterEq),
+            op!(tag("<=")).map(|_| Self::LessEq),
+            op!(tag("=")).map(|_| Self::Exact),
+            op!(tag(">")).map(|_| Self::Greater),
+            op!(tag("<")).map(|_| Self::Less),
+            op!(tag("~")).map(|_| Self::Tilde),
+            op!(tag("^")).map(|_| Self::Caret),
+            op!(satisfy(|ch| ch == '*' || ch == 'x' || ch == 'X')).map(|_| Self::Wildcard),
         ))
         .parse(input)
     }
