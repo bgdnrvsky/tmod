@@ -5,7 +5,6 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::{char, satisfy, space0},
-    combinator::opt,
     multi::separated_list1,
     sequence::{preceded, terminated},
     Finish, IResult, Parser,
@@ -13,127 +12,58 @@ use nom::{
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum_macros::Display;
 
-use super::utils::decimal;
-use super::version::PreRelease;
 use super::version::{BuildMetadata, PreRelease};
+use super::{utils::decimal, Version};
 
-#[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
-enum VersionPattern {
-    #[strum(to_string = "{major}")]
-    Single { major: usize },
-    #[strum(to_string = "{major}.{minor}")]
-    Double { major: usize, minor: usize },
-    #[strum(to_string = "{major}.{minor}.{patch}")]
-    Triple {
-        major: usize,
-        minor: usize,
-        patch: usize,
-    },
-    #[strum(to_string = "{major}.{minor}.{patch}-{pre}")]
-    WithPre {
-        major: usize,
-        minor: usize,
-        patch: usize,
-        pre: PreRelease,
-    },
-    #[strum(to_string = "{major}.{minor}.{patch}+{build}")]
-    WithBuild {
-        major: usize,
-        minor: usize,
-        patch: usize,
-        build: BuildMetadata,
-    },
-    #[strum(to_string = "{major}.{minor}.{patch}-{pre}+{build}")]
-    WitPreAndBuild {
-        major: usize,
-        minor: usize,
-        patch: usize,
-        pre: PreRelease,
-        build: BuildMetadata,
-    },
-}
-
-    fn parse(input: &str) -> IResult<&str, Self> {
-        // TODO: Remake it
-        decimal(false)
-            .and(opt(decimal(false)))
-            .and(opt(decimal(false)))
-            .and(opt(PreRelease::parse))
-            .map(|comb| -> Self {
-                match comb {
-                    (((major, None), None), None) => Self::Single { major },
-                    (((major, Some(minor)), None), None) => Self::Double { major, minor },
-                    (((major, Some(minor)), Some(patch)), None) => Self::Triple {
-                        major,
-                        minor,
-                        patch,
-                    },
-                    (((major, Some(minor)), Some(patch)), Some(pre)) => Self::Full {
-                        major,
-                        minor,
-                        patch,
-                        pre,
-                    },
-                    _ => unreachable!(),
-                }
-            })
-            .parse(input)
-impl VersionPattern {
-    }
-}
-
-impl std::str::FromStr for VersionPattern {
-    type Err = nom::error::Error<String>;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok((_, version)) => Ok(version),
-            Err(nom::error::Error { input, code }) => Err(Self::Err {
-                input: input.to_string(),
-                code,
-            }),
-        }
-    }
-}
-
-#[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Op {
-    #[strum(to_string = "={0}")]
-    Exact(VersionPattern),
-    #[strum(to_string = ">{0}")]
-    Greater(VersionPattern),
-    #[strum(to_string = ">={0}")]
-    GreaterEq(VersionPattern),
-    #[strum(to_string = "<{0}")]
-    Less(VersionPattern),
-    #[strum(to_string = "<={0}")]
-    LessEq(VersionPattern),
-    #[strum(to_string = "~{0}")]
-    Tilde(VersionPattern),
-    #[strum(to_string = "^{0}")]
-    Caret(VersionPattern),
-    #[strum(to_string = "*")]
+    Exact,
+    Greater,
+    GreaterEq,
+    Less,
+    LessEq,
+    Tilde,
+    Caret,
     Wildcard,
 }
 
 impl Op {
     fn parse(input: &str) -> IResult<&str, Self> {
-        let op = |prefix| preceded(tag(prefix), VersionPattern::parse);
         alt((
-            op(">=").map(Self::GreaterEq),
-            op("<=").map(Self::LessEq),
-            op("=").map(Self::Exact),
-            op(">").map(Self::Greater),
-            op("<").map(Self::Less),
-            op("~").map(Self::Tilde),
-            op("^").map(Self::Caret),
-            satisfy(|ch: char| ch == '*' || ch == 'x' || ch == 'X').map(|_| Self::Wildcard),
+            tag(">=").map(|_| Self::GreaterEq),
+            tag("<=").map(|_| Self::LessEq),
+            tag("=").map(|_| Self::Exact),
+            tag(">").map(|_| Self::Greater),
+            tag("<").map(|_| Self::Less),
+            tag("~").map(|_| Self::Tilde),
+            tag("^").map(|_| Self::Caret),
+            satisfy(|ch| ch == '*' || ch == 'x' || ch == 'X').map(|_| Self::Wildcard),
         ))
         .parse(input)
     }
 }
 
-impl std::str::FromStr for Op {
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Comparator {
+    operation: Op,
+    major: usize,
+    minor: Option<usize>,
+    patch: Option<usize>,
+    pre: Option<PreRelease>,
+    build: Option<BuildMetadata>,
+}
+
+impl Comparator {
+    fn parse(input: &str) -> IResult<&str, Self> {
+        todo!()
+    }
+
+    fn matches(&self, version: &Version) -> bool {
+        todo!()
+    }
+}
+
+impl std::str::FromStr for Comparator {
     type Err = nom::error::Error<String>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -147,23 +77,33 @@ impl std::str::FromStr for Op {
     }
 }
 
+impl std::fmt::Display for Comparator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 pub struct VersionReq {
-    ops: Vec<Op>,
+    comparators: Vec<Comparator>,
 }
 
 impl VersionReq {
     pub fn any() -> Self {
         Self {
-            ops: vec![Op::Wildcard],
+            comparators: Vec::new(),
         }
     }
 
     fn parse(input: &str) -> IResult<&str, Self> {
         let separator = terminated(char(','), space0);
-        separated_list1(separator, Op::parse)
-            .map(|ops| Self { ops })
+        separated_list1(separator, Comparator::parse)
+            .map(|comparators| Self { comparators })
             .parse(input)
+    }
+
+    pub fn matches(&self, version: &Version) -> bool {
+        todo!()
     }
 }
 
@@ -189,7 +129,15 @@ impl std::str::FromStr for VersionReq {
 
 impl Display for VersionReq {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.ops.iter().map(ToString::to_string).join(", "))
+        if self.comparators.is_empty() {
+            return write!(f, "*");
+        }
+
+        write!(
+            f,
+            "{}",
+            self.comparators.iter().map(ToString::to_string).join(", ")
+        )
     }
 }
 
@@ -199,7 +147,7 @@ mod tests {
     use std::str::FromStr;
 
     use super::super::Version;
-    use super::{Op, VersionReq};
+    use super::{Comparator, VersionReq};
 
     macro_rules! version {
         ($ver:expr) => {
@@ -213,9 +161,9 @@ mod tests {
         };
     }
 
-    macro_rules! op {
+    macro_rules! comp {
         ($op:expr) => {
-            Op::from_str($op).unwrap()
+            Comparator::from_str($op).unwrap()
         };
     }
 
@@ -534,24 +482,24 @@ mod tests {
 
     #[test]
     fn operation_parse() {
-        let parsed = op!("1.2.3-alpha");
+        let parsed = comp!("1.2.3-alpha");
         assert_to_string(parsed, "^1.2.3-alpha");
 
-        let parsed = op!("2.X");
+        let parsed = comp!("2.X");
         assert_to_string(parsed, "2.*");
 
-        let parsed = op!("2");
+        let parsed = comp!("2");
         assert_to_string(parsed, "^2");
 
-        let parsed = op!("2.x.x");
+        let parsed = comp!("2.x.x");
         assert_to_string(parsed, "2.*");
 
-        assert!(Op::from_str("1.2.3-01").is_err()); // invalid leading zero in pre-release identifier
-        assert!(Op::from_str("1.2.3+4.").is_err()); // empty identifier segment in build metadata
-        assert!(Op::from_str(">").is_err()); // unexpected end of input while parsing major version number
-        assert!(Op::from_str("1.").is_err()); // unexpected end of input while parsing minor version number
-        assert!(Op::from_str("1.*.").is_err()); // unexpected character after wildcard in version req
-        assert!(Op::from_str("1.2.3+4ÿ").is_err()); // unexpected character 'ÿ' after build metadata
+        assert!(Comparator::from_str("1.2.3-01").is_err()); // invalid leading zero in pre-release identifier
+        assert!(Comparator::from_str("1.2.3+4.").is_err()); // empty identifier segment in build metadata
+        assert!(Comparator::from_str(">").is_err()); // unexpected end of input while parsing major version number
+        assert!(Comparator::from_str("1.").is_err()); // unexpected end of input while parsing minor version number
+        assert!(Comparator::from_str("1.*.").is_err()); // unexpected character after wildcard in version req
+        assert!(Comparator::from_str("1.2.3+4ÿ").is_err()); // unexpected character 'ÿ' after build metadata
     }
 
     #[test]
