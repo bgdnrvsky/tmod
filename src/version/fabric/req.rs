@@ -151,6 +151,12 @@ impl VersionReq {
     }
 }
 
+impl Default for VersionReq {
+    fn default() -> Self {
+        Self::any()
+    }
+}
+
 impl std::str::FromStr for VersionReq {
     type Err = nom::error::Error<String>;
 
