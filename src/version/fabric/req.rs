@@ -149,7 +149,9 @@ impl VersionReq {
     }
 
     pub fn matches(&self, version: &Version) -> bool {
-        todo!()
+        self.comparators
+            .iter()
+            .all(|comparator| comparator.matches(version))
     }
 }
 
