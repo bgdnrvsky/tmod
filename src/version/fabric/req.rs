@@ -49,6 +49,25 @@ impl Op {
     }
 }
 
+impl Display for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Op::GreaterEq => ">=",
+                Op::LessEq => "<=",
+                Op::Exact => "=",
+                Op::Greater => ">",
+                Op::Less => "<",
+                Op::Tilde => "~",
+                Op::Caret => "^",
+                Op::Wildcard => "*",
+            }
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Comparator {
     operation: Op,
@@ -85,7 +104,28 @@ impl std::str::FromStr for Comparator {
 
 impl std::fmt::Display for Comparator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+        assert!(!matches!(self.operation, Op::Wildcard));
+
+        write!(f, "{}", self.operation)?;
+        write!(f, "{}", self.major)?;
+
+        if let Some(minor) = self.minor {
+            write!(f, ".{}", minor)?;
+        }
+
+        if let Some(patch) = self.patch {
+            write!(f, ".{}", patch)?;
+        }
+
+        if let Some(pre) = &self.pre {
+            write!(f, "-{}", pre)?;
+        }
+
+        if let Some(build) = &self.build {
+            write!(f, "+{}", build)?;
+        }
+
+        Ok(())
     }
 }
 
