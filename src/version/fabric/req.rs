@@ -47,6 +47,10 @@ impl Op {
         ))
         .parse(input)
     }
+
+    fn is_wildcard(&self) -> bool {
+        matches!(self, Self::Wildcard)
+    }
 }
 
 impl Display for Op {
@@ -104,9 +108,10 @@ impl std::str::FromStr for Comparator {
 
 impl std::fmt::Display for Comparator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        assert!(!matches!(self.operation, Op::Wildcard));
+        if !self.operation.is_wildcard() {
+            write!(f, "{}", self.operation)?;
+        }
 
-        write!(f, "{}", self.operation)?;
         write!(f, "{}", self.major)?;
 
         if let Some(minor) = self.minor {
