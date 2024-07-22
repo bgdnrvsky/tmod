@@ -215,7 +215,7 @@ impl std::str::FromStr for PreRelease {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-struct BuildMetadata {
+pub(crate) struct BuildMetadata {
     idents: Vec<Identifier>,
 }
 
