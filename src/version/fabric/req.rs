@@ -15,6 +15,7 @@ use strum_macros::Display;
 
 use super::utils::decimal;
 use super::version::PreRelease;
+use super::version::{BuildMetadata, PreRelease};
 
 #[derive(Display, Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
 enum VersionPart {
@@ -29,11 +30,26 @@ enum VersionPart {
         patch: usize,
     },
     #[strum(to_string = "{major}.{minor}.{patch}-{pre}")]
-    Full {
+    WithPre {
         major: usize,
         minor: usize,
         patch: usize,
         pre: PreRelease,
+    },
+    #[strum(to_string = "{major}.{minor}.{patch}+{build}")]
+    WithBuild {
+        major: usize,
+        minor: usize,
+        patch: usize,
+        build: BuildMetadata,
+    },
+    #[strum(to_string = "{major}.{minor}.{patch}-{pre}+{build}")]
+    WitPreAndBuild {
+        major: usize,
+        minor: usize,
+        patch: usize,
+        pre: PreRelease,
+        build: BuildMetadata,
     },
 }
 
