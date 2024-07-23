@@ -230,7 +230,7 @@ impl Display for BuildMetadata {
 }
 
 impl BuildMetadata {
-    fn parse(input: &str) -> IResult<&str, Self> {
+    pub fn parse(input: &str) -> IResult<&str, Self> {
         preceded(
             char('+'),
             separated_list1(char('.'), Identifier::parse(true)),
