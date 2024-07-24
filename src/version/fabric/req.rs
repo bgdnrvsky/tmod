@@ -157,8 +157,148 @@ impl Comparator {
         ))
     }
 
-    fn matches(&self, version: &Version) -> bool {
-        todo!()
+    fn matches_exact(&self, ver: &Version) -> bool {
+        if ver.major != self.major {
+            return false;
+        }
+
+        if let Some(minor) = self.minor {
+            if ver.minor != minor {
+                return false;
+            }
+        }
+
+        if let Some(patch) = self.patch {
+            if ver.patch != patch {
+                return false;
+            }
+        }
+
+        ver.pre == self.pre
+    }
+
+    fn matches_greater(&self, version: &Version) -> bool {
+        if version.major != self.major {
+            return version.major > self.major;
+        }
+
+        match self.minor {
+            None => return false,
+            Some(minor) => {
+                if version.minor != minor {
+                    return version.minor > minor;
+                }
+            }
+        }
+
+        match self.patch {
+            None => return false,
+            Some(patch) => {
+                if version.patch != patch {
+                    return version.patch > patch;
+                }
+            }
+        }
+
+        version.pre > self.pre
+    }
+
+    fn matches_less(&self, version: &Version) -> bool {
+        if version.major != self.major {
+            return version.major < self.major;
+        }
+
+        match self.minor {
+            None => return false,
+            Some(minor) => {
+                if version.minor != minor {
+                    return version.minor < minor;
+                }
+            }
+        }
+
+        match self.patch {
+            None => return false,
+            Some(patch) => {
+                if version.patch != patch {
+                    return version.patch < patch;
+                }
+            }
+        }
+
+        version.pre < self.pre
+    }
+
+    fn matches_tilde(&self, version: &Version) -> bool {
+        if version.major != self.major {
+            return false;
+        }
+
+        if let Some(minor) = self.minor {
+            if version.minor != minor {
+                return false;
+            }
+        }
+
+        if let Some(patch) = self.patch {
+            if version.patch != patch {
+                return version.patch > patch;
+            }
+        }
+
+        version.pre >= self.pre
+    }
+
+    fn matches_caret(&self, version: &Version) -> bool {
+        if version.major != self.major {
+            return false;
+        }
+
+        let minor = match self.minor {
+            None => return true,
+            Some(minor) => minor,
+        };
+
+        let patch = match self.patch {
+            None => {
+                if self.major > 0 {
+                    return version.minor >= minor;
+                } else {
+                    return version.minor == minor;
+                }
+            }
+            Some(patch) => patch,
+        };
+
+        if self.major > 0 {
+            if version.minor != minor {
+                return version.minor > minor;
+            } else if version.patch != patch {
+                return version.patch > patch;
+            }
+        } else if minor > 0 {
+            if version.minor != minor {
+                return false;
+            } else if version.patch != patch {
+                return version.patch > patch;
+            }
+        } else if version.minor != minor || version.patch != patch {
+            return false;
+        }
+
+        version.pre >= self.pre
+    }
+
+    fn matches(&self, ver: &Version) -> bool {
+        match self.operation {
+            Op::Exact | Op::Wildcard => self.matches_exact(ver),
+            Op::Greater => self.matches_greater(ver),
+            Op::GreaterEq => self.matches_exact(ver) || self.matches_greater(ver),
+            Op::Less => self.matches_less(ver),
+            Op::LessEq => self.matches_exact(ver) || self.matches_less(ver),
+            Op::Tilde => self.matches_tilde(ver),
+            Op::Caret => self.matches_caret(ver),
+        }
     }
 }
 
