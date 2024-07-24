@@ -89,7 +89,7 @@ struct Comparator {
 
 impl Comparator {
     fn parse(input: &str) -> IResult<&str, Self> {
-        let (rest, operation) = opt(Op::parse)
+        let (rest, mut operation) = opt(Op::parse)
             .map(|maybe_op| maybe_op.unwrap_or_default())
             .parse(input)?;
 
@@ -97,8 +97,16 @@ impl Comparator {
 
         let (rest, minor) = cond(rest.starts_with('.'), VersionPart::parse).parse(rest)?;
 
+        if minor.as_ref().is_some_and(VersionPart::is_wildcard) {
+            operation = Op::Wildcard;
+        }
+
         let (rest, patch) =
             cond(rest.starts_with('.') && minor.is_some(), VersionPart::parse).parse(rest)?;
+
+        if patch.as_ref().is_some_and(VersionPart::is_wildcard) {
+            operation = Op::Wildcard;
+        }
 
         let (rest, pre) =
             cond(rest.starts_with('-') && patch.is_some(), PreRelease::parse).parse(rest)?;
