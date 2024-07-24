@@ -178,18 +178,22 @@ impl std::fmt::Display for Comparator {
 
         if let Some(minor) = self.minor {
             write!(f, ".{}", minor)?;
-        }
 
-        if let Some(patch) = self.patch {
-            write!(f, ".{}", patch)?;
-        }
+            if let Some(patch) = self.patch {
+                write!(f, ".{}", patch)?;
 
-        if let Some(pre) = &self.pre {
-            write!(f, "-{}", pre)?;
-        }
+                if let Some(pre) = &self.pre {
+                    write!(f, "-{}", pre)?;
+                }
 
-        if let Some(build) = &self.build {
-            write!(f, "+{}", build)?;
+                if let Some(build) = &self.build {
+                    write!(f, "+{}", build)?;
+                }
+            } else if self.operation.is_wildcard() {
+                write!(f, ".*")?;
+            }
+        } else if self.operation.is_wildcard() {
+            write!(f, ".*")?;
         }
 
         Ok(())
