@@ -15,64 +15,102 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use super::version::{BuildMetadata, PreRelease};
 use super::{utils::decimal, Version};
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-enum Op {
-    Exact,
-    Greater,
-    GreaterEq,
-    Less,
-    LessEq,
-    Tilde,
-    #[default]
-    Caret,
-    Wildcard,
+#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
+pub struct VersionReq {
+    comparators: Vec<Comparator>,
 }
 
-impl Op {
-    fn parse_wildcard(input: &str) -> IResult<&str, char> {
-        satisfy(|ch| ch == '*' || ch == 'x' || ch == 'X').parse(input)
+impl VersionReq {
+    pub fn any() -> Self {
+        Self {
+            comparators: Vec::new(),
+        }
     }
 
     fn parse(input: &str) -> IResult<&str, Self> {
-        macro_rules! op {
-            ($parser:expr) => {
-                delimited(space0, $parser, space0)
-            };
+        let (rest, wildcard) = preceded(space0, opt(Op::parse_wildcard)).parse(input)?;
+
+        if wildcard.is_some() {
+            if rest.is_empty() {
+                return Ok((rest, Self::any()));
+            } else {
+                return Err(nom::Err::Failure(nom::error::Error::new(
+                    rest,
+                    nom::error::ErrorKind::Satisfy,
+                )));
+            }
         }
 
-        alt((
-            op!(tag(">=")).map(|_| Self::GreaterEq),
-            op!(tag("<=")).map(|_| Self::LessEq),
-            op!(tag("=")).map(|_| Self::Exact),
-            op!(tag(">")).map(|_| Self::Greater),
-            op!(tag("<")).map(|_| Self::Less),
-            op!(tag("~")).map(|_| Self::Tilde),
-            op!(tag("^")).map(|_| Self::Caret),
-            op!(Self::parse_wildcard).map(|_| Self::Wildcard),
-        ))
-        .parse(input)
+        let separator = delimited(space0, char(','), space0);
+        separated_list1(separator, Comparator::parse)
+            .map(|comparators| Self { comparators })
+            .parse(input)
     }
 
-    fn is_wildcard(&self) -> bool {
-        matches!(self, Self::Wildcard)
+    pub fn matches(&self, version: &Version) -> bool {
+        self.comparators
+            .iter()
+            .all(|comparator| comparator.matches(version))
+            && {
+                // If a version has a prerelease or build metadata tag then it
+                // will only be allowed to satisfy req if at least one comparator with the
+                // same major.minor.patch also has a prerelease or build metadata tag.
+
+                let has_prerelease = version.pre.is_some();
+                let has_buildmetadata = version.build.is_some();
+
+                if !has_prerelease && !has_buildmetadata {
+                    return true;
+                }
+
+                self.comparators.iter().any(|comparator| {
+                    let compatible_pre = if !has_prerelease {
+                        true
+                    } else {
+                        comparator.is_compatible_prerelease(version)
+                    };
+                    let compatible_build = if !has_buildmetadata {
+                        true
+                    } else {
+                        comparator.is_compatible_buildmeta(version)
+                    };
+
+                    compatible_pre && compatible_build
+                })
+            }
     }
 }
 
-impl Display for Op {
+impl Default for VersionReq {
+    fn default() -> Self {
+        Self::any()
+    }
+}
+
+impl std::str::FromStr for VersionReq {
+    type Err = nom::error::Error<String>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match all_consuming(Self::parse).parse(s).finish() {
+            Ok((_, version)) => Ok(version),
+            Err(nom::error::Error { input, code }) => Err(Self::Err {
+                input: input.to_string(),
+                code,
+            }),
+        }
+    }
+}
+
+impl Display for VersionReq {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.comparators.is_empty() {
+            return write!(f, "*");
+        }
+
         write!(
             f,
             "{}",
-            match self {
-                Op::GreaterEq => ">=",
-                Op::LessEq => "<=",
-                Op::Exact => "=",
-                Op::Greater => ">",
-                Op::Less => "<",
-                Op::Tilde => "~",
-                Op::Caret => "^",
-                Op::Wildcard => "*",
-            }
+            self.comparators.iter().map(ToString::to_string).join(", ")
         )
     }
 }
@@ -362,6 +400,68 @@ impl std::fmt::Display for Comparator {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+enum Op {
+    Exact,
+    Greater,
+    GreaterEq,
+    Less,
+    LessEq,
+    Tilde,
+    #[default]
+    Caret,
+    Wildcard,
+}
+
+impl Op {
+    fn parse_wildcard(input: &str) -> IResult<&str, char> {
+        satisfy(|ch| ch == '*' || ch == 'x' || ch == 'X').parse(input)
+    }
+
+    fn parse(input: &str) -> IResult<&str, Self> {
+        macro_rules! op {
+            ($parser:expr) => {
+                delimited(space0, $parser, space0)
+            };
+        }
+
+        alt((
+            op!(tag(">=")).map(|_| Self::GreaterEq),
+            op!(tag("<=")).map(|_| Self::LessEq),
+            op!(tag("=")).map(|_| Self::Exact),
+            op!(tag(">")).map(|_| Self::Greater),
+            op!(tag("<")).map(|_| Self::Less),
+            op!(tag("~")).map(|_| Self::Tilde),
+            op!(tag("^")).map(|_| Self::Caret),
+            op!(Self::parse_wildcard).map(|_| Self::Wildcard),
+        ))
+        .parse(input)
+    }
+
+    fn is_wildcard(&self) -> bool {
+        matches!(self, Self::Wildcard)
+    }
+}
+
+impl Display for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Op::GreaterEq => ">=",
+                Op::LessEq => "<=",
+                Op::Exact => "=",
+                Op::Greater => ">",
+                Op::Less => "<",
+                Op::Tilde => "~",
+                Op::Caret => "^",
+                Op::Wildcard => "*",
+            }
+        )
+    }
+}
+
 #[derive(Debug)]
 enum VersionPart {
     Wildcard,
@@ -392,106 +492,6 @@ impl VersionPart {
             VersionPart::Wildcard => None,
             VersionPart::Numeric(num) => Some(num),
         }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, DeserializeFromStr, SerializeDisplay)]
-pub struct VersionReq {
-    comparators: Vec<Comparator>,
-}
-
-impl VersionReq {
-    pub fn any() -> Self {
-        Self {
-            comparators: Vec::new(),
-        }
-    }
-
-    fn parse(input: &str) -> IResult<&str, Self> {
-        let (rest, wildcard) = preceded(space0, opt(Op::parse_wildcard)).parse(input)?;
-
-        if wildcard.is_some() {
-            if rest.is_empty() {
-                return Ok((rest, Self::any()));
-            } else {
-                return Err(nom::Err::Failure(nom::error::Error::new(
-                    rest,
-                    nom::error::ErrorKind::Satisfy,
-                )));
-            }
-        }
-
-        let separator = delimited(space0, char(','), space0);
-        separated_list1(separator, Comparator::parse)
-            .map(|comparators| Self { comparators })
-            .parse(input)
-    }
-
-    pub fn matches(&self, version: &Version) -> bool {
-        self.comparators
-            .iter()
-            .all(|comparator| comparator.matches(version))
-            && {
-                // If a version has a prerelease or build metadata tag then it
-                // will only be allowed to satisfy req if at least one comparator with the
-                // same major.minor.patch also has a prerelease or build metadata tag.
-
-                let has_prerelease = version.pre.is_some();
-                let has_buildmetadata = version.build.is_some();
-
-                if !has_prerelease && !has_buildmetadata {
-                    return true;
-                }
-
-                self.comparators.iter().any(|comparator| {
-                    let compatible_pre = if !has_prerelease {
-                        true
-                    } else {
-                        comparator.is_compatible_prerelease(version)
-                    };
-                    let compatible_build = if !has_buildmetadata {
-                        true
-                    } else {
-                        comparator.is_compatible_buildmeta(version)
-                    };
-
-                    compatible_pre && compatible_build
-                })
-            }
-    }
-}
-
-impl Default for VersionReq {
-    fn default() -> Self {
-        Self::any()
-    }
-}
-
-impl std::str::FromStr for VersionReq {
-    type Err = nom::error::Error<String>;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match all_consuming(Self::parse).parse(s).finish() {
-            Ok((_, version)) => Ok(version),
-            Err(nom::error::Error { input, code }) => Err(Self::Err {
-                input: input.to_string(),
-                code,
-            }),
-        }
-    }
-}
-
-impl Display for VersionReq {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.comparators.is_empty() {
-            return write!(f, "*");
-        }
-
-        write!(
-            f,
-            "{}",
-            self.comparators.iter().map(ToString::to_string).join(", ")
-        )
     }
 }
 
