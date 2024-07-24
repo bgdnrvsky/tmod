@@ -359,7 +359,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn basic() {
         let r = &req!("1.0.0");
         assert_to_string(r, "^1.0.0");
@@ -374,7 +373,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn exact() {
         let r = &req!("=1.0.0");
         assert_to_string(r, "=1.0.0");
@@ -402,7 +400,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn greater_than() {
         let r = &req!(">= 1.0.0");
         assert_to_string(r, ">=1.0.0");
@@ -419,7 +416,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn less_than() {
         let r = &req!("< 1.0.0");
         assert_to_string(r, "<1.0.0");
@@ -444,7 +440,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn multiple() {
         let r = &req!("> 0.0.9, <= 2.5.3");
         assert_to_string(r, ">0.0.9, <=2.5.3");
@@ -508,7 +503,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn tilde() {
         let r = &req!("~1");
         assert_match_all(r, &["1.0.0", "1.0.1", "1.1.1"]);
@@ -528,7 +522,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn caret() {
         let r = &req!("^1");
         assert_match_all(r, &["1.1.2", "1.1.0", "1.2.1", "1.0.1"]);
@@ -601,7 +594,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn wildcard() {
         assert!(VersionReq::from_str("").is_err()); // unexpected end of input while parsing major version number
 
@@ -646,7 +638,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     pub fn pre() {
         let r = &req!("=2.1.1-really.0");
         assert_match_all(r, &["2.1.1-really.0"]);
