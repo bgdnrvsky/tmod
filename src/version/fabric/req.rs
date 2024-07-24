@@ -112,7 +112,7 @@ impl Comparator {
                 .parse(rest)?;
 
         let (rest, build) = nom::combinator::cond(
-            rest.starts_with('-') && patch.is_some(),
+            rest.starts_with('+') && patch.is_some(),
             BuildMetadata::parse,
         )
         .parse(rest)?;
