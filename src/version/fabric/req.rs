@@ -164,7 +164,7 @@ impl Comparator {
     }
 
     pub fn is_compatible_prerelease(&self, version: &Version) -> bool {
-            self.is_compatible_version_base(version) && self.pre.is_some()
+        self.is_compatible_version_base(version) && self.pre.is_some()
     }
 
     pub fn is_compatible_buildmeta(&self, version: &Version) -> bool {
@@ -188,7 +188,7 @@ impl Comparator {
             }
         }
 
-        ver.pre == self.pre
+        ver.pre == self.pre && ver.build == self.build
     }
 
     fn matches_greater(&self, version: &Version) -> bool {
@@ -214,7 +214,7 @@ impl Comparator {
             }
         }
 
-        version.pre > self.pre
+        version.pre > self.pre && version.build > self.build
     }
 
     fn matches_less(&self, version: &Version) -> bool {
@@ -240,7 +240,7 @@ impl Comparator {
             }
         }
 
-        version.pre < self.pre
+        version.pre < self.pre && version.build < self.build
     }
 
     fn matches_tilde(&self, version: &Version) -> bool {
@@ -260,7 +260,7 @@ impl Comparator {
             }
         }
 
-        version.pre >= self.pre
+        version.pre >= self.pre && version.build >= self.build
     }
 
     fn matches_caret(&self, version: &Version) -> bool {
@@ -300,7 +300,7 @@ impl Comparator {
             return false;
         }
 
-        version.pre >= self.pre
+        version.pre >= self.pre && version.build >= self.build
     }
 
     fn matches(&self, ver: &Version) -> bool {
@@ -431,6 +431,33 @@ impl VersionReq {
         self.comparators
             .iter()
             .all(|comparator| comparator.matches(version))
+            && {
+                // If a version has a prerelease or build metadata tag then it
+                // will only be allowed to satisfy req if at least one comparator with the
+                // same major.minor.patch also has a prerelease or build metadata tag.
+
+                let has_prerelease = version.pre.is_some();
+                let has_buildmetadata = version.build.is_some();
+
+                if !has_prerelease && !has_buildmetadata {
+                    return true;
+                }
+
+                self.comparators.iter().any(|comparator| {
+                    let compatible_pre = if !has_prerelease {
+                        true
+                    } else {
+                        comparator.is_compatible_prerelease(version)
+                    };
+                    let compatible_build = if !has_buildmetadata {
+                        true
+                    } else {
+                        comparator.is_compatible_buildmeta(version)
+                    };
+
+                    compatible_pre && compatible_build
+                })
+            }
     }
 }
 
