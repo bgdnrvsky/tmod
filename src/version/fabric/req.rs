@@ -5,11 +5,11 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::{char, satisfy, space0},
+    combinator::{all_consuming, cond, opt},
     multi::separated_list1,
-    sequence::{delimited, preceded, terminated},
+    sequence::{delimited, preceded},
     Finish, IResult, Parser,
 };
-use nom::combinator::all_consuming;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use super::version::{BuildMetadata, PreRelease};
@@ -89,29 +89,21 @@ struct Comparator {
 
 impl Comparator {
     fn parse(input: &str) -> IResult<&str, Self> {
-        let (rest, operation) = nom::combinator::opt(Op::parse)
+        let (rest, operation) = opt(Op::parse)
             .map(|maybe_op| maybe_op.unwrap_or_default())
             .parse(input)?;
 
         let (rest, major) = decimal(false).parse(rest)?;
 
-        let (rest, minor) = nom::combinator::cond(
-            rest.starts_with('.'),
-            VersionPart::parse,
-        )
-        .parse(rest)?;
+        let (rest, minor) = cond(rest.starts_with('.'), VersionPart::parse).parse(rest)?;
 
-        let (rest, patch) = nom::combinator::cond(
-            rest.starts_with('.') && minor.is_some(),
-            VersionPart::parse,
-        )
-        .parse(rest)?;
+        let (rest, patch) =
+            cond(rest.starts_with('.') && minor.is_some(), VersionPart::parse).parse(rest)?;
 
         let (rest, pre) =
-            nom::combinator::cond(rest.starts_with('-') && patch.is_some(), PreRelease::parse)
-                .parse(rest)?;
+            cond(rest.starts_with('-') && patch.is_some(), PreRelease::parse).parse(rest)?;
 
-        let (rest, build) = nom::combinator::cond(
+        let (rest, build) = cond(
             rest.starts_with('+') && patch.is_some(),
             BuildMetadata::parse,
         )
@@ -144,14 +136,17 @@ impl Comparator {
             }
         }
 
-        Ok((rest, Self {
-            operation,
-            major,
-            minor: minor.and_then(VersionPart::resolve),
-            patch: patch.and_then(VersionPart::resolve),
-            pre,
-            build,
-        }))
+        Ok((
+            rest,
+            Self {
+                operation,
+                major,
+                minor: minor.and_then(VersionPart::resolve),
+                patch: patch.and_then(VersionPart::resolve),
+                pre,
+                build,
+            },
+        ))
     }
 
     fn matches(&self, version: &Version) -> bool {
@@ -217,10 +212,13 @@ impl VersionPart {
     }
 
     fn parse(input: &str) -> IResult<&str, Self> {
-        preceded(char('.'), Op::parse_wildcard
-            .map(|_| Self::Wildcard)
-            .or(decimal(false).map(Self::Numeric)))
-            .parse(input)
+        preceded(
+            char('.'),
+            Op::parse_wildcard
+                .map(|_| Self::Wildcard)
+                .or(decimal(false).map(Self::Numeric)),
+        )
+        .parse(input)
     }
 
     fn resolve(self) -> Option<usize> {
@@ -244,8 +242,7 @@ impl VersionReq {
     }
 
     fn parse(input: &str) -> IResult<&str, Self> {
-        let (rest, wildcard) =
-            preceded(space0, nom::combinator::opt(Op::parse_wildcard)).parse(input)?;
+        let (rest, wildcard) = preceded(space0, opt(Op::parse_wildcard)).parse(input)?;
 
         if wildcard.is_some() {
             if rest.is_empty() {
