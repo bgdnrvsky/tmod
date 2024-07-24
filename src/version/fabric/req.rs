@@ -395,7 +395,7 @@ mod tests {
         assert_match_none(r, &["0.9.1", "0.1.0", "0.1.1-beta2.a", "0.1.0-beta2"]);
 
         let r = &req!("=0.1.0+meta");
-        assert_to_string(r, "=0.1.0");
+        assert_to_string(r, "=0.1.0+meta");
         assert_match_all(r, &["0.1.0", "0.1.0+meta", "0.1.0+any"]);
     }
 
