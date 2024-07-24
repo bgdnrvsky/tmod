@@ -117,23 +117,19 @@ impl Comparator {
                 )));
             }
 
-            if patch.as_ref().is_some_and(VersionPart::is_numeric) {
-                if minor.as_ref().is_some_and(VersionPart::is_wildcard) {
-                    return Err(nom::Err::Failure(nom::error::Error::new(
-                        rest,
-                        nom::error::ErrorKind::Satisfy,
-                    )));
-                }
-            }
-        }
-
-        if pre.is_some() || build.is_some() {
-            if patch.is_none() || patch.as_ref().is_some_and(VersionPart::is_wildcard) {
+            if patch.as_ref().is_some_and(VersionPart::is_numeric) && minor.as_ref().is_some_and(VersionPart::is_wildcard) {
                 return Err(nom::Err::Failure(nom::error::Error::new(
                     rest,
                     nom::error::ErrorKind::Satisfy,
                 )));
             }
+        }
+
+        if (pre.is_some() || build.is_some()) && (patch.is_none() || patch.as_ref().is_some_and(VersionPart::is_wildcard)) {
+            return Err(nom::Err::Failure(nom::error::Error::new(
+                rest,
+                nom::error::ErrorKind::Satisfy,
+            )));
         }
 
         Ok((
@@ -349,7 +345,7 @@ mod tests {
     #[test]
     #[ignore]
     fn basic() {
-        let ref r = req!("1.0.0");
+        let r = &req!("1.0.0");
         assert_to_string(r, "^1.0.0");
         assert_match_all(r, &["1.0.0", "1.1.0", "1.0.1"]);
         assert_match_none(r, &["0.9.9", "0.10.0", "0.1.0", "1.0.0-pre", "1.0.1-pre"]);
@@ -357,34 +353,34 @@ mod tests {
 
     #[test]
     fn default() {
-        let ref r = VersionReq::default();
+        let r = &VersionReq::default();
         assert_eq!(r, &VersionReq::any());
     }
 
     #[test]
     #[ignore]
     fn exact() {
-        let ref r = req!("=1.0.0");
+        let r = &req!("=1.0.0");
         assert_to_string(r, "=1.0.0");
         assert_match_all(r, &["1.0.0"]);
         assert_match_none(r, &["1.0.1", "0.9.9", "0.10.0", "0.1.0", "1.0.0-pre"]);
 
-        let ref r = req!("=0.9.0");
+        let r = &req!("=0.9.0");
         assert_to_string(r, "=0.9.0");
         assert_match_all(r, &["0.9.0"]);
         assert_match_none(r, &["0.9.1", "1.9.0", "0.0.9", "0.9.0-pre"]);
 
-        let ref r = req!("=0.0.2");
+        let r = &req!("=0.0.2");
         assert_to_string(r, "=0.0.2");
         assert_match_all(r, &["0.0.2"]);
         assert_match_none(r, &["0.0.1", "0.0.3", "0.0.2-pre"]);
 
-        let ref r = req!("=0.1.0-beta2.a");
+        let r = &req!("=0.1.0-beta2.a");
         assert_to_string(r, "=0.1.0-beta2.a");
         assert_match_all(r, &["0.1.0-beta2.a"]);
         assert_match_none(r, &["0.9.1", "0.1.0", "0.1.1-beta2.a", "0.1.0-beta2"]);
 
-        let ref r = req!("=0.1.0+meta");
+        let r = &req!("=0.1.0+meta");
         assert_to_string(r, "=0.1.0");
         assert_match_all(r, &["0.1.0", "0.1.0+meta", "0.1.0+any"]);
     }
@@ -392,12 +388,12 @@ mod tests {
     #[test]
     #[ignore]
     pub fn greater_than() {
-        let ref r = req!(">= 1.0.0");
+        let r = &req!(">= 1.0.0");
         assert_to_string(r, ">=1.0.0");
         assert_match_all(r, &["1.0.0", "2.0.0"]);
         assert_match_none(r, &["0.1.0", "0.0.1", "1.0.0-pre", "2.0.0-pre"]);
 
-        let ref r = req!(">= 2.1.0-alpha2");
+        let r = &req!(">= 2.1.0-alpha2");
         assert_to_string(r, ">=2.1.0-alpha2");
         assert_match_all(r, &["2.1.0-alpha2", "2.1.0-alpha3", "2.1.0", "3.0.0"]);
         assert_match_none(
@@ -409,45 +405,45 @@ mod tests {
     #[test]
     #[ignore]
     pub fn less_than() {
-        let ref r = req!("< 1.0.0");
+        let r = &req!("< 1.0.0");
         assert_to_string(r, "<1.0.0");
         assert_match_all(r, &["0.1.0", "0.0.1"]);
         assert_match_none(r, &["1.0.0", "1.0.0-beta", "1.0.1", "0.9.9-alpha"]);
 
-        let ref r = req!("<= 2.1.0-alpha2");
+        let r = &req!("<= 2.1.0-alpha2");
         assert_match_all(r, &["2.1.0-alpha2", "2.1.0-alpha1", "2.0.0", "1.0.0"]);
         assert_match_none(
             r,
             &["2.1.0", "2.2.0-alpha1", "2.0.0-alpha2", "1.0.0-alpha2"],
         );
 
-        let ref r = req!(">1.0.0-alpha, <1.0.0");
+        let r = &req!(">1.0.0-alpha, <1.0.0");
         assert_match_all(r, &["1.0.0-beta"]);
 
-        let ref r = req!(">1.0.0-alpha, <1.0");
+        let r = &req!(">1.0.0-alpha, <1.0");
         assert_match_none(r, &["1.0.0-beta"]);
 
-        let ref r = req!(">1.0.0-alpha, <1");
+        let r = &req!(">1.0.0-alpha, <1");
         assert_match_none(r, &["1.0.0-beta"]);
     }
 
     #[test]
     #[ignore]
     pub fn multiple() {
-        let ref r = req!("> 0.0.9, <= 2.5.3");
+        let r = &req!("> 0.0.9, <= 2.5.3");
         assert_to_string(r, ">0.0.9, <=2.5.3");
         assert_match_all(r, &["0.0.10", "1.0.0", "2.5.3"]);
         assert_match_none(r, &["0.0.8", "2.5.4"]);
 
-        let ref r = req!("0.3.0, 0.4.0");
+        let r = &req!("0.3.0, 0.4.0");
         assert_to_string(r, "^0.3.0, ^0.4.0");
         assert_match_none(r, &["0.0.8", "0.3.0", "0.4.0"]);
 
-        let ref r = req!("<= 0.2.0, >= 0.5.0");
+        let r = &req!("<= 0.2.0, >= 0.5.0");
         assert_to_string(r, "<=0.2.0, >=0.5.0");
         assert_match_none(r, &["0.0.8", "0.3.0", "0.5.1"]);
 
-        let ref r = req!("0.1.0, 0.1.4, 0.1.6");
+        let r = &req!("0.1.0, 0.1.4, 0.1.6");
         assert_to_string(r, "^0.1.0, ^0.1.4, ^0.1.6");
         assert_match_all(r, &["0.1.6", "0.1.9"]);
         assert_match_none(r, &["0.1.0", "0.1.4", "0.2.0"]);
@@ -456,7 +452,7 @@ mod tests {
 
         assert!(VersionReq::from_str("> 0.3.0, ,").is_err()); // unexpected character ',' while parsing major version number
 
-        let ref r = req!(">=0.5.1-alpha3, <0.6");
+        let r = &req!(">=0.5.1-alpha3, <0.6");
         assert_to_string(r, ">=0.5.1-alpha3, <0.6");
         assert_match_all(
             r,
@@ -498,19 +494,19 @@ mod tests {
     #[test]
     #[ignore]
     pub fn tilde() {
-        let ref r = req!("~1");
+        let r = &req!("~1");
         assert_match_all(r, &["1.0.0", "1.0.1", "1.1.1"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "0.0.9"]);
 
-        let ref r = req!("~1.2");
+        let r = &req!("~1.2");
         assert_match_all(r, &["1.2.0", "1.2.1"]);
         assert_match_none(r, &["1.1.1", "1.3.0", "0.0.9"]);
 
-        let ref r = req!("~1.2.2");
+        let r = &req!("~1.2.2");
         assert_match_all(r, &["1.2.2", "1.2.4"]);
         assert_match_none(r, &["1.2.1", "1.9.0", "1.0.9", "2.0.1", "0.1.3"]);
 
-        let ref r = req!("~1.2.3-beta.2");
+        let r = &req!("~1.2.3-beta.2");
         assert_match_all(r, &["1.2.3", "1.2.4", "1.2.3-beta.2", "1.2.3-beta.4"]);
         assert_match_none(r, &["1.3.3", "1.1.4", "1.2.3-beta.1", "1.2.4-beta.2"]);
     }
@@ -518,26 +514,26 @@ mod tests {
     #[test]
     #[ignore]
     pub fn caret() {
-        let ref r = req!("^1");
+        let r = &req!("^1");
         assert_match_all(r, &["1.1.2", "1.1.0", "1.2.1", "1.0.1"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "0.1.4"]);
         assert_match_none(r, &["1.0.0-beta1", "0.1.0-alpha", "1.0.1-pre"]);
 
-        let ref r = req!("^1.1");
+        let r = &req!("^1.1");
         assert_match_all(r, &["1.1.2", "1.1.0", "1.2.1"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "1.0.1", "0.1.4"]);
 
-        let ref r = req!("^1.1.2");
+        let r = &req!("^1.1.2");
         assert_match_all(r, &["1.1.2", "1.1.4", "1.2.1"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "1.1.1", "0.0.1"]);
         assert_match_none(r, &["1.1.2-alpha1", "1.1.3-alpha1", "2.9.0-alpha1"]);
 
-        let ref r = req!("^0.1.2");
+        let r = &req!("^0.1.2");
         assert_match_all(r, &["0.1.2", "0.1.4"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "1.1.1", "0.0.1"]);
         assert_match_none(r, &["0.1.2-beta", "0.1.3-alpha", "0.2.0-pre"]);
 
-        let ref r = req!("^0.5.1-alpha3");
+        let r = &req!("^0.5.1-alpha3");
         assert_match_all(
             r,
             &[
@@ -559,19 +555,19 @@ mod tests {
             ],
         );
 
-        let ref r = req!("^0.0.2");
+        let r = &req!("^0.0.2");
         assert_match_all(r, &["0.0.2"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "1.1.1", "0.0.1", "0.1.4"]);
 
-        let ref r = req!("^0.0");
+        let r = &req!("^0.0");
         assert_match_all(r, &["0.0.2", "0.0.0"]);
         assert_match_none(r, &["0.9.1", "2.9.0", "1.1.1", "0.1.4"]);
 
-        let ref r = req!("^0");
+        let r = &req!("^0");
         assert_match_all(r, &["0.9.1", "0.0.2", "0.0.0"]);
         assert_match_none(r, &["2.9.0", "1.1.1"]);
 
-        let ref r = req!("^1.4.2-beta.5");
+        let r = &req!("^1.4.2-beta.5");
         assert_match_all(
             r,
             &["1.4.2", "1.4.3", "1.4.2-beta.5", "1.4.2-beta.6", "1.4.2-c"],
@@ -593,7 +589,7 @@ mod tests {
     pub fn wildcard() {
         assert!(VersionReq::from_str("").is_err()); // unexpected end of input while parsing major version number
 
-        let ref r = req!("*");
+        let r = &req!("*");
         assert_match_all(r, &["0.9.1", "2.9.0", "0.0.9", "1.0.1", "1.1.1"]);
         assert_match_none(r, &["1.0.0-pre"]);
 
@@ -601,7 +597,7 @@ mod tests {
             assert_eq!(*r, req!(s));
         }
 
-        let ref r = req!("1.*");
+        let r = &req!("1.*");
         assert_match_all(r, &["1.2.0", "1.2.1", "1.1.1", "1.3.0"]);
         assert_match_none(r, &["0.0.9", "1.2.0-pre"]);
 
@@ -609,7 +605,7 @@ mod tests {
             assert_eq!(*r, req!(s));
         }
 
-        let ref r = req!("1.2.*");
+        let r = &req!("1.2.*");
         assert_match_all(r, &["1.2.0", "1.2.2", "1.2.4"]);
         assert_match_none(r, &["1.9.0", "1.0.9", "2.0.1", "0.1.3", "1.2.2-pre"]);
 
@@ -629,14 +625,14 @@ mod tests {
 
     #[test]
     pub fn any() {
-        let ref r = VersionReq::any();
+        let r = &VersionReq::any();
         assert_match_all(r, &["0.0.1", "0.1.0", "1.0.0"]);
     }
 
     #[test]
     #[ignore]
     pub fn pre() {
-        let ref r = req!("=2.1.1-really.0");
+        let r = &req!("=2.1.1-really.0");
         assert_match_all(r, &["2.1.1-really.0"]);
     }
 
@@ -674,11 +670,11 @@ mod tests {
 
     #[test]
     fn cargo3202() {
-        let ref r = req!("0.*.*");
+        let r = &req!("0.*.*");
         assert_to_string(r, "0.*");
         assert_match_all(r, &["0.5.0"]);
 
-        let ref r = req!("0.0.*");
+        let r = &req!("0.0.*");
         assert_to_string(r, "0.0.*");
     }
 
