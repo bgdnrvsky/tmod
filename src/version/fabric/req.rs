@@ -117,7 +117,9 @@ impl Comparator {
                 )));
             }
 
-            if patch.as_ref().is_some_and(VersionPart::is_numeric) && minor.as_ref().is_some_and(VersionPart::is_wildcard) {
+            if patch.as_ref().is_some_and(VersionPart::is_numeric)
+                && minor.as_ref().is_some_and(VersionPart::is_wildcard)
+            {
                 return Err(nom::Err::Failure(nom::error::Error::new(
                     rest,
                     nom::error::ErrorKind::Satisfy,
@@ -125,7 +127,9 @@ impl Comparator {
             }
         }
 
-        if (pre.is_some() || build.is_some()) && (patch.is_none() || patch.as_ref().is_some_and(VersionPart::is_wildcard)) {
+        if (pre.is_some() || build.is_some())
+            && (patch.is_none() || patch.as_ref().is_some_and(VersionPart::is_wildcard))
+        {
             return Err(nom::Err::Failure(nom::error::Error::new(
                 rest,
                 nom::error::ErrorKind::Satisfy,
