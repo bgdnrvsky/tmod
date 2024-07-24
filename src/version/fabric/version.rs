@@ -17,11 +17,11 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 /// Needed since the `semver` crate isn't flexible enough
 #[derive(Debug, Clone, DeserializeFromStr, SerializeDisplay)]
 pub struct Version {
-    major: usize,
-    minor: usize,
-    patch: usize,
-    pre: Option<PreRelease>,
-    build: Option<BuildMetadata>,
+    pub(crate) major: usize,
+    pub(crate) minor: usize,
+    pub(crate) patch: usize,
+    pub(crate) pre: Option<PreRelease>,
+    pub(crate) build: Option<BuildMetadata>,
 }
 
 impl PartialOrd for Version {
