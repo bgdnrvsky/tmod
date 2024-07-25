@@ -195,17 +195,17 @@ impl Comparator {
         ))
     }
 
-    pub fn is_compatible_version_base(&self, version: &Version) -> bool {
+    fn is_compatible_version_base(&self, version: &Version) -> bool {
         self.major == version.major
             && self.minor == Some(version.minor)
             && self.patch == Some(version.patch)
     }
 
-    pub fn is_compatible_prerelease(&self, version: &Version) -> bool {
+    fn is_compatible_prerelease(&self, version: &Version) -> bool {
         self.is_compatible_version_base(version) && self.pre.is_some()
     }
 
-    pub fn is_compatible_buildmeta(&self, version: &Version) -> bool {
+    fn is_compatible_buildmeta(&self, version: &Version) -> bool {
         self.is_compatible_version_base(version) && self.build.is_some()
     }
 
