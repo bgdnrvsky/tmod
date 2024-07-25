@@ -209,24 +209,38 @@ impl Comparator {
         self.is_compatible_version_base(version) && self.build.is_some()
     }
 
-    fn matches_exact(&self, ver: &Version) -> bool {
-        if ver.major != self.major {
+    fn matches_exact(&self, version: &Version) -> bool {
+        if version.major != self.major {
             return false;
         }
 
         if let Some(minor) = self.minor {
-            if ver.minor != minor {
+            if version.minor != minor {
                 return false;
             }
         }
 
         if let Some(patch) = self.patch {
-            if ver.patch != patch {
+            if version.patch != patch {
                 return false;
             }
         }
 
-        ver.pre == self.pre && ver.build == self.build
+        let match_pre = match (self.pre.as_ref(), version.pre.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => false,
+            (Some(a), Some(b)) => a == b,
+        };
+
+        let match_build = match (self.build.as_ref(), version.build.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(_), Some(_)) => true,
+        };
+
+        match_pre && match_build
     }
 
     fn matches_greater(&self, version: &Version) -> bool {
@@ -252,7 +266,21 @@ impl Comparator {
             }
         }
 
-        version.pre > self.pre && version.build > self.build
+        let match_pre = match (self.pre.as_ref(), version.pre.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(a), Some(b)) => b > a,
+        };
+
+        let match_build = match (self.build.as_ref(), version.build.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(_), Some(_)) => true,
+        };
+
+        match_pre && match_build
     }
 
     fn matches_less(&self, version: &Version) -> bool {
@@ -278,7 +306,21 @@ impl Comparator {
             }
         }
 
-        version.pre < self.pre && version.build < self.build
+        let match_pre = match (self.pre.as_ref(), version.pre.as_ref()) {
+            (None, None) => false,
+            (None, Some(_)) => true,
+            (Some(_), None) => false,
+            (Some(a), Some(b)) => b < a,
+        };
+
+        let match_build = match (self.build.as_ref(), version.build.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(_), Some(_)) => true,
+        };
+
+        match_pre && match_build
     }
 
     fn matches_tilde(&self, version: &Version) -> bool {
@@ -298,7 +340,21 @@ impl Comparator {
             }
         }
 
-        version.pre >= self.pre && version.build >= self.build
+        let match_pre = match (self.pre.as_ref(), version.pre.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(a), Some(b)) => b >= a,
+        };
+
+        let match_build = match (self.build.as_ref(), version.build.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(_), Some(_)) => true,
+        };
+
+        match_pre && match_build
     }
 
     fn matches_caret(&self, version: &Version) -> bool {
@@ -338,7 +394,21 @@ impl Comparator {
             return false;
         }
 
-        version.pre >= self.pre && version.build >= self.build
+        let match_pre = match (self.pre.as_ref(), version.pre.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(a), Some(b)) => b >= a,
+        };
+
+        let match_build = match (self.build.as_ref(), version.build.as_ref()) {
+            (None, None) => true,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            (Some(_), Some(_)) => true,
+        };
+
+        match_pre && match_build
     }
 
     fn matches(&self, ver: &Version) -> bool {
