@@ -146,14 +146,9 @@ impl Comparator {
             operation = Op::Wildcard;
         }
 
-        let (rest, pre) =
-            cond(rest.starts_with('-') && patch.is_some(), PreRelease::parse).parse(rest)?;
+        let (rest, pre) = cond(rest.starts_with('-'), PreRelease::parse).parse(rest)?;
 
-        let (rest, build) = cond(
-            rest.starts_with('+') && patch.is_some(),
-            BuildMetadata::parse,
-        )
-        .parse(rest)?;
+        let (rest, build) = cond(rest.starts_with('+'), BuildMetadata::parse).parse(rest)?;
 
         if patch.is_some() {
             if minor.is_none() {
@@ -171,15 +166,6 @@ impl Comparator {
                     nom::error::ErrorKind::Satisfy,
                 )));
             }
-        }
-
-        if (pre.is_some() || build.is_some())
-            && (patch.is_none() || patch.as_ref().is_some_and(VersionPart::is_wildcard))
-        {
-            return Err(nom::Err::Failure(nom::error::Error::new(
-                rest,
-                nom::error::ErrorKind::Satisfy,
-            )));
         }
 
         Ok((
