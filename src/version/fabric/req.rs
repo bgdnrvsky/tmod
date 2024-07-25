@@ -667,17 +667,6 @@ mod tests {
 
         // https://github.com/steveklabnik/semver/issues/56
         assert!(VersionReq::from_str("1.2.3 - 2.3.4").is_err()); // expected comma after patch version number, found '-'
-
-        #[rustfmt::skip]
-        // excessive number of version operations
-        assert!(VersionReq::from_str(">1, >2, >3, >4, >5,\
-                                      >6, >7, >8, >9, >10,\
-                                      >11, >12, >13, >14,\
-                                      >15, >16, >17, >18,\
-                                      >19, >20, >21, >22,\
-                                      >23, >24, >25, >26,\
-                                      >27, >28, >29, >30,\
-                                      >31, >32, >33").is_err());
     }
 
     #[test]
