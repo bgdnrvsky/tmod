@@ -521,6 +521,7 @@ mod tests {
         };
     }
 
+    #[track_caller]
     fn assert_match_all(req: &VersionReq, versions: &[&str]) {
         for string in versions {
             let parsed = version!(string);
@@ -528,6 +529,7 @@ mod tests {
         }
     }
 
+    #[track_caller]
     fn assert_match_none(req: &VersionReq, versions: &[&str]) {
         for string in versions {
             let parsed = version!(string);
@@ -535,6 +537,7 @@ mod tests {
         }
     }
 
+    #[track_caller]
     fn assert_to_string(req: impl std::fmt::Display, repr: &'static str) {
         assert_eq!(req.to_string(), repr);
     }
