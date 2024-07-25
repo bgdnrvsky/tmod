@@ -73,20 +73,23 @@ fn main() -> anyhow::Result<()> {
                     let builder =
                     tmod::fetcher::mod_search::search_list::display_builder::DisplayBuilder::new(&mod_list);
 
-                    println!("{}", builder);
+                    print!("{}", builder);
                 }
                 AddCommandTypes::Id { mod_id } => {
                     let the_mod = searcher.search_mod_by_id(mod_id)?;
-                    let builder = tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilder::new(&the_mod);
+                    let builder =
+                        tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilder::new(
+                            &the_mod,
+                        );
 
-                    println!("{}", builder);
+                    print!("{}", builder);
                 }
                 AddCommandTypes::Slug { mod_slug } => {
                     let mod_list = searcher.search_mod_by_name(mod_slug)?;
                     let builder =
                     tmod::fetcher::mod_search::search_list::display_builder::DisplayBuilder::new(&mod_list);
 
-                    println!("{}", builder);
+                    print!("{}", builder);
                 }
             }
         }
