@@ -8,7 +8,7 @@ use tmod::{
 
 #[test]
 fn load_forge() -> anyhow::Result<()> {
-    let btp = Mod::from_jar("tests/btp.jar")?;
+    let btp = Mod::from_jar("tests/jars/btp.jar")?;
 
     assert_eq!(btp.id(), "betterthirdperson");
 

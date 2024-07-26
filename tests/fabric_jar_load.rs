@@ -10,7 +10,7 @@ use tmod::{
 
 #[test]
 fn load_fabric() -> anyhow::Result<()> {
-    let sodium = Mod::from_jar("tests/sodium.jar")?;
+    let sodium = Mod::from_jar("tests/jars/sodium.jar")?;
 
     assert_eq!(sodium.id(), "sodium");
 
