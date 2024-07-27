@@ -65,9 +65,9 @@ impl Searcher {
 
         let mut params = AdditionalFetchParameters::default();
 
-        params.add_query("gameId", self.minecraft_id()?.to_string());
-        params.add_query("classId", mods_class.to_string());
-        params.add_query("slug", slug);
+        params.add_query("gameId", self.minecraft_id()?);
+        params.add_query("classId", mods_class);
+        params.add_query("slug", slug.as_ref());
 
         ModSearchList::fetch(params)
     }

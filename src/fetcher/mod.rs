@@ -97,15 +97,15 @@ impl AdditionalFetchParameters {
         self.queries.as_ref()
     }
 
-    pub fn with_query(mut self, name: impl AsRef<str>, value: impl AsRef<str>) -> Self {
+    pub fn with_query(mut self, name: impl Display, value: impl Display) -> Self {
         self.add_query(name, value);
         self
     }
 
-    pub fn add_query(&mut self, name: impl AsRef<str>, value: impl AsRef<str>) {
+    pub fn add_query(&mut self, name: impl Display, value: impl Display) {
         self.queries
             .get_or_insert_with(HashMap::new)
-            .insert(name.as_ref().to_string(), value.as_ref().to_string());
+            .insert(name.to_string(), value.to_string());
     }
 
     pub fn with_segment(mut self, segment: String) -> Self {
