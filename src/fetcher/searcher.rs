@@ -58,11 +58,12 @@ impl Searcher {
     }
 
     pub fn search_mod_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
-        let mut params = AdditionalFetchParameters::default();
         let mods_class = self
             .curseforge_categories()?
             .get("Mods")
             .context("No category `Mods` found")?;
+
+        let mut params = AdditionalFetchParameters::default();
 
         params.add_query("gameId", self.minecraft_id()?.to_string());
         params.add_query("classId", mods_class.to_string());
