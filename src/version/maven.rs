@@ -5,7 +5,7 @@ use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::{one_of, space0},
-    combinator::opt,
+    combinator::{all_consuming, opt},
     multi::separated_list1,
     sequence::{delimited, preceded, separated_pair, terminated},
     Finish, IResult, Parser,
@@ -75,12 +75,8 @@ impl FromStr for ComparatorHalf {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok(("", item)) => Ok(item),
-            Ok((rest, item)) => {
-                eprintln!("The ComparatorHalf was parsed, but remaining input is left: `{rest}`");
-                Ok(item)
-            }
+        match all_consuming(Self::parse).parse(s).finish() {
+            Ok((_, item)) => Ok(item),
             Err(e) => Err(anyhow!("Error while parsing Comparator: {e}")),
         }
     }
@@ -134,12 +130,8 @@ impl FromStr for Comparator {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok(("", item)) => Ok(item),
-            Ok((rest, item)) => {
-                eprintln!("The Comparator was parsed, but remaining input is left: `{rest}`");
-                Ok(item)
-            }
+        match all_consuming(Self::parse).parse(s).finish() {
+            Ok((_, item)) => Ok(item),
             Err(e) => Err(anyhow!("Error while parsing Comparator: {e}")),
         }
     }
@@ -179,12 +171,8 @@ impl FromStr for VersionRange {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok(("", item)) => Ok(item),
-            Ok((rest, item)) => {
-                eprintln!("The VersionRange was parsed, but remaining input is left: `{rest}`");
-                Ok(item)
-            }
+        match all_consuming(Self::parse).parse(s).finish() {
+            Ok((_, item)) => Ok(item),
             Err(e) => Err(anyhow!("Error while parsing Comparator: {e}")),
         }
     }
@@ -221,12 +209,8 @@ impl FromStr for Version {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match Self::parse(s).finish() {
-            Ok(("", item)) => Ok(item),
-            Ok((rest, item)) => {
-                eprintln!("The Version was parsed, but remaining input is left: `{rest}`");
-                Ok(item)
-            }
+        match all_consuming(Self::parse).parse(s).finish() {
+            Ok((_, item)) => Ok(item),
             Err(e) => Err(anyhow!("Error while parsing Version: {e}")),
         }
     }
