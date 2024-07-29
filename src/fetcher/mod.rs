@@ -121,7 +121,7 @@ impl AdditionalFetchParameters {
 }
 
 #[cfg(test)]
-mod fetchers {
+mod item_tests {
     use super::items::*;
     use super::AdditionalFetchParameters;
     use super::Fetchable;
