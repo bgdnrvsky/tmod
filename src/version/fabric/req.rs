@@ -64,18 +64,8 @@ impl VersionReq {
                 }
 
                 self.comparators.iter().any(|comparator| {
-                    let compatible_pre = if !has_prerelease {
-                        true
-                    } else {
-                        comparator.is_compatible_prerelease(version)
-                    };
-                    let compatible_build = if !has_buildmetadata {
-                        true
-                    } else {
-                        comparator.is_compatible_buildmeta(version)
-                    };
-
-                    compatible_pre && compatible_build
+                    (comparator.is_compatible_prerelease(version) || !has_prerelease)
+                        && (comparator.is_compatible_buildmeta(version) || !has_buildmetadata)
                 })
             }
     }
