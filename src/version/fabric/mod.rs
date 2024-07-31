@@ -12,7 +12,7 @@ pub(crate) mod utils {
         IResult, Parser,
     };
 
-    pub fn version_core(input: &str) -> IResult<&str, (usize, usize, usize)> {
+    pub fn version_core(input: &str) -> IResult<&str, (u64, u64, u64)> {
         tuple((
             decimal(false),
             char('.'),
@@ -25,7 +25,7 @@ pub(crate) mod utils {
     }
 
     /// Parses a decimal, it is possible to choose whether you want to accept zeros at the start
-    pub fn decimal(accept_zeros: bool) -> impl Fn(&str) -> IResult<&str, usize> {
+    pub fn decimal(accept_zeros: bool) -> impl Fn(&str) -> IResult<&str, u64> {
         move |input| {
             map_res(digit1, |out: &str| {
                 if out.starts_with('0') && out.len() == 1 {

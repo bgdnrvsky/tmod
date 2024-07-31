@@ -108,9 +108,9 @@ impl Display for VersionReq {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Comparator {
     operation: Op,
-    major: usize,
-    minor: Option<usize>,
-    patch: Option<usize>,
+    major: u64,
+    minor: Option<u64>,
+    patch: Option<u64>,
     pre: Option<PreRelease>,
     build: Option<BuildMetadata>,
 }
@@ -511,7 +511,7 @@ impl Display for Op {
 #[derive(Debug)]
 enum VersionPart {
     Wildcard,
-    Numeric(usize),
+    Numeric(u64),
 }
 
 impl VersionPart {
@@ -533,7 +533,7 @@ impl VersionPart {
         .parse(input)
     }
 
-    fn resolve(self) -> Option<usize> {
+    fn resolve(self) -> Option<u64> {
         match self {
             VersionPart::Wildcard => None,
             VersionPart::Numeric(num) => Some(num),

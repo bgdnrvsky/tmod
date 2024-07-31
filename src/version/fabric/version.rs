@@ -17,9 +17,9 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 /// Needed since the `semver` crate isn't flexible enough
 #[derive(Debug, Clone, DeserializeFromStr, SerializeDisplay)]
 pub struct Version {
-    pub(crate) major: usize,
-    pub(crate) minor: usize,
-    pub(crate) patch: usize,
+    pub(crate) major: u64,
+    pub(crate) minor: u64,
+    pub(crate) patch: u64,
     pub(crate) pre: Option<PreRelease>,
     pub(crate) build: Option<BuildMetadata>,
 }
@@ -121,7 +121,7 @@ impl std::str::FromStr for Version {
 /// Numeric identifiers MUST NOT include leading zeroes. (except build metadata)
 #[derive(Debug, Clone, PartialEq, Hash, Eq)]
 enum Identifier {
-    Numeric(usize),
+    Numeric(u64),
     Textual(String),
 }
 
