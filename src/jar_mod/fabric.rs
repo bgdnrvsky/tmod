@@ -18,6 +18,32 @@ pub struct FabricMod {
     incompatibilities: HashMap<String, VersionReq>,
 }
 
+impl FabricMod {
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn version(&self) -> &Version {
+        &self.version
+    }
+
+    pub fn loader_version_needed(&self) -> &VersionReq {
+        &self.loader_version_needed
+    }
+
+    pub fn minecraft_version_needed(&self) -> &VersionReq {
+        &self.minecraft_version_needed
+    }
+
+    pub fn dependencies(&self) -> &HashMap<String, VersionReq> {
+        &self.dependencies
+    }
+
+    pub fn incompatibilities(&self) -> &HashMap<String, VersionReq> {
+        &self.incompatibilities
+    }
+}
+
 impl TryFrom<Jar> for FabricMod {
     type Error = anyhow::Error;
 
