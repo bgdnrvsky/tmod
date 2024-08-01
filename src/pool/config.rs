@@ -75,6 +75,7 @@ mod config_deserializer_tests {
             kind = "forge"
             version = "47.2.0"
             "#,
-        ).expect("Should fail since game version is missing");
+        )
+        .expect("Should fail since game version is missing");
     }
 }

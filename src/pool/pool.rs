@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     ffi::{OsStr, OsString},
-    fs::{self, ReadDir},
+    fs::{self},
     path::Path,
 };
 
@@ -79,7 +79,6 @@ impl Pool {
 
             fs::read_dir(path)
                 .context("Reading `locals` directory")?
-                .into_iter()
                 .map(|entry| entry.map(|entry| entry.file_name()))
                 .map(|entry| {
                     entry.and_then(|file_name| {
