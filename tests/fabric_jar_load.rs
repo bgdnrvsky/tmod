@@ -1,35 +1,33 @@
 use std::str::FromStr;
 
+use jars::{jar, JarOptionBuilder};
+
 use tmod::{
-    minecraft_mod::Mod,
-    version::{
-        fabric::{Version, VersionReq},
-        MultiVersion, SingleVersion,
-    },
+    jar_mod::fabric::FabricMod as Mod,
+    version::fabric::{Version, VersionReq},
 };
 
 #[test]
 fn load_fabric() -> anyhow::Result<()> {
-    let sodium = Mod::from_jar("tests/jars/sodium.jar")?;
+    let jar = jar(
+        "tests/jars/sodium.jar",
+        JarOptionBuilder::builder().keep_meta_info().build(),
+    )?;
+
+    let sodium = Mod::try_from(jar)?;
 
     assert_eq!(sodium.id(), "sodium");
 
-    assert_eq!(
-        sodium.version(),
-        SingleVersion::Fabric(Version::from_str("0.5.8+mc1.20.4")?)
-    );
+    assert_eq!(sodium.version(), &Version::from_str("0.5.8+mc1.20.4")?);
 
     assert!(!sodium.dependencies().is_empty());
     assert!(!sodium.incompatibilities().is_empty());
 
-    assert_eq!(
-        sodium.minecraft_version_needed(),
-        MultiVersion::Fabric(VersionReq::any())
-    );
+    assert_eq!(sodium.minecraft_version_needed(), &VersionReq::any());
 
     assert_eq!(
         sodium.loader_version_needed(),
-        MultiVersion::Fabric(VersionReq::from_str(">=0.12.0")?)
+        &VersionReq::from_str(">=0.12.0")?
     );
 
     Ok(())
