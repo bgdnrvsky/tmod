@@ -1,33 +1,35 @@
 use std::str::FromStr;
 
-use tmod::version::maven::Version;
+use jars::{jar, JarOptionBuilder};
+
 use tmod::{
-    minecraft_mod::Mod,
-    version::{MultiVersion, SingleVersion},
+    jar_mod::forge::ForgeMod as Mod,
+    version::maven::{Version, VersionRange},
 };
 
 #[test]
 fn load_forge() -> anyhow::Result<()> {
-    let btp = Mod::from_jar("tests/jars/btp.jar")?;
+    let jar = jar(
+        "tests/jars/btp.jar",
+        JarOptionBuilder::builder().keep_meta_info().build(),
+    )?;
+
+    let btp = Mod::try_from(jar)?;
 
     assert_eq!(btp.id(), "betterthirdperson");
 
-    assert_eq!(
-        btp.version(),
-        SingleVersion::Forge(Version::from_str("1.9.0").unwrap())
-    );
+    assert_eq!(btp.version(), &Version::from_str("1.9.0")?);
 
     assert!(btp.dependencies().is_empty());
-    assert!(btp.incompatibilities().is_empty());
 
     assert_eq!(
         btp.minecraft_version_needed(),
-        MultiVersion::Forge(tmod::version::maven::VersionRange::from_str("[1.20,1.21)")?)
+        &VersionRange::from_str("[1.20,1.21)")?
     );
 
     assert_eq!(
         btp.loader_version_needed(),
-        MultiVersion::Forge(tmod::version::maven::VersionRange::from_str("[46,)")?)
+        &VersionRange::from_str("[46,)")?
     );
 
     Ok(())
