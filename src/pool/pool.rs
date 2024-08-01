@@ -20,14 +20,14 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn new(path: impl AsRef<Path>) -> anyhow::Result<Self> {
-        let metadata = fs::metadata(&path).context("Getting metadata")?;
+    pub fn new(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        let metadata = fs::metadata(&dir_path).context("Getting metadata")?;
         anyhow::ensure!(
             metadata.is_dir(),
             "The provided path should point to a directory"
         );
 
-        let directory = fs::read_dir(&path).context("Failed to read directory")?;
+        let directory = fs::read_dir(&dir_path).context("Failed to read directory")?;
         let mut entries = directory
             .map(|entry| entry.map(|e| (e.file_name(), e.file_type())))
             .collect::<Result<HashMap<_, _>, _>>()
@@ -46,7 +46,7 @@ impl Pool {
                 "`config.toml` is expected to be a file"
             );
 
-            Config::from_toml(path).context("Reading `config.toml`")?
+            Config::from_toml(dir_path.as_ref().join(path)).context("Reading `config.toml`")?
         };
 
         // Check if `remotes.json` file exists
@@ -62,7 +62,8 @@ impl Pool {
                 "`remotes.json` is expected to be a file"
             );
 
-            let content = fs::read_to_string("remotes.json").context("Reading `remotes.json`")?;
+            let content = fs::read_to_string(dir_path.as_ref().join(path))
+                .context("Reading `remotes.json`")?;
 
             serde_json::from_str(&content).context("Deserializing `remotes.json`")?
         };
@@ -77,7 +78,7 @@ impl Pool {
 
             anyhow::ensure!(file_type.is_dir(), "`locals` is expected to be a file");
 
-            fs::read_dir(path)
+            fs::read_dir(dir_path.as_ref().join(path))
                 .context("Reading `locals` directory")?
                 .map(|entry| entry.map(|entry| entry.file_name()))
                 .map(|entry| {
