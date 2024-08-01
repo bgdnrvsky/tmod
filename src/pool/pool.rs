@@ -18,12 +18,11 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(path: PathBuf) -> anyhow::Result<Self> {
-        // Check that the path is a directory
-        if !fs::metadata(&path).context("Getting metadata")?.is_dir() {
-            return Err(anyhow::anyhow!(
-                "The provided path should point to a directory"
-            ));
-        }
+        let metadata = fs::metadata(&path).context("Getting metadata")?;
+        anyhow::ensure!(
+            metadata.is_dir(),
+            "The provided path should point to a directory"
+        );
 
         let directory = fs::read_dir(&path).context("Failed to read directory")?;
         let mut entries = directory
@@ -39,9 +38,10 @@ impl Pool {
 
             let file_type = file_type.context("Can't get metadata for `config.toml`")?;
 
-            if !file_type.is_file() {
-                return Err(anyhow::anyhow!("`config.toml` is expected to be a file"));
-            }
+            anyhow::ensure!(
+                file_type.is_file(),
+                "`config.toml` is expected to be a file"
+            );
 
             Config::from_toml(path).context("Reading `config.toml`")?
         };
@@ -54,9 +54,7 @@ impl Pool {
 
             let file_type = file_type.context("Can't get metadata for `remotes`")?;
 
-            if !file_type.is_dir() {
-                return Err(anyhow::anyhow!("`remotes` is expected to be a file"));
-            }
+            anyhow::ensure!(file_type.is_dir(), "`remotes` is expected to be a file");
 
             fs::read_dir(path).context("Reading `remotes` directory")?
         };
@@ -69,9 +67,7 @@ impl Pool {
 
             let file_type = file_type.context("Can't get metadata for `locals`")?;
 
-            if !file_type.is_dir() {
-                return Err(anyhow::anyhow!("`locals` is expected to be a file"));
-            }
+            anyhow::ensure!(file_type.is_dir(), "`locals` is expected to be a file");
 
             fs::read_dir(path).context("Reading `locals` directory")?
         };
