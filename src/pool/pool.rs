@@ -1,19 +1,22 @@
 use std::{
     collections::HashMap,
-    ffi::OsStr,
+    ffi::{OsStr, OsString},
     fs::{self, ReadDir},
     path::Path,
 };
 
 use anyhow::Context;
 
+use crate::version::MultiVersion;
+
 use super::config::Config;
 
 #[derive(Debug)]
 pub struct Pool {
     config: Config,
-    remotes: ReadDir,
     locals: ReadDir,
+    /// mod slug - required versions
+    remotes: HashMap<String, MultiVersion>,
 }
 
 impl Pool {
@@ -46,17 +49,22 @@ impl Pool {
             Config::from_toml(path).context("Reading `config.toml`")?
         };
 
-        // Check if `remotes` directory exists
+        // Check if `remotes.json` file exists
         let remotes = {
             let (path, file_type) = entries
-                .remove_entry(OsStr::new("remotes"))
+                .remove_entry(OsStr::new("remotes.json"))
                 .context("No `remotes` directory present in the pool")?;
 
             let file_type = file_type.context("Can't get metadata for `remotes`")?;
 
-            anyhow::ensure!(file_type.is_dir(), "`remotes` is expected to be a file");
+            anyhow::ensure!(
+                file_type.is_file(),
+                "`remotes.json` is expected to be a file"
+            );
 
-            fs::read_dir(path).context("Reading `remotes` directory")?
+            let content = fs::read_to_string("remotes.json").context("Reading `remotes.json`")?;
+
+            serde_json::from_str(&content).context("Deserializing `remotes.json`")?
         };
 
         // Check if `locals` directory exists
