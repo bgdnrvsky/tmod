@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     ffi::OsStr,
     fs::{self, ReadDir},
-    path::PathBuf,
+    path::Path,
 };
 
 use anyhow::Context;
@@ -17,7 +17,7 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn new(path: PathBuf) -> anyhow::Result<Self> {
+    pub fn new(path: impl AsRef<Path>) -> anyhow::Result<Self> {
         let metadata = fs::metadata(&path).context("Getting metadata")?;
         anyhow::ensure!(
             metadata.is_dir(),
