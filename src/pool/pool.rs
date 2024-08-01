@@ -6,17 +6,17 @@ use std::{
 };
 
 use anyhow::Context;
+use jars::{jar, Jar, JarOptionBuilder};
 
 use crate::version::MultiVersion;
 
 use super::config::Config;
 
-#[derive(Debug)]
 pub struct Pool {
     config: Config,
-    locals: ReadDir,
     /// mod slug - required versions
     remotes: HashMap<String, MultiVersion>,
+    locals: HashMap<OsString, Jar>,
 }
 
 impl Pool {
@@ -77,7 +77,16 @@ impl Pool {
 
             anyhow::ensure!(file_type.is_dir(), "`locals` is expected to be a file");
 
-            fs::read_dir(path).context("Reading `locals` directory")?
+            fs::read_dir(path)
+                .context("Reading `locals` directory")?
+                .into_iter()
+                .map(|entry| entry.map(|entry| entry.file_name()))
+                .map(|entry| {
+                    entry.and_then(|file_name| {
+                        jar(&file_name, JarOptionBuilder::default()).map(|jar| (file_name, jar))
+                    })
+                })
+                .collect::<Result<HashMap<_, _>, _>>()?
         };
 
         Ok(Self {
