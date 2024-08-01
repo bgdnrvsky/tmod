@@ -18,6 +18,28 @@ pub struct ForgeMod {
     dependencies: HashMap<String, VersionRange>,
 }
 
+impl ForgeMod {
+    pub fn id(&self) -> &str {
+        &self.id
+    }
+
+    pub fn version(&self) -> &Version {
+        &self.version
+    }
+
+    pub fn loader_version_needed(&self) -> &VersionRange {
+        &self.loader_version_needed
+    }
+
+    pub fn minecraft_version_needed(&self) -> &VersionRange {
+        &self.minecraft_version_needed
+    }
+
+    pub fn dependencies(&self) -> &HashMap<String, VersionRange> {
+        &self.dependencies
+    }
+}
+
 impl TryFrom<Jar> for ForgeMod {
     type Error = anyhow::Error;
 
