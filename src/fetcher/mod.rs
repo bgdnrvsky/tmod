@@ -120,6 +120,7 @@ impl AdditionalFetchParameters {
     }
 }
 
+#[cfg(not(feature = "offline"))]
 #[cfg(test)]
 mod item_tests {
     use super::items::*;

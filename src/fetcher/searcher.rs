@@ -97,6 +97,7 @@ where
     }
 }
 
+#[cfg(not(feature = "offline"))]
 #[cfg(test)]
 mod tests {
     use super::*;
