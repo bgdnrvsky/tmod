@@ -63,7 +63,9 @@ impl PartialEq<MultiVersion> for &MultiVersion {
             (MultiVersion::Forge(a), MultiVersion::Forge(b)) => a.eq(b),
             (MultiVersion::Fabric(_), MultiVersion::Forge(_))
             | (MultiVersion::Forge(_), MultiVersion::Fabric(_)) => {
-                unimplemented!("Comparing version ranges of two different breeds is not yet implemented")
+                unimplemented!(
+                    "Comparing version ranges of two different breeds is not yet implemented"
+                )
             }
         }
     }
