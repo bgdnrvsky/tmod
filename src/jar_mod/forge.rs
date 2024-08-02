@@ -72,7 +72,7 @@ impl TryFrom<Jar> for ForgeMod {
 
         let minecraft_version_needed = dependencies
             .remove("minecraft")
-            .context("Jar mod config didn't specify the required loader version range")?;
+            .context("Jar mod config didn't specify the required minecraft version range")?;
 
         Ok(Self {
             id,
