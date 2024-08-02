@@ -95,4 +95,16 @@ impl Pool {
             locals,
         })
     }
+
+    pub fn remotes(&self) -> &HashMap<String, MultiVersion> {
+        &self.remotes
+    }
+
+    pub fn locals(&self) -> &HashMap<OsString, Jar> {
+        &self.locals
+    }
+
+    pub fn config(&self) -> &Config {
+        &self.config
+    }
 }
