@@ -10,7 +10,7 @@ use crate::version::maven::{Version, VersionRange};
 
 #[derive(Debug, Clone)]
 pub struct ForgeMod {
-    id: String,
+    slug: String,
     version: Version,
     loader_version_needed: VersionRange,
     minecraft_version_needed: VersionRange,
@@ -19,8 +19,8 @@ pub struct ForgeMod {
 }
 
 impl ForgeMod {
-    pub fn id(&self) -> &str {
-        &self.id
+    pub fn slug(&self) -> &str {
+        &self.slug
     }
 
     pub fn version(&self) -> &Version {
@@ -76,7 +76,7 @@ impl TryFrom<Jar> for ForgeMod {
             .context("Jar mod config didn't specify the required minecraft version range")?;
 
         Ok(Self {
-            id,
+            slug: id,
             version: mod_info.version,
             loader_version_needed,
             minecraft_version_needed,

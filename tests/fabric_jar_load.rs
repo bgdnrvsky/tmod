@@ -16,7 +16,7 @@ fn load_fabric() -> anyhow::Result<()> {
 
     let sodium = Mod::try_from(jar)?;
 
-    assert_eq!(sodium.id(), "sodium");
+    assert_eq!(sodium.slug(), "sodium");
 
     assert_eq!(sodium.version(), &Version::from_str("0.5.8+mc1.20.4")?);
 

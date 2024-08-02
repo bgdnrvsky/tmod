@@ -16,7 +16,7 @@ fn load_forge() -> anyhow::Result<()> {
 
     let btp = Mod::try_from(jar)?;
 
-    assert_eq!(btp.id(), "betterthirdperson");
+    assert_eq!(btp.slug(), "betterthirdperson");
 
     assert_eq!(btp.version(), &Version::from_str("1.9.0")?);
 

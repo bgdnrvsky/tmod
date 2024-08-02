@@ -8,7 +8,7 @@ use crate::version::fabric::{Version, VersionReq};
 
 #[derive(Debug, Clone)]
 pub struct FabricMod {
-    id: String,
+    slug: String,
     version: Version,
     loader_version_needed: VersionReq,
     minecraft_version_needed: VersionReq,
@@ -19,8 +19,8 @@ pub struct FabricMod {
 }
 
 impl FabricMod {
-    pub fn id(&self) -> &str {
-        &self.id
+    pub fn slug(&self) -> &str {
+        &self.slug
     }
 
     pub fn version(&self) -> &Version {
@@ -67,7 +67,7 @@ impl TryFrom<Jar> for FabricMod {
             .unwrap_or_else(VersionReq::any);
 
         Ok(Self {
-            id: fabric_json.id,
+            slug: fabric_json.id,
             version: fabric_json.version,
             loader_version_needed,
             minecraft_version_needed,
