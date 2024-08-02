@@ -52,10 +52,11 @@ impl TryFrom<Jar> for ForgeMod {
         let mut forge_toml = toml::from_str::<ForgeToml>(&String::from_utf8_lossy(content))
             .context("Deserializing toml file META-INF/mods.toml")?;
 
-        let mod_info = forge_toml.mods.into_iter().next().context(
-            "The `mods` array in META-INF/mods.toml file \
-                     is expected to have at least one (probably the only) entry",
-        )?;
+        let mod_info = forge_toml
+            .mods
+            .into_iter()
+            .next()
+            .expect("mods array contains only one element");
 
         let id = mod_info.mod_id;
         let mod_deps = forge_toml.dependencies.remove(&id).unwrap_or_else(Vec::new);
