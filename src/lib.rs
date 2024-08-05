@@ -1,5 +1,5 @@
 pub mod config;
 pub mod fetcher;
-pub mod jar_mod;
+pub mod jar;
 pub mod loader;
 pub mod version;
