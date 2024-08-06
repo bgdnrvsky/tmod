@@ -114,7 +114,7 @@ mod loader_deserializing {
 
 #[cfg(test)]
 mod loaders_kind_parsing {
-    use crate::loader::Loaders;
+    use super::super::loader::Loaders;
     use std::str::FromStr;
 
     #[test]

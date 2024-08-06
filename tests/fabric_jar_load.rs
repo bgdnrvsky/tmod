@@ -3,7 +3,7 @@ use std::str::FromStr;
 use jars::{jar, JarOptionBuilder};
 
 use tmod::{
-    jar_mod::fabric::FabricMod as Mod,
+    jar::fabric::FabricMod as Mod,
     version::fabric::{Version, VersionReq},
 };
 

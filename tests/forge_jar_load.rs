@@ -3,7 +3,7 @@ use std::str::FromStr;
 use jars::{jar, JarOptionBuilder};
 
 use tmod::{
-    jar_mod::forge::ForgeMod as Mod,
+    jar::forge::ForgeMod as Mod,
     version::maven::{Version, VersionRange},
 };
 
