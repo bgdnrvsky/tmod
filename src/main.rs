@@ -68,7 +68,7 @@ fn main() -> anyhow::Result<()> {
                     .and_then(|mut segs| segs.nth(2))
                     .expect("Given that `valid_curse_forge_url` didn't fail, no need for checking anymore");
 
-                let mod_list = searcher.search_mod_by_name(mod_name)?;
+                let mod_list = searcher.search_mod_by_slug(mod_name)?;
 
                 print!("{}", mod_list.display());
             }
@@ -78,7 +78,7 @@ fn main() -> anyhow::Result<()> {
                 print!("{}", the_mod.display());
             }
             AddCommandTypes::Slug { mod_slug } => {
-                let mod_list = searcher.search_mod_by_name(mod_slug)?;
+                let mod_list = searcher.search_mod_by_slug(mod_slug)?;
 
                 print!("{}", mod_list.display());
             }

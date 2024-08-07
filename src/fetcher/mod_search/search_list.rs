@@ -40,6 +40,15 @@ impl ModSearchList {
     pub fn display(&self) -> display_builder::DisplayBuilder {
         display_builder::DisplayBuilder::new(self)
     }
+
+    pub fn to_single_mod(mut self) -> Result<SearchedMod, usize> {
+        let count = self.count();
+        if count != 1 {
+            return Err(count);
+        }
+
+        Ok(self.mods.pop_first().unwrap().0)
+    }
 }
 
 pub mod display_builder {
