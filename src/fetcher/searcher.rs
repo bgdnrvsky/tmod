@@ -57,7 +57,7 @@ impl Searcher {
         SearchedMod::fetch(AdditionalFetchParameters::default().with_segment(id.to_string()))
     }
 
-    pub fn search_mod_by_name(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
+    pub fn search_mod_by_slug(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
         let mods_class = self
             .curseforge_categories()?
             .get("Mods")
