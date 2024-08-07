@@ -57,7 +57,7 @@ impl Searcher {
         SearchedMod::fetch(AdditionalFetchParameters::default().with_segment(id.to_string()))
     }
 
-    pub fn search_mod_by_slug(&self, slug: impl AsRef<str>) -> anyhow::Result<ModSearchList> {
+    pub fn search_mod_by_slug(&self, slug: impl AsRef<str>) -> anyhow::Result<SearchedMod> {
         let mods_class = self
             .curseforge_categories()?
             .get("Mods")
@@ -69,7 +69,12 @@ impl Searcher {
         params.add_query("classId", mods_class);
         params.add_query("slug", slug.as_ref());
 
-        ModSearchList::fetch(params)
+        let list = ModSearchList::fetch(params)?;
+
+        match list.to_single_mod() {
+            Ok(r#mod) => Ok(r#mod),
+            Err(n) => anyhow::bail!("The list should have contained 1 mod, but found {n}"),
+        }
     }
 }
 
