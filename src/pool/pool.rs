@@ -1,21 +1,19 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ffi::{OsStr, OsString},
-    fs::{self},
+    fs,
     path::Path,
 };
 
 use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
 
-use crate::version::MultiVersion;
-
 use super::config::Config;
 
 pub struct Pool {
     config: Config,
     /// mod slug - required versions
-    remotes: HashMap<String, MultiVersion>,
+    remotes: HashSet<String>,
     locals: HashMap<OsString, Jar>,
 }
 
@@ -96,7 +94,7 @@ impl Pool {
         })
     }
 
-    pub fn remotes(&self) -> &HashMap<String, MultiVersion> {
+    pub fn remotes(&self) -> &HashSet<String> {
         &self.remotes
     }
 
