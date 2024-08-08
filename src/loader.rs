@@ -47,7 +47,7 @@ impl Loader {
             SingleVersion::Fabric(_) => searcher.fabric_versions()?.0.contains(&version),
         };
 
-        anyhow::ensure!(exists, "The version {version} of the loader doesn't exist");
+        anyhow::ensure!(exists, "The version {version} of the {kind} doesn't exist");
 
         Ok(Self { kind, version })
     }
