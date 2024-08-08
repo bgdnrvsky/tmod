@@ -18,6 +18,30 @@ pub enum SingleVersion {
     Forge(ForgeVersion),
 }
 
+impl TryInto<FabricVersion> for SingleVersion {
+    type Error = Self;
+
+    fn try_into(self) -> Result<FabricVersion, Self::Error> {
+        if let Self::Fabric(v) = self {
+            Ok(v)
+        } else {
+            Err(self)
+        }
+    }
+}
+
+impl TryInto<ForgeVersion> for SingleVersion {
+    type Error = Self;
+
+    fn try_into(self) -> Result<ForgeVersion, Self::Error> {
+        if let Self::Forge(v) = self {
+            Ok(v)
+        } else {
+            Err(self)
+        }
+    }
+}
+
 impl Display for SingleVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
