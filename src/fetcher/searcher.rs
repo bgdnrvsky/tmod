@@ -23,23 +23,19 @@ impl Searcher {
     }
 
     pub fn minecraft_id(&self) -> anyhow::Result<&MinecraftId> {
-        self.minecraft_id
-            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
+        self.minecraft_id.get_or_fetch_with_default(self)
     }
 
     pub fn minecraft_versions(&self) -> anyhow::Result<&MinecraftVersions> {
-        self.minecraft_versions
-            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
+        self.minecraft_versions.get_or_fetch_with_default(self)
     }
 
     pub fn forge_versions(&self) -> anyhow::Result<&ForgeVersions> {
-        self.forge_versions
-            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
+        self.forge_versions.get_or_fetch_with_default(self)
     }
 
     pub fn fabric_versions(&self) -> anyhow::Result<&FabricVersions> {
-        self.fabric_versions
-            .get_or_fetch(self, |_| Ok(AdditionalFetchParameters::default()))
+        self.fabric_versions.get_or_fetch_with_default(self)
     }
 
     pub fn curseforge_categories(&self) -> anyhow::Result<&CurseForgeCategories> {
@@ -99,6 +95,10 @@ where
             debug_assert!(prev.is_ok());
             Ok(self.cell.get().unwrap())
         }
+    }
+
+    fn get_or_fetch_with_default(&self, fetcher: &Searcher) -> anyhow::Result<&T> {
+        self.get_or_fetch(fetcher, |_| Ok(AdditionalFetchParameters::default()))
     }
 }
 
