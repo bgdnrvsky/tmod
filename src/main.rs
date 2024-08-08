@@ -1,9 +1,13 @@
+use std::path::PathBuf;
+
 use anyhow::{bail, ensure};
 use clap::{Parser, Subcommand};
 use tmod::fetcher::searcher::Searcher;
 
 #[derive(Parser)]
 struct Args {
+    #[arg(long, default_value = ".tmod", value_name = "PATH")]
+    pool_dir: PathBuf,
     #[command(subcommand)]
     command: Commands,
 }
