@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, ensure};
 use clap::{Parser, Subcommand};
-use tmod::{fetcher::searcher::Searcher, pool::pool::Pool};
+use tmod::{fetcher::searcher::Searcher, pool::Pool};
 
 #[derive(Parser)]
 struct Args {

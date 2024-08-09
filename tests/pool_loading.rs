@@ -1,5 +1,5 @@
 use anyhow::Context;
-use tmod::pool::pool::Pool;
+use tmod::pool::Pool;
 
 #[test]
 fn read_pool() -> anyhow::Result<()> {
