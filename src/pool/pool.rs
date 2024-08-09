@@ -8,6 +8,8 @@ use std::{
 use anyhow::Context;
 use jars::{jar, Jar, JarOptionBuilder};
 
+use crate::fetcher::mod_search::search_mod::SearchedMod;
+
 use super::config::Config;
 
 pub struct Pool {
@@ -104,5 +106,9 @@ impl Pool {
 
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    pub fn add_to_remotes(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
+        unimplemented!()
     }
 }

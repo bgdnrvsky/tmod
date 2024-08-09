@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{bail, ensure};
 use clap::{Parser, Subcommand};
-use tmod::fetcher::searcher::Searcher;
+use tmod::{fetcher::searcher::Searcher, pool::pool::Pool};
 
 #[derive(Parser)]
 struct Args {
@@ -63,30 +63,27 @@ fn valid_curse_forge_url(s: &str) -> anyhow::Result<url::Url> {
 fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
     let searcher = Searcher::new();
+    let mut pool = Pool::new(&cli.pool_dir)?;
 
     match cli.command {
-        Commands::Add { subadd } => match subadd {
-            AddCommandTypes::Url { curse_forge_url } => {
-                let mod_name = curse_forge_url
+        Commands::Add { subadd } => {
+            let the_mod = match subadd {
+                AddCommandTypes::Url { curse_forge_url } => {
+                    let mod_name = curse_forge_url
                     .path_segments()
                     .and_then(|mut segs| segs.nth(2))
                     .expect("Given that `valid_curse_forge_url` didn't fail, no need for checking anymore");
 
-                let the_mod = searcher.search_mod_by_slug(mod_name)?;
+                    searcher.search_mod_by_slug(mod_name)?
+                }
+                AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                AddCommandTypes::Slug { mod_slug } => searcher.search_mod_by_slug(mod_slug)?,
+            };
 
-                print!("{}", the_mod.display());
-            }
-            AddCommandTypes::Id { mod_id } => {
-                let the_mod = searcher.search_mod_by_id(mod_id)?;
+            print!("{}", the_mod.display());
 
-                print!("{}", the_mod.display());
-            }
-            AddCommandTypes::Slug { mod_slug } => {
-                let the_mod = searcher.search_mod_by_slug(mod_slug)?;
-
-                print!("{}", the_mod.display());
-            }
-        },
+            pool.add_to_remotes(&the_mod)?;
+        }
     }
 
     Ok(())
