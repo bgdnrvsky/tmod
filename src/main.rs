@@ -1,5 +1,6 @@
 use anyhow::{bail, ensure};
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use tmod::fetcher::searcher::Searcher;
 
 #[derive(Parser)]
@@ -68,9 +69,11 @@ fn main() -> anyhow::Result<()> {
                     .and_then(|mut segs| segs.nth(2))
                     .expect("Given that `valid_curse_forge_url` didn't fail, no need for checking anymore");
 
-                let the_mod = searcher.search_mod_by_slug(mod_name)?;
-
-                print!("{}", the_mod.display());
+                if let Some(the_mod) = searcher.search_mod_by_slug(mod_name)? {
+                    print!("{}", the_mod.display());
+                } else {
+                    println!("No mod {name} found", name = mod_name.italic().blue());
+                }
             }
             AddCommandTypes::Id { mod_id } => {
                 let the_mod = searcher.search_mod_by_id(mod_id)?;
@@ -78,9 +81,11 @@ fn main() -> anyhow::Result<()> {
                 print!("{}", the_mod.display());
             }
             AddCommandTypes::Slug { mod_slug } => {
-                let the_mod = searcher.search_mod_by_slug(mod_slug)?;
-
-                print!("{}", the_mod.display());
+                if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                    print!("{}", the_mod.display());
+                } else {
+                    println!("No mod {slug} found", slug = mod_slug.italic().blue());
+                }
             }
         },
     }
