@@ -72,7 +72,7 @@ enum ComparatorHalf {
 impl ComparatorHalf {
     fn get(&self) -> Option<&Version> {
         match self {
-            ComparatorHalf::Inclusive(version) | ComparatorHalf::Uninclusive(version) => {
+            Self::Inclusive(version) | Self::Uninclusive(version) => {
                 version.as_ref()
             }
         }
