@@ -30,8 +30,8 @@ impl Pool {
             "The provided path should point to a directory"
         );
 
-        let directory = fs::read_dir(&dir_path).context("Failed to read directory")?;
-        let mut entries = directory
+        let mut entries = fs::read_dir(&dir_path)
+            .context("Failed to read directory")?
             .map(|entry| entry.map(|e| (e.file_name(), e.file_type())))
             .collect::<Result<HashMap<_, _>, _>>()
             .context("Collecting entries")?;
