@@ -3,7 +3,7 @@ pub mod loader;
 
 use std::{
     collections::{HashMap, HashSet},
-    ffi::{OsStr, OsString},
+    ffi::OsString,
     fs,
     path::Path,
 };
@@ -24,64 +24,66 @@ pub struct Pool {
 
 impl Pool {
     pub fn new(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
-        let metadata = fs::metadata(&dir_path).context("Getting metadata")?;
         anyhow::ensure!(
-            metadata.is_dir(),
+            fs::metadata(&dir_path)?.is_dir(),
             "The provided path should point to a directory"
         );
 
         let mut entries = fs::read_dir(&dir_path)
             .context("Failed to read directory")?
-            .map(|entry| entry.map(|e| (e.file_name(), e.file_type())))
-            .collect::<Result<HashMap<_, _>, _>>()
-            .context("Collecting entries")?;
+            .collect::<Result<Vec<_>, _>>()?;
 
         // Check if `config.toml` file exists
         let config = {
-            let (path, file_type) = entries
-                .remove_entry(OsStr::new("config.toml"))
-                .context("No `config.toml` file present in the pool")?;
-
-            let file_type = file_type.context("Can't get metadata for `config.toml`")?;
+            let file = entries.swap_remove(
+                entries
+                    .iter()
+                    .position(|f| f.file_name() == "config.toml")
+                    .context("No `config.toml` present in the pool")?,
+            );
 
             anyhow::ensure!(
-                file_type.is_file(),
+                file.metadata()?.is_file(),
                 "`config.toml` is expected to be a file"
             );
 
-            Config::from_toml(dir_path.as_ref().join(path)).context("Reading `config.toml`")?
+            Config::from_toml(file.path()).context("Deserializing `config.toml`")?
         };
 
         // Check if `remotes.json` file exists
         let remotes = {
-            let (path, file_type) = entries
-                .remove_entry(OsStr::new("remotes.json"))
-                .context("No `remotes` directory present in the pool")?;
-
-            let file_type = file_type.context("Can't get metadata for `remotes`")?;
+            let file = entries.swap_remove(
+                entries
+                    .iter()
+                    .position(|f| f.file_name() == "remotes.json")
+                    .context("No `remotes.json` present in the pool")?,
+            );
 
             anyhow::ensure!(
-                file_type.is_file(),
+                file.metadata()?.is_file(),
                 "`remotes.json` is expected to be a file"
             );
 
-            let content = fs::read_to_string(dir_path.as_ref().join(path))
-                .context("Reading `remotes.json`")?;
+            let content = fs::read_to_string(file.path()).context("Reading `remotes.json`")?;
 
             serde_json::from_str(&content).context("Deserializing `remotes.json`")?
         };
 
         // Check if `locals` directory exists
         let locals = {
-            let (path, file_type) = entries
-                .remove_entry(OsStr::new("locals"))
-                .context("No `locals` directory present in the pool")?;
+            let dir = entries.swap_remove(
+                entries
+                    .iter()
+                    .position(|f| f.file_name() == "locals")
+                    .context("No `locals` directory present in the pool")?,
+            );
 
-            let file_type = file_type.context("Can't get metadata for `locals`")?;
+            anyhow::ensure!(
+                dir.metadata()?.is_dir(),
+                "`locals` is expected to be a directory"
+            );
 
-            anyhow::ensure!(file_type.is_dir(), "`locals` is expected to be a file");
-
-            fs::read_dir(dir_path.as_ref().join(path))
+            fs::read_dir(dir.path())
                 .context("Reading `locals` directory")?
                 .map(|entry| entry.map(|entry| entry.file_name()))
                 .map(|entry| {
