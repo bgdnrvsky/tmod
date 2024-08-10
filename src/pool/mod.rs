@@ -34,14 +34,17 @@ impl Pool {
             .context("Failed to read directory")?
             .collect::<Result<Vec<_>, _>>()?;
 
+        let mut find_entry = |filename: &'static str| {
+            entries
+                .iter()
+                .position(|f| f.file_name() == filename)
+                .context("No `{filename}` present in the pool")
+                .map(|idx| entries.swap_remove(idx))
+        };
+
         // Check if `config.toml` file exists
         let config = {
-            let file = entries.swap_remove(
-                entries
-                    .iter()
-                    .position(|f| f.file_name() == "config.toml")
-                    .context("No `config.toml` present in the pool")?,
-            );
+            let file = find_entry("config.toml")?;
 
             anyhow::ensure!(
                 file.metadata()?.is_file(),
@@ -53,12 +56,7 @@ impl Pool {
 
         // Check if `remotes.json` file exists
         let remotes = {
-            let file = entries.swap_remove(
-                entries
-                    .iter()
-                    .position(|f| f.file_name() == "remotes.json")
-                    .context("No `remotes.json` present in the pool")?,
-            );
+            let file = find_entry("remotes.json")?;
 
             anyhow::ensure!(
                 file.metadata()?.is_file(),
@@ -73,12 +71,7 @@ impl Pool {
 
         // Check if `locals` directory exists
         let locals = {
-            let dir = entries.swap_remove(
-                entries
-                    .iter()
-                    .position(|f| f.file_name() == "locals")
-                    .context("No `locals` directory present in the pool")?,
-            );
+            let dir = find_entry("locals")?;
 
             anyhow::ensure!(
                 dir.metadata()?.is_dir(),
