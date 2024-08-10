@@ -1,6 +1,9 @@
 use std::cell::OnceCell;
+use std::collections::HashMap;
 
 use anyhow::Context;
+
+use crate::version::SingleVersion;
 
 use super::items::*;
 use super::AdditionalFetchParameters;
@@ -22,23 +25,25 @@ impl Searcher {
         Self::default()
     }
 
-    pub fn minecraft_id(&self) -> anyhow::Result<&MinecraftId> {
-        self.minecraft_id.get_or_fetch_with_default(self)
+    pub fn minecraft_id(&self) -> anyhow::Result<usize> {
+        self.minecraft_id.get_or_fetch_with_default(self).copied()
     }
 
-    pub fn minecraft_versions(&self) -> anyhow::Result<&MinecraftVersions> {
+    pub fn minecraft_versions(&self) -> anyhow::Result<&Vec<SingleVersion>> {
         self.minecraft_versions.get_or_fetch_with_default(self)
     }
 
-    pub fn forge_versions(&self) -> anyhow::Result<&ForgeVersions> {
+    pub fn forge_versions(&self) -> anyhow::Result<&HashMap<SingleVersion, Vec<SingleVersion>>> {
         self.forge_versions.get_or_fetch_with_default(self)
     }
 
-    pub fn fabric_versions(&self) -> anyhow::Result<&FabricVersions> {
-        self.fabric_versions.get_or_fetch_with_default(self)
+    pub fn fabric_versions(&self) -> anyhow::Result<&Vec<SingleVersion>> {
+        self.fabric_versions
+            .get_or_fetch_with_default(self)
+            .map(|item| item.0.as_ref())
     }
 
-    pub fn curseforge_categories(&self) -> anyhow::Result<&CurseForgeCategories> {
+    pub fn curseforge_categories(&self) -> anyhow::Result<&HashMap<String, usize>> {
         self.curseforge_categories.get_or_fetch(self, |fetcher| {
             let mut params = AdditionalFetchParameters::default();
 

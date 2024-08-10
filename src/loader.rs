@@ -44,7 +44,7 @@ impl Loader {
                 .forge_versions()?
                 .values()
                 .any(|versions| versions.contains(&version)),
-            SingleVersion::Fabric(_) => searcher.fabric_versions()?.0.contains(&version),
+            SingleVersion::Fabric(_) => searcher.fabric_versions()?.contains(&version),
         };
 
         anyhow::ensure!(exists, "The version {version} of the {kind} doesn't exist");
