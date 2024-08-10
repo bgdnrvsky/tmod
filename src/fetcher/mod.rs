@@ -31,7 +31,7 @@ where
         #[cfg(not(test))]
         let loading = Self::loading_init();
 
-        let mut url = Self::link()?;
+        let mut url = Self::link().context("Getting the URL")?;
 
         if let Some(queries) = additional_parameters.get_queries() {
             url.query_pairs_mut().extend_pairs(queries);
@@ -43,12 +43,12 @@ where
                 .extend(segments);
         }
 
-        let response = Self::download(url)?;
+        let response = Self::download(url).context("Fetching")?;
 
         #[cfg(not(test))]
         Self::loading_end(loading);
 
-        Self::parse(response)
+        Self::parse(response).context("Parsing")
     }
 
     /// Message, displayed, by default: _i Fetching data_
