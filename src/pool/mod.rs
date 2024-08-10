@@ -4,7 +4,8 @@ pub mod loader;
 use std::{
     collections::{HashMap, HashSet},
     ffi::OsString,
-    fs,
+    fs::{self, File},
+    io::BufReader,
     path::Path,
 };
 
@@ -64,9 +65,10 @@ impl Pool {
                 "`remotes.json` is expected to be a file"
             );
 
-            let content = fs::read_to_string(file.path()).context("Reading `remotes.json`")?;
+            let file = File::open(file.path()).context("Opening `remotes.json`")?;
+            let reader = BufReader::new(file);
 
-            serde_json::from_str(&content).context("Deserializing `remotes.json`")?
+            serde_json::from_reader(reader).context("Deserializing `remotes.json`")?
         };
 
         // Check if `locals` directory exists
