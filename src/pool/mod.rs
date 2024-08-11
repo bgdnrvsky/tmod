@@ -38,7 +38,7 @@ impl Pool {
             entries
                 .iter()
                 .position(|f| f.file_name() == filename)
-                .context("No `{filename}` present in the pool")
+                .with_context(|| format!("No `{filename}` present in the pool"))
                 .map(|idx| entries.swap_remove(idx))
         };
 
