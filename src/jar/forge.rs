@@ -58,8 +58,11 @@ impl TryFrom<Jar> for ForgeMod {
             .next()
             .expect("mods array contains only one element");
 
-        let id = mod_info.mod_id;
-        let mod_deps = forge_toml.dependencies.remove(&id).unwrap_or_else(Vec::new);
+        let slug = mod_info.slug;
+        let mod_deps = forge_toml
+            .dependencies
+            .remove(&slug)
+            .unwrap_or_else(Vec::new);
 
         let mut dependencies = mod_deps
             .into_iter()
@@ -76,7 +79,7 @@ impl TryFrom<Jar> for ForgeMod {
             .context("Jar mod config didn't specify the required minecraft version range")?;
 
         Ok(Self {
-            slug: id,
+            slug,
             version: mod_info.version,
             loader_version_needed,
             minecraft_version_needed,
@@ -103,7 +106,7 @@ impl Side {
 #[derive(Debug, Deserialize)]
 struct ModInfo {
     #[serde(rename = "modId")]
-    mod_id: String,
+    slug: String,
     version: crate::version::maven::Version,
 }
 
