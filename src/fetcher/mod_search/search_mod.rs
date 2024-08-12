@@ -178,9 +178,8 @@ impl Fetchable for SearchedMod {
         "Fetching Minecraft mod"
     }
 
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://api.curseforge.com/v1/mods")
-            .context("Parsing Url for fetching mod by it's id")
+    fn link() -> Url {
+        Url::parse("https://api.curseforge.com/v1/mods").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {

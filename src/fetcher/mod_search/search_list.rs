@@ -15,8 +15,8 @@ pub struct ModSearchList {
 }
 
 impl Fetchable for ModSearchList {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://api.curseforge.com/v1/mods/search").context("Parsing search mods url")
+    fn link() -> Url {
+        Url::parse("https://api.curseforge.com/v1/mods/search").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {

@@ -36,9 +36,8 @@ use super::{rq::*, Fetchable, Url};
 pub type MinecraftId = usize;
 
 impl Fetchable for MinecraftId {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://api.curseforge.com/v1/games")
-            .context("Url parsing for getting Minecraft id from CurseForge")
+    fn link() -> Url {
+        Url::parse("https://api.curseforge.com/v1/games").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
@@ -88,9 +87,8 @@ impl Fetchable for MinecraftId {
 pub type MinecraftVersions = Vec<SingleVersion>;
 
 impl Fetchable for MinecraftVersions {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://mc-versions-api.net/api/java")
-            .context("Url parsing for getting Minecraft versions")
+    fn link() -> Url {
+        Url::parse("https://mc-versions-api.net/api/java").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
@@ -140,9 +138,8 @@ impl Fetchable for MinecraftVersions {
 pub type ForgeVersions = HashMap<SingleVersion, Vec<SingleVersion>>;
 
 impl Fetchable for ForgeVersions {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://mc-versions-api.net/api/forge")
-            .context("Url parsing for getting forge versions")
+    fn link() -> Url {
+        Url::parse("https://mc-versions-api.net/api/forge").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
@@ -166,9 +163,8 @@ impl Fetchable for ForgeVersions {
 pub struct FabricVersions(pub Vec<SingleVersion>);
 
 impl Fetchable for FabricVersions {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://meta.fabricmc.net/v2/versions/loader")
-            .context("Url parsing for getting fabric versions")
+    fn link() -> Url {
+        Url::parse("https://meta.fabricmc.net/v2/versions/loader").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {
@@ -212,9 +208,8 @@ impl Fetchable for FabricVersions {
 pub type CurseForgeCategories = HashMap<String, usize>;
 
 impl Fetchable for CurseForgeCategories {
-    fn link() -> anyhow::Result<Url> {
-        Url::parse("https://api.curseforge.com/v1/categories")
-            .context("Url parsing for getting all categories")
+    fn link() -> Url {
+        Url::parse("https://api.curseforge.com/v1/categories").unwrap()
     }
 
     fn parse(response: Response) -> anyhow::Result<Self> {

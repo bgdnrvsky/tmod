@@ -21,7 +21,7 @@ where
     Self: Sized,
 {
     /// Url where GET will be performed
-    fn link() -> anyhow::Result<Url>;
+    fn link() -> Url;
 
     /// from response's JSON to the datatype
     fn parse(response: Response) -> anyhow::Result<Self>;
@@ -31,7 +31,7 @@ where
         #[cfg(not(test))]
         let loading = Self::loading_init();
 
-        let mut url = Self::link().context("Getting the URL")?;
+        let mut url = Self::link();
 
         if let Some(queries) = additional_parameters.get_queries() {
             url.query_pairs_mut().extend_pairs(queries);
