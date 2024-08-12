@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use colored::Colorize;
 use tmod::fetcher::searcher::Searcher;
 
 #[derive(Parser)]
@@ -30,20 +29,20 @@ fn main() -> anyhow::Result<()> {
     let searcher = Searcher::new();
 
     match cli.command {
-        Commands::Add { subadd } => match subadd {
-            AddCommandTypes::Id { mod_id } => {
-                let the_mod = searcher.search_mod_by_id(mod_id)?;
-
-                print!("{}", the_mod.display());
-            }
-            AddCommandTypes::Slug { mod_slug } => {
-                if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                    print!("{}", the_mod.display());
-                } else {
-                    println!("No mod {slug} found", slug = mod_slug.italic().blue());
+        Commands::Add { subadd } => {
+            let the_mod = match subadd {
+                AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                AddCommandTypes::Slug { mod_slug } => {
+                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                        the_mod
+                    } else {
+                        panic!("No mod `{mod_slug}` was found");
+                    }
                 }
-            }
-        },
+            };
+
+            print!("{}", the_mod.display());
+        }
     }
 
     Ok(())
