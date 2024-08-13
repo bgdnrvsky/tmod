@@ -6,7 +6,7 @@ use std::{
     ffi::OsString,
     fs::{self, File},
     io::BufReader,
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::Context;
@@ -17,6 +17,7 @@ use crate::fetcher::mod_search::search_mod::SearchedMod;
 use config::Config;
 
 pub struct Pool {
+    path: PathBuf,
     config: Config,
     /// mod slug - required versions
     remotes: HashSet<String>,
@@ -93,6 +94,7 @@ impl Pool {
             config,
             remotes,
             locals,
+            path: dir_path.as_ref().to_owned(),
         })
     }
 
