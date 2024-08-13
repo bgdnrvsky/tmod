@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use crate::version::SingleVersion as Version;
 use anyhow::Context;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::loader::Loader;
 
@@ -16,7 +16,7 @@ use super::loader::Loader;
 /// kind = "forge"
 /// version = "47.2.0"
 /// ```
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Config {
     /// Minecraft mod loader (forge or fabric)
     loader: Loader,
