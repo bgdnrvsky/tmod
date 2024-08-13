@@ -137,7 +137,7 @@ impl Pool {
             .context("Creating locals dir")?;
 
         for name in self.locals.keys() {
-            fs::File::create(locals_path.join(&name))
+            fs::File::create(locals_path.join(name))
                 .with_context(|| format!("Creating `{}` in locals", name.to_string_lossy()))?;
         }
 
