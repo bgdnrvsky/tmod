@@ -153,6 +153,8 @@ impl Pool {
     }
 
     pub fn add_to_remotes(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
-        unimplemented!()
+        self.remotes.insert(the_mod.slug().to_string());
+
+        self.write_remotes()
     }
 }
