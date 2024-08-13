@@ -63,7 +63,7 @@ impl JarMod {
         }
     }
 
-    fn incompabilites(&self) -> HashMap<&str, MultiVersion> {
+    fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
         match self {
             JarMod::Fabric(the_mod) => the_mod
                 .dependencies()
