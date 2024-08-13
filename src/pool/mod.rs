@@ -5,7 +5,7 @@ use std::{
     collections::{HashMap, HashSet},
     ffi::OsString,
     fs::{self, File},
-    io::BufReader,
+    io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
@@ -108,6 +108,48 @@ impl Pool {
 
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    fn create_dir(&self) -> anyhow::Result<()> {
+        fs::DirBuilder::new()
+            .create(&self.path)
+            .context("Creating dir")
+    }
+
+    fn write_config(&self) -> anyhow::Result<()> {
+        let mut file = fs::File::create(self.path.join("config.toml"))?;
+
+        file.write_all(toml::to_string_pretty(&self.config)?.as_bytes())
+            .context("Writing config")
+    }
+
+    fn write_remotes(&self) -> anyhow::Result<()> {
+        let file = fs::File::create(self.path.join("remotes.json"))?;
+
+        serde_json::to_writer_pretty(file, &self.remotes).context("Writing remotes")
+    }
+
+    fn write_locals(&self) -> anyhow::Result<()> {
+        let locals_path = &self.path.join("locals");
+        fs::DirBuilder::new()
+            .recursive(true)
+            .create(locals_path)
+            .context("Creating locals dir")?;
+
+        for name in self.locals.keys() {
+            fs::File::create(locals_path.join(&name))
+                .with_context(|| format!("Creating `{}` in locals", name.to_string_lossy()))?;
+        }
+
+        Ok(())
+    }
+
+    fn save(&self) -> anyhow::Result<()> {
+        self.create_dir()
+            .and_then(|_| Self::write_config(self))
+            .and_then(|_| Self::write_remotes(self))
+            .and_then(|_| Self::write_locals(self))
+            .context("Saving pool")
     }
 
     pub fn add_to_remotes(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
