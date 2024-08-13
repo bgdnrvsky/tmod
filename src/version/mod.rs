@@ -18,6 +18,18 @@ pub enum SingleVersion {
     Forge(ForgeVersion),
 }
 
+impl From<ForgeVersion> for SingleVersion {
+    fn from(v: ForgeVersion) -> Self {
+        Self::Forge(v)
+    }
+}
+
+impl From<FabricVersion> for SingleVersion {
+    fn from(v: FabricVersion) -> Self {
+        Self::Fabric(v)
+    }
+}
+
 impl TryInto<FabricVersion> for SingleVersion {
     type Error = Self;
 
@@ -72,6 +84,18 @@ pub enum MultiVersion {
     Fabric(FabricVersionRange),
     /// See: `https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html`
     Forge(ForgeVersionRange),
+}
+
+impl From<ForgeVersionRange> for MultiVersion {
+    fn from(v: ForgeVersionRange) -> Self {
+        Self::Forge(v)
+    }
+}
+
+impl From<FabricVersionRange> for MultiVersion {
+    fn from(v: FabricVersionRange) -> Self {
+        Self::Fabric(v)
+    }
 }
 
 impl PartialEq<MultiVersion> for &MultiVersion {

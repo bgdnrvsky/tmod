@@ -15,62 +15,55 @@ pub enum JarMod {
 impl JarMod {
     fn name(&self) -> &str {
         match self {
-            JarMod::Fabric(the_mod) => the_mod.slug(),
-            JarMod::Forge(the_mod) => the_mod.slug(),
+            Self::Fabric(the_mod) => the_mod.slug(),
+            Self::Forge(the_mod) => the_mod.slug(),
         }
     }
 
     fn version(&self) -> SingleVersion {
         match self {
-            JarMod::Fabric(the_mod) => SingleVersion::Fabric(the_mod.version().clone()),
-            JarMod::Forge(the_mod) => SingleVersion::Forge(the_mod.version().clone()),
+            Self::Fabric(the_mod) => the_mod.version().clone().into(),
+            Self::Forge(the_mod) => the_mod.version().clone().into(),
         }
     }
 
     fn minecraft_version(&self) -> MultiVersion {
         match self {
-            JarMod::Fabric(the_mod) => {
-                MultiVersion::Fabric(the_mod.minecraft_version_needed().clone())
-            }
-            JarMod::Forge(the_mod) => {
-                MultiVersion::Forge(the_mod.minecraft_version_needed().clone())
-            }
+            Self::Fabric(the_mod) => the_mod.minecraft_version_needed().clone().into(),
+            Self::Forge(the_mod) => the_mod.minecraft_version_needed().clone().into(),
         }
     }
 
     fn loader_version(&self) -> MultiVersion {
         match self {
-            JarMod::Fabric(the_mod) => {
-                MultiVersion::Fabric(the_mod.loader_version_needed().clone())
-            }
-            JarMod::Forge(the_mod) => MultiVersion::Forge(the_mod.loader_version_needed().clone()),
+            Self::Fabric(the_mod) => the_mod.loader_version_needed().clone().into(),
+            Self::Forge(the_mod) => the_mod.loader_version_needed().clone().into(),
         }
     }
 
     fn dependencies(&self) -> HashMap<&str, MultiVersion> {
-        // self.dependencies().into_iter().map(|(slug, ver)| (slug, MutliVersion::
         match self {
-            JarMod::Fabric(the_mod) => the_mod
+            Self::Fabric(the_mod) => the_mod
                 .dependencies()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), MultiVersion::Fabric(req.clone())))
+                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
                 .collect(),
-            JarMod::Forge(the_mod) => the_mod
+            Self::Forge(the_mod) => the_mod
                 .dependencies()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), MultiVersion::Forge(req.clone())))
+                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
                 .collect(),
         }
     }
 
     fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
         match self {
-            JarMod::Fabric(the_mod) => the_mod
+            Self::Fabric(the_mod) => the_mod
                 .dependencies()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), MultiVersion::Fabric(req.clone())))
+                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
                 .collect(),
-            JarMod::Forge(_) => HashMap::with_capacity(0),
+            Self::Forge(_) => HashMap::with_capacity(0),
         }
     }
 }
