@@ -102,11 +102,13 @@ impl Side {
     }
 }
 
-// NOTE: Might also include `displayName`
 #[derive(Debug, Deserialize)]
 struct ModInfo {
     #[serde(rename = "modId")]
     slug: String,
+    #[allow(unused)]
+    #[serde(rename = "displayName")]
+    display_name: Option<String>,
     version: crate::version::maven::Version,
 }
 
