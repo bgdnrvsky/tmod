@@ -11,6 +11,9 @@ struct Args {
 enum Commands {
     /// Add minecraft mod to the `pool`
     Add {
+        /// Do not print the mod to stdout
+        #[arg(long, default_value_t = false)]
+        no_print: bool,
         #[command(subcommand)]
         subadd: AddCommandTypes,
     },
@@ -29,7 +32,10 @@ fn main() -> anyhow::Result<()> {
     let searcher = Searcher::new();
 
     match cli.command {
-        Commands::Add { subadd } => {
+        Commands::Add {
+            subadd,
+            no_print: no_print_mod,
+        } => {
             let the_mod = match subadd {
                 AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
                 AddCommandTypes::Slug { mod_slug } => {
@@ -41,7 +47,9 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            print!("{}", the_mod.display());
+            if !no_print_mod {
+                print!("{}", the_mod.display());
+            }
         }
     }
 
