@@ -14,6 +14,24 @@ enum Commands {
         /// Do not print the mod to stdout
         #[arg(long, default_value_t = false)]
         no_print: bool,
+        #[arg(long, default_value_t = true)]
+        with_id: bool,
+        #[arg(long, default_value_t = true)]
+        with_name: bool,
+        #[arg(long, default_value_t = false)]
+        with_slug: bool,
+        #[arg(long, default_value_t = true)]
+        with_summary: bool,
+        #[arg(long, default_value_t = false)]
+        with_links: bool,
+        #[arg(long, default_value_t = false)]
+        with_thumbs_up_count: bool,
+        #[arg(long, default_value_t = false)]
+        with_download_count: bool,
+        #[arg(long, default_value_t = false)]
+        with_files: bool,
+        #[arg(long, default_value_t = false)]
+        with_indexes: bool,
         #[command(subcommand)]
         subadd: AddCommandTypes,
     },
@@ -35,6 +53,15 @@ fn main() -> anyhow::Result<()> {
         Commands::Add {
             subadd,
             no_print: no_print_mod,
+            with_id,
+            with_name,
+            with_slug,
+            with_summary,
+            with_links,
+            with_thumbs_up_count,
+            with_download_count,
+            with_files,
+            with_indexes,
         } => {
             let the_mod = match subadd {
                 AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
@@ -48,7 +75,20 @@ fn main() -> anyhow::Result<()> {
             };
 
             if !no_print_mod {
-                print!("{}", the_mod.display());
+                print!(
+                    "{}",
+                    the_mod
+                        .display()
+                        .with_id(with_id)
+                        .with_name(with_name)
+                        .with_slug(with_slug)
+                        .with_summary(with_summary)
+                        .with_links(with_links)
+                        .with_thumbs_up_count(with_thumbs_up_count)
+                        .with_download_count(with_download_count)
+                        .with_files(with_files)
+                        .with_indexes(with_indexes)
+                );
             }
         }
     }
