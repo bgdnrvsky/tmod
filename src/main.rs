@@ -18,6 +18,7 @@ enum Commands {
         with_id: bool,
         #[arg(long, default_value_t = true)]
         with_name: bool,
+        /// Include the mod identifier name (might be different from the mod name)
         #[arg(long, default_value_t = false)]
         with_slug: bool,
         #[arg(long, default_value_t = true)]
@@ -41,7 +42,7 @@ enum Commands {
 enum AddCommandTypes {
     /// By CurseForge mod id
     Id { mod_id: usize },
-    /// Using mod's 'slug'
+    /// Using mod's 'slug' (slug is not always the same as the mod name)
     Slug { mod_slug: String },
 }
 
@@ -52,7 +53,7 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Commands::Add {
             subadd,
-            no_print: no_print_mod,
+            no_print,
             with_id,
             with_name,
             with_slug,
@@ -74,7 +75,7 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            if !no_print_mod {
+            if !no_print {
                 print!(
                     "{}",
                     the_mod
