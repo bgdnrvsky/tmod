@@ -44,6 +44,7 @@ impl ModLinks {
 }
 
 pub mod display_builder {
+    use clap::Args;
     use colored::Colorize;
     use std::fmt::Display;
     use url::Url;
@@ -51,11 +52,15 @@ pub mod display_builder {
     use super::ModLinks;
 
     /// Options to include while printing the searched mod
-    #[derive(Debug, Clone, Copy, Default)]
+    #[derive(Debug, Clone, Copy, Default, Args)]
     pub struct DisplayBuilderOptions {
+        #[arg(long, default_value_t = false)]
         pub with_website: bool,
+        #[arg(long, default_value_t = false)]
         pub with_wiki: bool,
+        #[arg(long, default_value_t = false)]
         pub with_issues: bool,
+        #[arg(long, default_value_t = false)]
         pub with_source: bool,
     }
 

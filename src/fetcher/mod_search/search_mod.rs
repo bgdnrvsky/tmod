@@ -291,29 +291,40 @@ pub struct ModFile {
 }
 
 pub mod display_builder {
+    use clap::Args;
     use colored::Colorize;
     use std::fmt::Display;
 
-    use crate::fetcher::mod_search::mod_links::display_builder::{
-        DisplayBuilder as DisplayBuilderLinks, DisplayBuilderOptions as DisplayOptionsLinks,
-    };
+    // use crate::fetcher::mod_search::mod_links::display_builder::{
+    //     DisplayBuilder as DisplayBuilderLinks, DisplayBuilderOptions as DisplayOptionsLinks,
+    // };
 
     use super::SearchedMod;
 
     /// Options to include while printing the searched mod
-    #[derive(Debug, Clone, Copy)]
+    #[derive(Debug, Clone, Copy, Args)]
     pub struct DisplayBuilderOptions {
-        links_options: Option<DisplayOptionsLinks>,
+        #[arg(long, default_value_t = true)]
         pub with_id: bool,
+        #[arg(long, default_value_t = true)]
         pub with_name: bool,
+        /// Include the mod identifier name (might be different from the mod name)
+        #[arg(long, default_value_t = false)]
         pub with_slug: bool,
+        #[arg(long, default_value_t = true)]
         pub with_summary: bool,
+        #[arg(long, default_value_t = false)]
         pub with_links: bool,
+        #[arg(long, default_value_t = false)]
         pub with_thumbs_up_count: bool,
+        #[arg(long, default_value_t = false)]
         pub with_download_count: bool,
+        #[arg(long, default_value_t = false)]
         pub with_files: bool,
+        #[arg(long, default_value_t = false)]
         pub with_indexes: bool,
-        pub links_options: Option<DisplayOptionsLinks>,
+        // #[clap(flatten)]
+        // pub links_options: Option<DisplayOptionsLinks>,
     }
 
     impl Default for DisplayBuilderOptions {
@@ -328,7 +339,7 @@ pub mod display_builder {
                 with_download_count: false,
                 with_files: false,
                 with_indexes: false,
-                links_options: None,
+                // links_options: None,
             }
         }
     }
@@ -402,10 +413,10 @@ pub mod display_builder {
             self
         }
 
-        pub fn with_links_builder(mut self, options: DisplayOptionsLinks) -> Self {
-            self.options.links_options = Some(options);
-            self
-        }
+        // pub fn with_links_builder(mut self, options: DisplayOptionsLinks) -> Self {
+        //     self.options.links_options = Some(options);
+        //     self
+        // }
     }
 
     impl Display for DisplayBuilder<'_> {
@@ -446,12 +457,12 @@ pub mod display_builder {
                 write!(f, "- {}", self.the_mod.summary().italic())?;
             }
 
-            if let Some(links_options) = self.options.links_options {
-                let builder =
-                    DisplayBuilderLinks::with_options(self.the_mod.links(), links_options);
-
-                builder.fmt(f)?;
-            }
+            // if let Some(links_options) = self.options.links_options {
+            //     let builder =
+            //         DisplayBuilderLinks::with_options(self.the_mod.links(), links_options);
+            //
+            //     builder.fmt(f)?;
+            // }
 
             if self.options.with_files {
                 writeln!(f, "Files:")?;

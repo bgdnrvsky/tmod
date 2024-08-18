@@ -14,25 +14,9 @@ enum Commands {
         /// Do not print the mod to stdout
         #[arg(long, default_value_t = false)]
         no_print: bool,
-        #[arg(long, default_value_t = true)]
-        with_id: bool,
-        #[arg(long, default_value_t = true)]
-        with_name: bool,
-        /// Include the mod identifier name (might be different from the mod name)
-        #[arg(long, default_value_t = false)]
-        with_slug: bool,
-        #[arg(long, default_value_t = true)]
-        with_summary: bool,
-        #[arg(long, default_value_t = false)]
-        with_links: bool,
-        #[arg(long, default_value_t = false)]
-        with_thumbs_up_count: bool,
-        #[arg(long, default_value_t = false)]
-        with_download_count: bool,
-        #[arg(long, default_value_t = false)]
-        with_files: bool,
-        #[arg(long, default_value_t = false)]
-        with_indexes: bool,
+        #[clap(flatten)]
+        display_options:
+            tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilderOptions,
         #[command(subcommand)]
         subadd: AddCommandTypes,
     },
@@ -54,15 +38,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Add {
             subadd,
             no_print,
-            with_id,
-            with_name,
-            with_slug,
-            with_summary,
-            with_links,
-            with_thumbs_up_count,
-            with_download_count,
-            with_files,
-            with_indexes,
+            display_options,
         } => {
             let the_mod = match subadd {
                 AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
@@ -80,15 +56,15 @@ fn main() -> anyhow::Result<()> {
                     "{}",
                     the_mod
                         .display()
-                        .with_id(with_id)
-                        .with_name(with_name)
-                        .with_slug(with_slug)
-                        .with_summary(with_summary)
-                        .with_links(with_links)
-                        .with_thumbs_up_count(with_thumbs_up_count)
-                        .with_download_count(with_download_count)
-                        .with_files(with_files)
-                        .with_indexes(with_indexes)
+                        .with_id(display_options.with_id)
+                        .with_name(display_options.with_name)
+                        .with_slug(display_options.with_slug)
+                        .with_summary(display_options.with_summary)
+                        .with_links(display_options.with_links)
+                        .with_thumbs_up_count(display_options.with_thumbs_up_count)
+                        .with_download_count(display_options.with_download_count)
+                        .with_files(display_options.with_files)
+                        .with_indexes(display_options.with_indexes)
                 );
             }
         }
