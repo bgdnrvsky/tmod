@@ -53,10 +53,10 @@ pub mod display_builder {
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Copy, Default)]
     pub struct DisplayBuilderOptions {
-        with_website: bool,
-        with_wiki: bool,
-        with_issues: bool,
-        with_source: bool,
+        pub with_website: bool,
+        pub with_wiki: bool,
+        pub with_issues: bool,
+        pub with_source: bool,
     }
 
     #[derive(Debug, Clone)]

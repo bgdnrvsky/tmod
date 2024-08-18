@@ -303,16 +303,17 @@ pub mod display_builder {
     /// Options to include while printing the searched mod
     #[derive(Debug, Clone, Copy)]
     pub struct DisplayBuilderOptions {
-        with_id: bool,
-        with_name: bool,
-        with_slug: bool,
-        with_summary: bool,
-        with_links: bool,
-        with_thumbs_up_count: bool,
-        with_download_count: bool,
-        with_files: bool,
-        with_indexes: bool,
         links_options: Option<DisplayOptionsLinks>,
+        pub with_id: bool,
+        pub with_name: bool,
+        pub with_slug: bool,
+        pub with_summary: bool,
+        pub with_links: bool,
+        pub with_thumbs_up_count: bool,
+        pub with_download_count: bool,
+        pub with_files: bool,
+        pub with_indexes: bool,
+        pub links_options: Option<DisplayOptionsLinks>,
     }
 
     impl Default for DisplayBuilderOptions {
