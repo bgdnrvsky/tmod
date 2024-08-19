@@ -116,7 +116,7 @@ pub mod display_builder {
                 writeln!(
                     f,
                     "- {}",
-                    DisplayBuilderMod::with_options(mmod, search_mod_options)
+                    DisplayBuilderMod::from_options(mmod, search_mod_options)
                 )?;
             }
 

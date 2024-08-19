@@ -361,7 +361,7 @@ pub mod display_builder {
             .with_summary(true)
         }
 
-        pub fn with_options(searched_mod: &'a SearchedMod, options: DisplayBuilderOptions) -> Self {
+        pub fn from_options(searched_mod: &'a SearchedMod, options: DisplayBuilderOptions) -> Self {
             Self {
                 the_mod: searched_mod,
                 options,
