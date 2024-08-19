@@ -52,20 +52,7 @@ fn main() -> anyhow::Result<()> {
             };
 
             if !no_print {
-                print!(
-                    "{}",
-                    the_mod
-                        .display()
-                        .with_id(display_options.with_id)
-                        .with_name(display_options.with_name)
-                        .with_slug(display_options.with_slug)
-                        .with_summary(display_options.with_summary)
-                        .with_links(display_options.with_links)
-                        .with_thumbs_up_count(display_options.with_thumbs_up_count)
-                        .with_download_count(display_options.with_download_count)
-                        .with_files(display_options.with_files)
-                        .with_indexes(display_options.with_indexes)
-                );
+                print!("{}", the_mod.display().with_options(display_options));
             }
         }
     }

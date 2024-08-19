@@ -368,6 +368,11 @@ pub mod display_builder {
             }
         }
 
+        pub fn with_options(mut self, options: DisplayBuilderOptions) -> Self {
+            self.options = options;
+            self
+        }
+
         pub fn with_id(mut self, value: bool) -> Self {
             self.options.with_id = value;
             self
