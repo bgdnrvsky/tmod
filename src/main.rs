@@ -1,8 +1,12 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
-use tmod::fetcher::searcher::Searcher;
+use tmod::{fetcher::searcher::Searcher, pool::Pool};
 
 #[derive(Parser)]
 struct Args {
+    #[arg(long, default_value = ".tmod", value_name = "PATH")]
+    pool_dir: PathBuf,
     #[command(subcommand)]
     command: Commands,
 }
@@ -33,6 +37,7 @@ enum AddCommandTypes {
 fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
     let searcher = Searcher::new();
+    let mut pool = Pool::new(&cli.pool_dir)?;
 
     match cli.command {
         Commands::Add {
@@ -54,6 +59,8 @@ fn main() -> anyhow::Result<()> {
             if !no_print {
                 print!("{}", the_mod.display_with_options(display_options));
             }
+
+            pool.add_to_remotes(&the_mod)?;
         }
     }
 

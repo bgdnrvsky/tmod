@@ -1,12 +1,14 @@
 use crate::version::SingleVersion;
 
 use anyhow::anyhow;
-use serde::Deserialize;
-use serde_with::DeserializeFromStr;
+use serde::{Deserialize, Serialize};
+use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum::{Display, EnumString};
 
 /// Various mod management systems for Minecraft
-#[derive(Debug, Clone, EnumString, DeserializeFromStr, Display, PartialEq, Eq)]
+#[derive(
+    Debug, Clone, EnumString, DeserializeFromStr, SerializeDisplay, Display, PartialEq, Eq,
+)]
 #[strum(ascii_case_insensitive)]
 pub enum Loaders {
     Forge,
@@ -22,7 +24,7 @@ pub enum Loaders {
 /// kind = "forge" # any case accepted (e.g. FORGE, FoRgE)
 /// version = "47.2.2" # Either semver version or maven version
 /// ```
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Loader {
     kind: Loaders,
     version: SingleVersion,
