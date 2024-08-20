@@ -235,6 +235,13 @@ impl SearchedMod {
     pub fn display(&self) -> display_builder::DisplayBuilder {
         display_builder::DisplayBuilder::new(self)
     }
+
+    pub fn display_with_options(
+        &self,
+        options: display_builder::DisplayBuilderOptions,
+    ) -> display_builder::DisplayBuilder {
+        display_builder::DisplayBuilder::from_options(self, options)
+    }
 }
 
 impl PartialEq for SearchedMod {
@@ -366,11 +373,6 @@ pub mod display_builder {
                 the_mod: searched_mod,
                 options,
             }
-        }
-
-        pub fn with_options(mut self, options: DisplayBuilderOptions) -> Self {
-            self.options = options;
-            self
         }
 
         pub fn with_id(mut self, value: bool) -> Self {

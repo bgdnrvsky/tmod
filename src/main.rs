@@ -52,7 +52,7 @@ fn main() -> anyhow::Result<()> {
             };
 
             if !no_print {
-                print!("{}", the_mod.display().with_options(display_options));
+                print!("{}", the_mod.display_with_options(display_options));
             }
         }
     }
