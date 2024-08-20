@@ -46,7 +46,7 @@ fn main() -> anyhow::Result<()> {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
                         the_mod
                     } else {
-                        panic!("No mod `{mod_slug}` was found");
+                        anyhow::bail!("No mod `{mod_slug}` was found");
                     }
                 }
             };
