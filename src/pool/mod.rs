@@ -19,7 +19,6 @@ use config::Config;
 pub struct Pool {
     path: PathBuf,
     config: Config,
-    /// mod slug - required versions
     remotes: HashSet<String>,
     locals: HashMap<OsString, Jar>,
 }
@@ -81,10 +80,10 @@ impl Pool {
 
             fs::read_dir(dir.path())
                 .context("Reading `locals` directory")?
-                .map(|entry| entry.map(|entry| entry.file_name()))
                 .map(|entry| {
-                    entry.and_then(|file_name| {
-                        jar(&file_name, JarOptionBuilder::default()).map(|jar| (file_name, jar))
+                    entry.and_then(|entry| {
+                        jar(&entry.path(), JarOptionBuilder::default())
+                            .map(|jar| (entry.file_name(), jar))
                     })
                 })
                 .collect::<Result<HashMap<_, _>, _>>()?
