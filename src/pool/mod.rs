@@ -82,7 +82,7 @@ impl Pool {
                 .context("Reading `locals` directory")?
                 .map(|entry| {
                     entry.and_then(|entry| {
-                        jar(&entry.path(), JarOptionBuilder::default())
+                        jar(entry.path(), JarOptionBuilder::default())
                             .map(|jar| (entry.file_name(), jar))
                     })
                 })
