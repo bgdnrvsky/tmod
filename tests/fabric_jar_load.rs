@@ -10,7 +10,7 @@ use tmod::{
 #[test]
 fn load_fabric() -> anyhow::Result<()> {
     let jar = jar(
-        "tests/jars/sodium.jar",
+        "tests/test_pool/locals/sodium.jar",
         JarOptionBuilder::builder().keep_meta_info().build(),
     )?;
 

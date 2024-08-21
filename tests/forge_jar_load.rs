@@ -10,7 +10,7 @@ use tmod::{
 #[test]
 fn load_forge() -> anyhow::Result<()> {
     let jar = jar(
-        "tests/jars/btp.jar",
+        "tests/test_pool/locals/btp.jar",
         JarOptionBuilder::builder().keep_meta_info().build(),
     )?;
 
