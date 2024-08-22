@@ -1,7 +1,8 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, str::FromStr};
 
 use crate::version::SingleVersion as Version;
 use anyhow::Context;
+use dialoguer::Input;
 use serde::{Deserialize, Serialize};
 
 use super::loader::Loader;
@@ -25,6 +26,23 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn init() -> anyhow::Result<Self> {
+        let loader = Loader::prompt()?;
+        let game_version = Input::new()
+            .with_prompt("Game version")
+            .validate_with(|input: &String| -> anyhow::Result<()> {
+                Version::from_str(input).map(|_| ())
+            })
+            .interact()
+            .unwrap()
+            .parse()?;
+
+        Ok(Self {
+            loader,
+            game_version,
+        })
+    }
+
     pub fn from_toml<P: AsRef<Path>>(path: P) -> anyhow::Result<Self> {
         let content = fs::read_to_string(path).context("Reading file content")?;
 

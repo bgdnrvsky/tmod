@@ -13,6 +13,8 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Initialize a new `pool`
+    Init,
     /// Add minecraft mod to the `pool`
     Add {
         /// Do not print the mod to stdout
@@ -37,14 +39,18 @@ enum AddCommandTypes {
 fn main() -> anyhow::Result<()> {
     let cli = Args::parse();
     let searcher = Searcher::new();
-    let mut pool = Pool::new(&cli.pool_dir)?;
 
     match cli.command {
+        Commands::Init => {
+            Pool::init(&cli.pool_dir)?;
+        }
         Commands::Add {
             subadd,
             no_print,
             display_options,
         } => {
+            let mut pool = Pool::new(&cli.pool_dir)?;
+
             let the_mod = match subadd {
                 AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
                 AddCommandTypes::Slug { mod_slug } => {

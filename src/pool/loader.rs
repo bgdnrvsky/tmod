@@ -1,13 +1,25 @@
+use std::str::FromStr;
+
 use crate::version::SingleVersion;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
+use dialoguer::{Input, Select};
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
-use strum::{Display, EnumString};
+use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
 /// Various mod management systems for Minecraft
 #[derive(
-    Debug, Clone, EnumString, DeserializeFromStr, SerializeDisplay, Display, PartialEq, Eq,
+    Debug,
+    Copy,
+    Clone,
+    EnumString,
+    DeserializeFromStr,
+    SerializeDisplay,
+    Display,
+    PartialEq,
+    Eq,
+    EnumIter,
 )]
 #[strum(ascii_case_insensitive)]
 pub enum Loaders {
@@ -15,6 +27,18 @@ pub enum Loaders {
     Fabric,
     Quilt,
     NeoForge,
+}
+
+impl Loaders {
+    fn prompt() -> anyhow::Result<Self> {
+        let loaders = Self::iter().collect::<Vec<_>>();
+
+        Ok(loaders[Select::new()
+            .with_prompt("Choose the mod loader")
+            .items(&loaders)
+            .interact()
+            .context("Error when prompting loader")?])
+    }
 }
 
 /// Configuration unit for describing the mod management system used and its version
@@ -31,6 +55,20 @@ pub struct Loader {
 }
 
 impl Loader {
+    pub fn prompt() -> anyhow::Result<Self> {
+        let kind = Loaders::prompt()?;
+        let version = Input::new()
+            .with_prompt("Loader version")
+            .validate_with(|input: &String| -> anyhow::Result<()> {
+                SingleVersion::from_str(input).map(|_| ())
+            })
+            .interact()
+            .unwrap()
+            .parse()?;
+
+        Ok(Self { kind, version })
+    }
+
     pub fn new_unchecked(kind: Loaders, version: SingleVersion) -> Self {
         Self { kind, version }
     }

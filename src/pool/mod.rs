@@ -24,6 +24,19 @@ pub struct Pool {
 }
 
 impl Pool {
+    pub fn init(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        let config = Config::init()?;
+
+        let pool = Self {
+            path: path.as_ref().to_owned(),
+            config,
+            remotes: Default::default(),
+            locals: Default::default(),
+        };
+
+        pool.save().map(|_| pool)
+    }
+
     pub fn new(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
         anyhow::ensure!(
             fs::metadata(&dir_path)?.is_dir(),

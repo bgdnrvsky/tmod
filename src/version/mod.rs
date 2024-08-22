@@ -1,7 +1,7 @@
 pub mod fabric;
 pub mod maven;
 
-use std::fmt::Display;
+use std::{fmt::Display, str::FromStr};
 
 use fabric::Version as FabricVersion;
 use maven::Version as ForgeVersion;
@@ -16,6 +16,16 @@ use serde::{Deserialize, Serialize};
 pub enum SingleVersion {
     Fabric(FabricVersion),
     Forge(ForgeVersion),
+}
+
+impl FromStr for SingleVersion {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        FabricVersion::from_str(s)
+            .map(Self::Fabric)
+            .or(ForgeVersion::from_str(s).map(Self::Forge))
+    }
 }
 
 impl From<ForgeVersion> for SingleVersion {
