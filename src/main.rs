@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Context;
 use clap::{Parser, Subcommand};
 use tmod::{fetcher::searcher::Searcher, pool::Pool};
 
@@ -49,7 +50,8 @@ fn main() -> anyhow::Result<()> {
             no_print,
             display_options,
         } => {
-            let mut pool = Pool::new(&cli.pool_dir)?;
+            let mut pool = Pool::new(&cli.pool_dir)
+                .context("Error initializing the pool (maybe you should init it?)")?;
 
             let the_mod = match subadd {
                 AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
