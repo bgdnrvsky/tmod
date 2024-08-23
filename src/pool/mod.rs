@@ -2,17 +2,16 @@ pub mod config;
 pub mod loader;
 
 use std::{
-    collections::{HashMap, HashSet},
-    ffi::OsString,
+    collections::HashSet,
     fs::{self, File},
     io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
 use anyhow::Context;
-use jars::{jar, Jar, JarOptionBuilder};
+use jars::{jar, JarOptionBuilder};
 
-use crate::fetcher::mod_search::search_mod::SearchedMod;
+use crate::{fetcher::mod_search::search_mod::SearchedMod, jar::JarMod};
 
 use config::Config;
 
@@ -20,7 +19,7 @@ pub struct Pool {
     path: PathBuf,
     config: Config,
     remotes: HashSet<String>,
-    locals: HashMap<OsString, Jar>,
+    locals: Vec<JarMod>,
 }
 
 impl Pool {
@@ -94,12 +93,13 @@ impl Pool {
             fs::read_dir(dir.path())
                 .context("Reading `locals` directory")?
                 .map(|entry| {
-                    entry.and_then(|entry| {
+                    entry.context("Reading entry").and_then(|entry| {
                         jar(entry.path(), JarOptionBuilder::default())
-                            .map(|jar| (entry.file_name(), jar))
+                            .context("Reading jar file")
+                            .and_then(JarMod::try_from)
                     })
                 })
-                .collect::<Result<HashMap<_, _>, _>>()?
+                .collect::<Result<Vec<_>, _>>()?
         };
 
         Ok(Self {
@@ -114,7 +114,7 @@ impl Pool {
         &self.remotes
     }
 
-    pub fn locals(&self) -> &HashMap<OsString, Jar> {
+    pub fn locals(&self) -> &[JarMod] {
         &self.locals
     }
 
@@ -148,9 +148,10 @@ impl Pool {
             .create(locals_path)
             .context("Creating locals dir")?;
 
-        for name in self.locals.keys() {
-            fs::File::create(locals_path.join(name))
-                .with_context(|| format!("Creating `{}` in locals", name.to_string_lossy()))?;
+        for jar_mod in self.locals() {
+            let path = locals_path.join(jar_mod.name()).join(".jar");
+            fs::File::create(&path)
+                .with_context(|| format!("Creating `{}` in locals", path.to_string_lossy()))?;
         }
 
         Ok(())

@@ -1,5 +1,3 @@
-use std::ffi::OsStr;
-
 use anyhow::Context;
 use tmod::pool::Pool;
 
@@ -12,8 +10,10 @@ fn read_pool() -> anyhow::Result<()> {
     assert!(remotes.contains("bar"));
 
     let locals = pool.locals();
-    assert!(locals.contains_key(OsStr::new("sodium.jar")));
-    assert!(locals.contains_key(OsStr::new("btp.jar")));
+    assert!(locals.iter().any(|r#mod| r#mod.name() == "sodium"));
+    assert!(locals
+        .iter()
+        .any(|r#mod| r#mod.name() == "betterthirdperson"));
 
     Ok(())
 }
