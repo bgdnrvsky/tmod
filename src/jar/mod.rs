@@ -16,35 +16,35 @@ pub enum JarMod {
 
 #[allow(unused)]
 impl JarMod {
-    fn name(&self) -> &str {
+    pub fn name(&self) -> &str {
         match self {
             Self::Fabric(the_mod) => the_mod.slug(),
             Self::Forge(the_mod) => the_mod.slug(),
         }
     }
 
-    fn version(&self) -> SingleVersion {
+    pub fn version(&self) -> SingleVersion {
         match self {
             Self::Fabric(the_mod) => the_mod.version().clone().into(),
             Self::Forge(the_mod) => the_mod.version().clone().into(),
         }
     }
 
-    fn minecraft_version(&self) -> MultiVersion {
+    pub fn minecraft_version(&self) -> MultiVersion {
         match self {
             Self::Fabric(the_mod) => the_mod.minecraft_version_needed().clone().into(),
             Self::Forge(the_mod) => the_mod.minecraft_version_needed().clone().into(),
         }
     }
 
-    fn loader_version(&self) -> MultiVersion {
+    pub fn loader_version(&self) -> MultiVersion {
         match self {
             Self::Fabric(the_mod) => the_mod.loader_version_needed().clone().into(),
             Self::Forge(the_mod) => the_mod.loader_version_needed().clone().into(),
         }
     }
 
-    fn dependencies(&self) -> HashMap<&str, MultiVersion> {
+    pub fn dependencies(&self) -> HashMap<&str, MultiVersion> {
         match self {
             Self::Fabric(the_mod) => the_mod
                 .dependencies()
@@ -59,7 +59,7 @@ impl JarMod {
         }
     }
 
-    fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
+    pub fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
         match self {
             Self::Fabric(the_mod) => the_mod
                 .dependencies()
