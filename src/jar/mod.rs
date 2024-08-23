@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 
-use crate::version::{MultiVersion, SingleVersion};
+use jars::Jar;
+
+use crate::{
+    pool::loader::Loaders,
+    version::{MultiVersion, SingleVersion},
+};
 
 pub mod fabric;
 pub mod forge;
@@ -64,6 +69,20 @@ impl JarMod {
                 .map(|(slug, req)| (slug.as_str(), req.clone().into()))
                 .collect(),
             Self::Forge(_) => HashMap::with_capacity(0),
+        }
+    }
+}
+
+impl TryFrom<Jar> for JarMod {
+    type Error = anyhow::Error;
+
+    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+        if jar.files.contains_key("META-INF/mods.toml") {
+            forge::ForgeMod::try_from(jar).map(Self::Forge)
+        } else if jar.files.contains_key("fabric.mod.json") {
+            fabric::FabricMod::try_from(jar).map(Self::Fabric)
+        } else {
+            anyhow::bail!("No loader kind predicted");
         }
     }
 }
