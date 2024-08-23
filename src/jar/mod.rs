@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use jars::Jar;
 
-use crate::{
-    pool::loader::Loaders,
-    version::{MultiVersion, SingleVersion},
-};
+use crate::version::{MultiVersion, SingleVersion};
 
 pub mod fabric;
 pub mod forge;
