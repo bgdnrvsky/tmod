@@ -71,10 +71,10 @@ impl JarMod {
     }
 }
 
-impl TryFrom<Jar> for JarMod {
+impl TryFrom<&Jar> for JarMod {
     type Error = anyhow::Error;
 
-    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+    fn try_from(jar: &Jar) -> Result<Self, Self::Error> {
         if jar.files.contains_key("META-INF/mods.toml") {
             forge::ForgeMod::try_from(jar)
                 .context("Reading Forge jar mod")
@@ -86,5 +86,13 @@ impl TryFrom<Jar> for JarMod {
         } else {
             anyhow::bail!("No loader kind predicted");
         }
+    }
+}
+
+impl TryFrom<Jar> for JarMod {
+    type Error = anyhow::Error;
+
+    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+        Self::try_from(&jar)
     }
 }

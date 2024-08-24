@@ -40,10 +40,10 @@ impl ForgeMod {
     }
 }
 
-impl TryFrom<Jar> for ForgeMod {
+impl TryFrom<&Jar> for ForgeMod {
     type Error = anyhow::Error;
 
-    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+    fn try_from(jar: &Jar) -> Result<Self, Self::Error> {
         let content = jar
             .files
             .get("META-INF/mods.toml")
@@ -85,6 +85,14 @@ impl TryFrom<Jar> for ForgeMod {
             minecraft_version_needed,
             dependencies,
         })
+    }
+}
+
+impl TryFrom<Jar> for ForgeMod {
+    type Error = anyhow::Error;
+
+    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+        Self::try_from(&jar)
     }
 }
 

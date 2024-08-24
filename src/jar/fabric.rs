@@ -44,10 +44,10 @@ impl FabricMod {
     }
 }
 
-impl TryFrom<Jar> for FabricMod {
+impl TryFrom<&Jar> for FabricMod {
     type Error = anyhow::Error;
 
-    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+    fn try_from(jar: &Jar) -> Result<Self, Self::Error> {
         let content = jar
             .files
             .get("fabric.mod.json")
@@ -74,6 +74,14 @@ impl TryFrom<Jar> for FabricMod {
             dependencies,
             incompatibilities,
         })
+    }
+}
+
+impl TryFrom<Jar> for FabricMod {
+    type Error = anyhow::Error;
+
+    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+        Self::try_from(&jar)
     }
 }
 
