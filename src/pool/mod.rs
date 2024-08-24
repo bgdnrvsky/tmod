@@ -170,4 +170,10 @@ impl Pool {
 
         self.write_remotes()
     }
+
+    pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
+        self.locals.push(jar);
+
+        self.write_locals()
+    }
 }

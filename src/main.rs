@@ -2,10 +2,12 @@ use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
-use tmod::{fetcher::searcher::Searcher, pool::Pool};
+use colored::Colorize;
+use jars::{jar, JarOption};
+use tmod::{fetcher::searcher::Searcher, jar::JarMod, pool::Pool};
 
 #[derive(Parser)]
-struct Args {
+struct Cli {
     #[arg(long, default_value = ".tmod", value_name = "PATH")]
     pool_dir: PathBuf,
     #[command(subcommand)]
@@ -35,10 +37,17 @@ enum AddCommandTypes {
     Id { mod_id: usize },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
     Slug { mod_slug: String },
+    /// Add your own jar file
+    Jar {
+        /// Move the file instead of default copying
+        #[arg(short, long, default_value_t = false)]
+        r#move: bool,
+        path: PathBuf,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
-    let cli = Args::parse();
+    let cli = Cli::parse();
     let searcher = Searcher::new();
 
     match cli.command {
@@ -53,22 +62,56 @@ fn main() -> anyhow::Result<()> {
             let mut pool = Pool::new(&cli.pool_dir)
                 .context("Error initializing the pool (maybe you should init it?)")?;
 
-            let the_mod = match subadd {
-                AddCommandTypes::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+            match subadd {
+                AddCommandTypes::Id { mod_id } => {
+                    let the_mod = searcher.search_mod_by_id(mod_id)?;
+
+                    if !no_print {
+                        print!("{}", the_mod.display_with_options(display_options));
+                    }
+
+                    pool.add_to_remotes(&the_mod)?;
+                }
                 AddCommandTypes::Slug { mod_slug } => {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                        the_mod
+                        if !no_print {
+                            print!("{}", the_mod.display_with_options(display_options));
+                        }
+
+                        pool.add_to_remotes(&the_mod)?;
                     } else {
                         anyhow::bail!("No mod `{mod_slug}` was found");
                     }
                 }
+                AddCommandTypes::Jar { r#move, path } => {
+                    if path.extension().is_none()
+                        || path.extension().is_some_and(|ext| ext != "jar")
+                    {
+                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                    }
+
+                    let jar = jar(&path, JarOption::default())
+                        .context("Opening jar")
+                        .and_then(JarMod::try_from)
+                        .context("Reading jar")?;
+
+                    println!(
+                        "Jar info: name - {}, deps count - {}, incomps count - {}",
+                        jar.name().blue().italic(),
+                        jar.dependencies().len(),
+                        jar.incompatibilities().len()
+                    );
+
+                    if r#move {
+                        println!("Moving {}", path.to_string_lossy());
+                        std::fs::remove_file(path).context("Removing jar")?;
+                    } else {
+                        println!("Copying {}", path.to_string_lossy());
+                    }
+
+                    pool.add_to_locals(jar).context("Adding to locals")?;
+                }
             };
-
-            if !no_print {
-                print!("{}", the_mod.display_with_options(display_options));
-            }
-
-            pool.add_to_remotes(&the_mod)?;
         }
     }
 
