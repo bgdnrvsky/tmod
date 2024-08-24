@@ -149,7 +149,7 @@ impl Pool {
             .context("Creating locals dir")?;
 
         for jar_mod in self.locals() {
-            let path = locals_path.join(jar_mod.name()).join(".jar");
+            let path = locals_path.join(format!("{}.jar", jar_mod.name()));
             fs::File::create(&path)
                 .with_context(|| format!("Creating `{}` in locals", path.to_string_lossy()))?;
         }
