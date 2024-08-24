@@ -10,6 +10,7 @@ use std::{
 
 use anyhow::Context;
 use jars::{jar, JarOptionBuilder};
+use zip::ZipWriter;
 
 use crate::{fetcher::mod_search::search_mod::SearchedMod, jar::JarMod};
 
@@ -150,8 +151,27 @@ impl Pool {
 
         for jar_mod in self.locals() {
             let path = locals_path.join(format!("{}.jar", jar_mod.name()));
-            fs::File::create(&path)
+            let file = fs::File::create(&path)
                 .with_context(|| format!("Creating `{}` in locals", path.to_string_lossy()))?;
+
+            let mut writer = ZipWriter::new(file);
+            let options = zip::write::FileOptions::default();
+
+            for (zip_filename, zip_file_content) in jar_mod.zip().files.iter() {
+                // Mark the file where we are writing
+                writer
+                    .start_file(zip_filename, options)
+                    .with_context(|| format!("Starting {} file in the jar", zip_filename))?;
+
+                // Write the content
+                writer
+                    .write(zip_file_content)
+                    .with_context(|| format!("Writing to {} in the jar", zip_filename))?;
+            }
+
+            writer
+                .finish()
+                .with_context(|| format!("Finishing writing to {} jar", path.to_string_lossy()))?;
         }
 
         Ok(())
