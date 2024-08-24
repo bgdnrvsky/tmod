@@ -9,13 +9,49 @@ pub mod fabric;
 pub mod forge;
 
 #[derive(Debug, Clone)]
-pub enum JarMod {
+enum JarModType {
     Fabric(fabric::FabricMod),
     Forge(forge::ForgeMod),
 }
 
+pub struct JarMod {
+    r#type: JarModType,
+    zip: Jar,
+}
+
 #[allow(unused)]
 impl JarMod {
+    pub fn name(&self) -> &str {
+        self.r#type.name()
+    }
+
+    pub fn version(&self) -> SingleVersion {
+        self.r#type.version()
+    }
+
+    pub fn minecraft_version(&self) -> MultiVersion {
+        self.r#type.minecraft_version()
+    }
+
+    pub fn loader_version(&self) -> MultiVersion {
+        self.r#type.loader_version()
+    }
+
+    pub fn dependencies(&self) -> HashMap<&str, MultiVersion> {
+        self.r#type.dependencies()
+    }
+
+    pub fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
+        self.r#type.incompatibilities()
+    }
+
+    pub fn zip(&self) -> &Jar {
+        &self.zip
+    }
+}
+
+#[allow(unused)]
+impl JarModType {
     pub fn name(&self) -> &str {
         match self {
             Self::Fabric(the_mod) => the_mod.slug(),
@@ -71,7 +107,7 @@ impl JarMod {
     }
 }
 
-impl TryFrom<&Jar> for JarMod {
+impl TryFrom<&Jar> for JarModType {
     type Error = anyhow::Error;
 
     fn try_from(jar: &Jar) -> Result<Self, Self::Error> {
@@ -89,10 +125,21 @@ impl TryFrom<&Jar> for JarMod {
     }
 }
 
-impl TryFrom<Jar> for JarMod {
+impl TryFrom<Jar> for JarModType {
     type Error = anyhow::Error;
 
     fn try_from(jar: Jar) -> Result<Self, Self::Error> {
         Self::try_from(&jar)
+    }
+}
+
+impl TryFrom<Jar> for JarMod {
+    type Error = anyhow::Error;
+
+    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
+        Ok(Self {
+            r#type: JarModType::try_from(&jar)?,
+            zip: jar,
+        })
     }
 }
