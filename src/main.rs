@@ -18,6 +18,8 @@ struct Cli {
 enum Commands {
     /// Initialize a new `pool`
     Init,
+    /// List the mods in the `pool`
+    List,
     /// Add minecraft mod to the `pool`
     Add {
         /// Do not print the mod to stdout
@@ -112,6 +114,23 @@ fn main() -> anyhow::Result<()> {
                     pool.add_to_locals(jar).context("Adding to locals")?;
                 }
             };
+        }
+        Commands::List => {
+            let pool = Pool::new(&cli.pool_dir)
+                .context("Error initializing the pool (maybe you should init it?)")?;
+
+            let remotes = pool.remotes();
+            let locals = pool.locals();
+
+            println!("Remotes ({} mod(s)):", remotes.len());
+            for r in remotes {
+                println!("\t- {}", r.italic().blue());
+            }
+
+            println!("Locals ({} mod(s)):", locals.len());
+            for l in locals {
+                println!("\t- {}", l.name().italic().blue());
+            }
         }
     }
 
