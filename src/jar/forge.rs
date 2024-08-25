@@ -66,6 +66,7 @@ impl TryFrom<&Jar> for ForgeMod {
 
         let mut dependencies = mod_deps
             .into_iter()
+            .filter(|dependency| dependency.mandatory)
             .filter(|dependency| dependency.side.is_needed_for_client())
             .map(|dependency| (dependency.id, dependency.versions))
             .collect::<HashMap<_, _>>();
@@ -127,8 +128,6 @@ struct ForgeModDep {
     #[serde(rename = "versionRange")]
     versions: crate::version::maven::VersionRange,
     side: Side,
-    // NOTE: What to do with it ?
-    #[allow(unused)]
     mandatory: bool,
 }
 
