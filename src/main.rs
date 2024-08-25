@@ -117,10 +117,10 @@ fn main() -> anyhow::Result<()> {
                     );
 
                     if r#move {
-                        println!("Moving {}", path.to_string_lossy());
+                        println!("Moving {}", path.display());
                         std::fs::remove_file(path).context("Removing jar")?;
                     } else {
-                        println!("Copying {}", path.to_string_lossy());
+                        println!("Copying {}", path.display());
                     }
 
                     pool.add_to_locals(jar).context("Adding to locals")?;

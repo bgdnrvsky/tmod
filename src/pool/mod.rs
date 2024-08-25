@@ -152,7 +152,7 @@ impl Pool {
         for jar_mod in self.locals() {
             let path = locals_path.join(format!("{}.jar", jar_mod.name()));
             let file = fs::File::create(&path)
-                .with_context(|| format!("Creating `{}` in locals", path.to_string_lossy()))?;
+                .with_context(|| format!("Creating `{}` in locals", path.display()))?;
 
             let mut writer = ZipWriter::new(file);
             let options = zip::write::FileOptions::default();
@@ -171,7 +171,7 @@ impl Pool {
 
             writer
                 .finish()
-                .with_context(|| format!("Finishing writing to {} jar", path.to_string_lossy()))?;
+                .with_context(|| format!("Finishing writing to {} jar", path.display()))?;
         }
 
         Ok(())
