@@ -196,4 +196,25 @@ impl Pool {
 
         self.write_locals()
     }
+
+    pub fn remove_mod(&mut self, name: &str) -> anyhow::Result<bool> {
+        Ok(self.remove_from_locals(name)? || self.remove_from_remotes(name)?)
+    }
+
+    pub fn remove_from_locals(&mut self, name: &str) -> anyhow::Result<bool> {
+        if let Some(idx) = self.locals.iter().position(|jar| jar.name() == name) {
+            self.locals.swap_remove(idx);
+            self.write_locals().map(|_| true)
+        } else {
+            Ok(false)
+        }
+    }
+
+    pub fn remove_from_remotes(&mut self, name: &str) -> anyhow::Result<bool> {
+        if self.remotes.remove(name) {
+            self.write_remotes().map(|_| true)
+        } else {
+            Ok(false)
+        }
+    }
 }

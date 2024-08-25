@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Context;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use jars::{jar, JarOption};
 use tmod::{fetcher::searcher::Searcher, jar::JarMod, pool::Pool};
@@ -31,6 +31,18 @@ enum Commands {
         #[command(subcommand)]
         subadd: AddCommandTypes,
     },
+    /// Remove a mod from the `pool`
+    Remove {
+        name: String,
+        #[arg(value_enum)]
+        from: Option<Locations>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Locations {
+    Remotes,
+    Locals,
 }
 
 #[derive(Debug, Subcommand)]
@@ -130,6 +142,22 @@ fn main() -> anyhow::Result<()> {
             println!("Locals ({} mod(s)):", locals.len());
             for l in locals {
                 println!("\t- {}", l.name().italic().blue());
+            }
+        }
+        Commands::Remove { from, name } => {
+            let mut pool = Pool::new(&cli.pool_dir)
+                .context("Error initializing the pool (maybe you should init it?)")?;
+
+            let present = match from {
+                Some(loc) => match loc {
+                    Locations::Remotes => pool.remove_from_remotes(&name),
+                    Locations::Locals => pool.remove_from_locals(&name),
+                },
+                None => pool.remove_mod(&name),
+            }?;
+
+            if !present {
+                println!("No mod {} was removed", name.italic().blue());
             }
         }
     }
