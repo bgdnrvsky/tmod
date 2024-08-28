@@ -37,6 +37,16 @@ enum Commands {
         #[arg(value_enum)]
         from: Option<Locations>,
     },
+    /// Search a remote mod and print its info
+    Info {
+        #[clap(flatten)]
+        display_options:
+            tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilderOptions,
+        /// And also add the mod to the `pool`
+        #[arg(long, default_value_t = false)]
+        add_as_well: bool,
+        mod_slug: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -158,6 +168,24 @@ fn main() -> anyhow::Result<()> {
 
             if !present {
                 println!("No mod {} was removed", name.italic().blue());
+            }
+        }
+        Commands::Info {
+            display_options,
+            mod_slug,
+            add_as_well,
+        } => {
+            if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                print!("{}", the_mod.display_with_options(display_options));
+
+                if add_as_well {
+                    let mut pool = Pool::new(&cli.pool_dir)
+                        .context("Error initializing the pool (maybe you should init it?)")?;
+
+                    pool.add_to_remotes(&the_mod)?;
+                }
+            } else {
+                anyhow::bail!("No mod `{mod_slug}` was found");
             }
         }
     }
