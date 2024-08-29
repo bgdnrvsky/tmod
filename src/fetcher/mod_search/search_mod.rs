@@ -474,13 +474,13 @@ pub mod display_builder {
             if self.options.with_files {
                 writeln!(f, "Files:")?;
 
-                write!(f, "{:?}", self.the_mod.files)?;
+                write!(f, "{:#?}", self.the_mod.files)?;
             }
 
             if self.options.with_indexes {
                 writeln!(f, "Indexes:")?;
 
-                write!(f, "{:?}", self.the_mod.indexes)?;
+                write!(f, "{:#?}", self.the_mod.indexes)?;
             }
 
             Ok(())
