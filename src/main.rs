@@ -29,7 +29,7 @@ enum Commands {
         display_options:
             tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilderOptions,
         #[command(subcommand)]
-        subadd: AddCommandTypes,
+        subadd: AddTargets,
     },
     /// Remove a mod from the `pool`
     Remove {
@@ -45,7 +45,8 @@ enum Commands {
         /// And also add the mod to the `pool`
         #[arg(long, default_value_t = false)]
         add_as_well: bool,
-        mod_slug: String,
+        #[command(subcommand)]
+        target: SearchTargets,
     },
 }
 
@@ -56,11 +57,17 @@ enum Locations {
 }
 
 #[derive(Debug, Subcommand)]
-enum AddCommandTypes {
-    /// By CurseForge mod id
+enum SearchTargets {
+    /// Using CurseForge mod id
     Id { mod_id: usize },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
     Slug { mod_slug: String },
+}
+
+#[derive(Debug, Subcommand)]
+enum AddTargets {
+    #[clap(flatten)]
+    Remote(SearchTargets),
     /// Add your own jar file
     Jar {
         /// Move the file instead of default copying
@@ -87,7 +94,7 @@ fn main() -> anyhow::Result<()> {
                 .context("Error initializing the pool (maybe you should init it?)")?;
 
             match subadd {
-                AddCommandTypes::Id { mod_id } => {
+                AddTargets::Remote(SearchTargets::Id { mod_id }) => {
                     let the_mod = searcher.search_mod_by_id(mod_id)?;
 
                     if !no_print {
@@ -96,7 +103,7 @@ fn main() -> anyhow::Result<()> {
 
                     pool.add_to_remotes(&the_mod)?;
                 }
-                AddCommandTypes::Slug { mod_slug } => {
+                AddTargets::Remote(SearchTargets::Slug { mod_slug }) => {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
                         if !no_print {
                             print!("{}", the_mod.display_with_options(display_options));
@@ -107,7 +114,7 @@ fn main() -> anyhow::Result<()> {
                         anyhow::bail!("No mod `{mod_slug}` was found");
                     }
                 }
-                AddCommandTypes::Jar { r#move, path } => {
+                AddTargets::Jar { r#move, path } => {
                     if path.extension().is_none()
                         || path.extension().is_some_and(|ext| ext != "jar")
                     {
@@ -172,22 +179,29 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::Info {
             display_options,
-            mod_slug,
+            target,
             add_as_well,
         } => {
             let searcher = Searcher::new();
 
-            if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                print!("{}", the_mod.display_with_options(display_options));
-
-                if add_as_well {
-                    let mut pool = Pool::new(&cli.pool_dir)
-                        .context("Error initializing the pool (maybe you should init it?)")?;
-
-                    pool.add_to_remotes(&the_mod)?;
+            let the_mod = match target {
+                SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                SearchTargets::Slug { mod_slug } => {
+                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                        the_mod
+                    } else {
+                        anyhow::bail!("No mod `{mod_slug}` was found");
+                    }
                 }
-            } else {
-                anyhow::bail!("No mod `{mod_slug}` was found");
+            };
+
+            print!("{}", the_mod.display_with_options(display_options));
+
+            if add_as_well {
+                let mut pool = Pool::new(&cli.pool_dir)
+                    .context("Error initializing the pool (maybe you should init it?)")?;
+
+                pool.add_to_remotes(&the_mod)?;
             }
         }
     }
