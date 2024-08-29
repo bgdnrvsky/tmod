@@ -72,7 +72,6 @@ enum AddCommandTypes {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let searcher = Searcher::new();
 
     match cli.command {
         Commands::Init => {
@@ -83,6 +82,7 @@ fn main() -> anyhow::Result<()> {
             no_print,
             display_options,
         } => {
+            let searcher = Searcher::new();
             let mut pool = Pool::new(&cli.pool_dir)
                 .context("Error initializing the pool (maybe you should init it?)")?;
 
@@ -175,6 +175,8 @@ fn main() -> anyhow::Result<()> {
             mod_slug,
             add_as_well,
         } => {
+            let searcher = Searcher::new();
+
             if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
                 print!("{}", the_mod.display_with_options(display_options));
 
