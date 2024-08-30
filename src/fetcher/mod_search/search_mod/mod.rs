@@ -229,15 +229,12 @@ impl SearchedMod {
         &self.summary
     }
 
-    pub fn display(&self) -> display::DisplayBuilder {
-        display::DisplayBuilder::new(self)
+    pub fn display(&self) -> display::Builder {
+        display::Builder::new(self)
     }
 
-    pub fn display_with_options(
-        &self,
-        options: display::DisplayBuilderOptions,
-    ) -> display::DisplayBuilder {
-        display::DisplayBuilder::from_options(self, options)
+    pub fn display_with_options(&self, options: display::Options) -> display::Builder {
+        display::Builder::from_options(self, options)
     }
 }
 

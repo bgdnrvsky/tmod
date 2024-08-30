@@ -7,7 +7,7 @@ use super::ModLinks;
 
 /// Options to include while printing the searched mod
 #[derive(Debug, Clone, Copy, Default, Args)]
-pub struct DisplayBuilderOptions {
+pub struct Options {
     #[arg(long, default_value_t = false)]
     pub with_website: bool,
     #[arg(long, default_value_t = false)]
@@ -19,16 +19,16 @@ pub struct DisplayBuilderOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DisplayBuilder<'a> {
+pub struct Builder<'a> {
     the_links: &'a ModLinks,
-    options: DisplayBuilderOptions,
+    options: Options,
 }
 
-impl<'a> DisplayBuilder<'a> {
+impl<'a> Builder<'a> {
     pub fn new(links: &'a ModLinks) -> Self {
         Self {
             the_links: links,
-            options: DisplayBuilderOptions::default(),
+            options: Options::default(),
         }
         .with_source(true)
         .with_website(true)
@@ -36,7 +36,7 @@ impl<'a> DisplayBuilder<'a> {
         .with_issues(true)
     }
 
-    pub fn with_options(links: &'a ModLinks, options: DisplayBuilderOptions) -> Self {
+    pub fn with_options(links: &'a ModLinks, options: Options) -> Self {
         Self {
             the_links: links,
             options,
@@ -64,7 +64,7 @@ impl<'a> DisplayBuilder<'a> {
     }
 }
 
-impl Display for DisplayBuilder<'_> {
+impl Display for Builder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let the = self.the_links;
         let no_source = || "No source!";

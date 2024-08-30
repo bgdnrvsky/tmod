@@ -26,8 +26,7 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         no_print: bool,
         #[clap(flatten)]
-        display_options:
-            tmod::fetcher::mod_search::search_mod::display::DisplayBuilderOptions,
+        display_options: tmod::fetcher::mod_search::search_mod::display::Options,
         #[command(subcommand)]
         subadd: AddTargets,
     },
@@ -40,8 +39,7 @@ enum Commands {
     /// Search a remote mod and print its info
     Info {
         #[clap(flatten)]
-        display_options:
-            tmod::fetcher::mod_search::search_mod::display::DisplayBuilderOptions,
+        display_options: tmod::fetcher::mod_search::search_mod::display::Options,
         /// And also add the mod to the `pool`
         #[arg(long, default_value_t = false)]
         add_as_well: bool,

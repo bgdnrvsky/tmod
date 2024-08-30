@@ -39,8 +39,8 @@ impl ModSearchList {
         self.mods.len()
     }
 
-    pub fn display(&self) -> display::DisplayBuilder {
-        display::DisplayBuilder::new(self)
+    pub fn display(&self) -> display::Builder {
+        display::Builder::new(self)
     }
 
     pub fn to_single_mod(mut self) -> Result<SearchedMod, usize> {

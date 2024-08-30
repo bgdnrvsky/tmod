@@ -10,7 +10,7 @@ use super::SearchedMod;
 
 /// Options to include while printing the searched mod
 #[derive(Debug, Clone, Copy, Args)]
-pub struct DisplayBuilderOptions {
+pub struct Options {
     #[arg(long, default_value_t = true)]
     pub with_id: bool,
     #[arg(long, default_value_t = true)]
@@ -32,7 +32,7 @@ pub struct DisplayBuilderOptions {
     // pub links_options: Option<DisplayOptionsLinks>,
 }
 
-impl Default for DisplayBuilderOptions {
+impl Default for Options {
     fn default() -> Self {
         Self {
             with_id: true,
@@ -49,23 +49,23 @@ impl Default for DisplayBuilderOptions {
 }
 
 #[derive(Debug, Clone)]
-pub struct DisplayBuilder<'a> {
+pub struct Builder<'a> {
     the_mod: &'a SearchedMod,
-    options: DisplayBuilderOptions,
+    options: Options,
 }
 
-impl<'a> DisplayBuilder<'a> {
+impl<'a> Builder<'a> {
     pub fn new(searched_mod: &'a SearchedMod) -> Self {
         Self {
             the_mod: searched_mod,
-            options: DisplayBuilderOptions::default(),
+            options: Options::default(),
         }
         .with_id(true)
         .with_name(true)
         .with_summary(true)
     }
 
-    pub fn from_options(searched_mod: &'a SearchedMod, options: DisplayBuilderOptions) -> Self {
+    pub fn from_options(searched_mod: &'a SearchedMod, options: Options) -> Self {
         Self {
             the_mod: searched_mod,
             options,
@@ -118,7 +118,7 @@ impl<'a> DisplayBuilder<'a> {
     // }
 }
 
-impl Display for DisplayBuilder<'_> {
+impl Display for Builder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.options.with_id {
             write!(f, "(id: {}) ", self.the_mod.id().to_string().bold())?;
