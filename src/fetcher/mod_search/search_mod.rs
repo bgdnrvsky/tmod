@@ -169,8 +169,6 @@ pub struct SearchedMod {
     download_count: usize,
     #[serde(rename = "latestFiles")]
     files: Vec<ModFile>,
-    #[serde(rename = "latestFilesIndexes")]
-    indexes: Vec<ModFileIndex>,
 }
 
 impl Fetchable for SearchedMod {
@@ -220,10 +218,6 @@ impl SearchedMod {
         &self.files
     }
 
-    pub fn indexes(&self) -> &[ModFileIndex] {
-        &self.indexes
-    }
-
     pub fn links(&self) -> &ModLinks {
         &self.links
     }
@@ -264,13 +258,6 @@ impl Ord for SearchedMod {
             .cmp(&other.download_count)
             .then_with(|| self.thumbs_up_count.cmp(&other.thumbs_up_count))
     }
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ModFileIndex {
-    #[allow(unused)]
-    #[serde(rename = "fileId")]
-    id: usize,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -328,8 +315,6 @@ pub mod display_builder {
         pub with_download_count: bool,
         #[arg(long, default_value_t = false)]
         pub with_files: bool,
-        #[arg(long, default_value_t = false)]
-        pub with_indexes: bool,
         // #[clap(flatten)]
         // pub links_options: Option<DisplayOptionsLinks>,
     }
@@ -345,7 +330,6 @@ pub mod display_builder {
                 with_thumbs_up_count: false,
                 with_download_count: false,
                 with_files: false,
-                with_indexes: false,
                 // links_options: None,
             }
         }
@@ -415,11 +399,6 @@ pub mod display_builder {
             self
         }
 
-        pub fn with_indexes(mut self, value: bool) -> Self {
-            self.options.with_indexes = value;
-            self
-        }
-
         // pub fn with_links_builder(mut self, options: DisplayOptionsLinks) -> Self {
         //     self.options.links_options = Some(options);
         //     self
@@ -475,12 +454,6 @@ pub mod display_builder {
                 writeln!(f, "Files:")?;
 
                 write!(f, "{:#?}", self.the_mod.files)?;
-            }
-
-            if self.options.with_indexes {
-                writeln!(f, "Indexes:")?;
-
-                write!(f, "{:#?}", self.the_mod.indexes)?;
             }
 
             Ok(())
