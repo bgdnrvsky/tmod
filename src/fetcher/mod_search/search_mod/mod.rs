@@ -9,7 +9,7 @@ use url::Url;
 use super::super::Fetchable;
 use super::mod_links::ModLinks;
 
-pub mod display_builder;
+pub mod display;
 
 /// Example JSON:
 /// ```json
@@ -229,15 +229,15 @@ impl SearchedMod {
         &self.summary
     }
 
-    pub fn display(&self) -> display_builder::DisplayBuilder {
-        display_builder::DisplayBuilder::new(self)
+    pub fn display(&self) -> display::DisplayBuilder {
+        display::DisplayBuilder::new(self)
     }
 
     pub fn display_with_options(
         &self,
-        options: display_builder::DisplayBuilderOptions,
-    ) -> display_builder::DisplayBuilder {
-        display_builder::DisplayBuilder::from_options(self, options)
+        options: display::DisplayBuilderOptions,
+    ) -> display::DisplayBuilder {
+        display::DisplayBuilder::from_options(self, options)
     }
 }
 

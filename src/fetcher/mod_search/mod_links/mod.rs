@@ -3,7 +3,7 @@ use super::super::Url;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
 
-pub mod display_builder;
+pub mod display;
 
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
@@ -40,7 +40,7 @@ impl ModLinks {
         self.source.as_ref()
     }
 
-    pub fn display(&self) -> display_builder::DisplayBuilder {
-        display_builder::DisplayBuilder::new(self)
+    pub fn display(&self) -> display::DisplayBuilder {
+        display::DisplayBuilder::new(self)
     }
 }

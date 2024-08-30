@@ -1,6 +1,6 @@
 use std::{cmp::Reverse, fmt::Display};
 
-use crate::fetcher::mod_search::search_mod::display_builder::{
+use crate::fetcher::mod_search::search_mod::display::{
     DisplayBuilder as DisplayBuilderMod, DisplayBuilderOptions as DisplayOptionsMod,
 };
 

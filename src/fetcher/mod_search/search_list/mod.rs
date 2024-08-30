@@ -8,7 +8,7 @@ use super::search_mod::SearchedMod;
 
 use super::super::{rq::*, Url};
 
-pub mod display_builder;
+pub mod display;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModSearchList {
@@ -39,8 +39,8 @@ impl ModSearchList {
         self.mods.len()
     }
 
-    pub fn display(&self) -> display_builder::DisplayBuilder {
-        display_builder::DisplayBuilder::new(self)
+    pub fn display(&self) -> display::DisplayBuilder {
+        display::DisplayBuilder::new(self)
     }
 
     pub fn to_single_mod(mut self) -> Result<SearchedMod, usize> {

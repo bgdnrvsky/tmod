@@ -27,7 +27,7 @@ enum Commands {
         no_print: bool,
         #[clap(flatten)]
         display_options:
-            tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilderOptions,
+            tmod::fetcher::mod_search::search_mod::display::DisplayBuilderOptions,
         #[command(subcommand)]
         subadd: AddTargets,
     },
@@ -41,7 +41,7 @@ enum Commands {
     Info {
         #[clap(flatten)]
         display_options:
-            tmod::fetcher::mod_search::search_mod::display_builder::DisplayBuilderOptions,
+            tmod::fetcher::mod_search::search_mod::display::DisplayBuilderOptions,
         /// And also add the mod to the `pool`
         #[arg(long, default_value_t = false)]
         add_as_well: bool,
