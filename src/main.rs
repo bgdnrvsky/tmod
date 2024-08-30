@@ -23,7 +23,7 @@ enum Commands {
     /// Add minecraft mod to the `pool`
     Add {
         /// Do not print the mod to stdout
-        #[arg(long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false)]
         no_print: bool,
         #[clap(flatten)]
         display_options: tmod::fetcher::mod_search::search_mod::display::Options,
@@ -41,7 +41,7 @@ enum Commands {
         #[clap(flatten)]
         display_options: tmod::fetcher::mod_search::search_mod::display::Options,
         /// And also add the mod to the `pool`
-        #[arg(long, default_value_t = false)]
+        #[arg(short, long, default_value_t = false)]
         add_as_well: bool,
         #[command(subcommand)]
         target: SearchTargets,
