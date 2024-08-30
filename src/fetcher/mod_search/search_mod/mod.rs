@@ -282,3 +282,13 @@ pub struct ModFile {
     versions: Vec<String>,
     dependencies: Vec<ModDependency>,
 }
+
+impl ModFile {
+    pub fn versions(&self) -> &[String] {
+        &self.versions
+    }
+
+    pub fn dependencies(&self) -> &[ModDependency] {
+        &self.dependencies
+    }
+}
