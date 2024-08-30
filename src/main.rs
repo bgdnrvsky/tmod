@@ -38,6 +38,9 @@ enum Commands {
     },
     /// Search a remote mod and print its info
     Info {
+        /// List the mod dependencies (if any)
+        #[arg(short, long, default_value_t = true)]
+        list_deps: bool,
         #[clap(flatten)]
         display_options: tmod::fetcher::mod_search::search_mod::display::Options,
         /// And also add the mod to the `pool`
@@ -179,6 +182,7 @@ fn main() -> anyhow::Result<()> {
             display_options,
             target,
             add_as_well,
+            list_deps,
         } => {
             let searcher = Searcher::new();
 
@@ -193,7 +197,26 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            print!("{}", the_mod.display_with_options(display_options));
+            println!("{}", the_mod.display_with_options(display_options));
+
+            if list_deps {
+                println!("Dependencies:");
+
+                for file in the_mod.files() {
+                    println!("For version: {}:", file.versions().join(" - ").italic());
+
+                    for dep in file.dependencies() {
+                        println!(
+                            "\t- {}",
+                            searcher
+                                .search_mod_by_id(dep.id())?
+                                .display_with_options(display_options)
+                        );
+                    }
+
+                    println!();
+                }
+            }
 
             if add_as_well {
                 let mut pool = Pool::new(&cli.pool_dir)
