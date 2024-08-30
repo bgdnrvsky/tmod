@@ -271,7 +271,6 @@ pub struct ModDependency {
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModFile {
-    id: usize,
     #[serde(rename = "fileName")]
     file_name: String,
     #[serde(rename = "downloadCount")]
