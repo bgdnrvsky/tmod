@@ -267,6 +267,12 @@ pub struct ModDependency {
     id: usize,
 }
 
+impl ModDependency {
+    pub fn id(&self) -> usize {
+        self.id
+    }
+}
+
 #[allow(unused)]
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
