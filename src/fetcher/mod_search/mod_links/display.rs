@@ -74,10 +74,18 @@ impl Display for LinksBuilder<'_> {
         };
 
         writeln!(f, "\nLinks:")?;
-        writeln!(f, "Website: {}", the.website().as_str().italic())?;
-        writeln!(f, "Wiki: {}", formatted(the.wiki_url()))?;
-        writeln!(f, "Issues: {}", formatted(the.issues_url()))?;
-        writeln!(f, "Source: {}", formatted(the.source_url()))?;
+        if self.options.with_website {
+            writeln!(f, "Website: {}", the.website().as_str().italic())?;
+        }
+        if self.options.with_wiki {
+            writeln!(f, "Wiki: {}", formatted(the.wiki_url()))?;
+        }
+        if self.options.with_issues {
+            writeln!(f, "Issues: {}", formatted(the.issues_url()))?;
+        }
+        if self.options.with_source {
+            writeln!(f, "Source: {}", formatted(the.source_url()))?;
+        }
 
         Ok(())
     }
