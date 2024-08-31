@@ -40,7 +40,7 @@ impl ModLinks {
         self.source.as_ref()
     }
 
-    pub fn display(&self) -> display::Builder {
-        display::Builder::new(self)
+    pub fn display(&self) -> display::LinksBuilder {
+        display::LinksBuilder::new(self)
     }
 }

@@ -2,15 +2,13 @@ use clap::Args;
 use colored::Colorize;
 use std::fmt::Display;
 
-// use crate::fetcher::mod_search::mod_links::display_builder::{
-//     DisplayBuilder as DisplayBuilderLinks, DisplayBuilderOptions as DisplayOptionsLinks,
-// };
+use crate::fetcher::mod_search::mod_links::display::{LinksBuilder, LinksOptions};
 
 use super::SearchedMod;
 
 /// Options to include while printing the searched mod
 #[derive(Debug, Clone, Copy, Args)]
-pub struct Options {
+pub struct ModOptions {
     #[arg(long, default_value_t = true)]
     pub with_id: bool,
     #[arg(long, default_value_t = true)]
@@ -28,11 +26,11 @@ pub struct Options {
     pub with_download_count: bool,
     #[arg(long, default_value_t = false)]
     pub with_files: bool,
-    // #[clap(flatten)]
-    // pub links_options: Option<DisplayOptionsLinks>,
+    #[clap(flatten)]
+    pub links_options: Option<LinksOptions>,
 }
 
-impl Default for Options {
+impl Default for ModOptions {
     fn default() -> Self {
         Self {
             with_id: true,
@@ -43,29 +41,29 @@ impl Default for Options {
             with_thumbs_up_count: false,
             with_download_count: false,
             with_files: false,
-            // links_options: None,
+            links_options: None,
         }
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct Builder<'a> {
+pub struct ModBuilder<'a> {
     the_mod: &'a SearchedMod,
-    options: Options,
+    options: ModOptions,
 }
 
-impl<'a> Builder<'a> {
+impl<'a> ModBuilder<'a> {
     pub fn new(searched_mod: &'a SearchedMod) -> Self {
         Self {
             the_mod: searched_mod,
-            options: Options::default(),
+            options: ModOptions::default(),
         }
         .with_id(true)
         .with_name(true)
         .with_summary(true)
     }
 
-    pub fn from_options(searched_mod: &'a SearchedMod, options: Options) -> Self {
+    pub fn from_options(searched_mod: &'a SearchedMod, options: ModOptions) -> Self {
         Self {
             the_mod: searched_mod,
             options,
@@ -112,13 +110,13 @@ impl<'a> Builder<'a> {
         self
     }
 
-    // pub fn with_links_builder(mut self, options: DisplayOptionsLinks) -> Self {
-    //     self.options.links_options = Some(options);
-    //     self
-    // }
+    pub fn with_links_builder(mut self, options: LinksOptions) -> Self {
+        self.options.links_options = Some(options);
+        self
+    }
 }
 
-impl Display for Builder<'_> {
+impl Display for ModBuilder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.options.with_id {
             write!(f, "(id: {}) ", self.the_mod.id().to_string().bold())?;
@@ -156,12 +154,11 @@ impl Display for Builder<'_> {
             write!(f, "- {}", self.the_mod.summary().italic())?;
         }
 
-        // if let Some(links_options) = self.options.links_options {
-        //     let builder =
-        //         DisplayBuilderLinks::with_options(self.the_mod.links(), links_options);
-        //
-        //     builder.fmt(f)?;
-        // }
+        if let Some(links_options) = self.options.links_options {
+            let builder = LinksBuilder::with_options(self.the_mod.links(), links_options);
+
+            builder.fmt(f)?;
+        }
 
         if self.options.with_files {
             writeln!(f, "Files:")?;

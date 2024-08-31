@@ -1,34 +1,34 @@
 use std::{cmp::Reverse, fmt::Display};
 
 use crate::fetcher::mod_search::search_mod::display::{
-    Builder as DisplayBuilderMod, Options as DisplayOptionsMod,
+    ModBuilder as DisplayBuilderMod, ModOptions as DisplayOptionsMod,
 };
 
 use super::ModSearchList;
 
 /// Options to include while printing the searched mod
 #[derive(Debug, Clone, Copy, Default)]
-pub struct Options {
+pub struct ListOptions {
     with_count: bool,
     searched_mod_options: Option<DisplayOptionsMod>,
 }
 
 #[derive(Debug, Clone)]
-pub struct Builder<'a> {
+pub struct ListBuilder<'a> {
     the_list: &'a ModSearchList,
-    options: Options,
+    options: ListOptions,
 }
 
-impl<'a> Builder<'a> {
+impl<'a> ListBuilder<'a> {
     pub fn new(list: &'a ModSearchList) -> Self {
         Self {
             the_list: list,
-            options: Options::default(),
+            options: ListOptions::default(),
         }
         .with_count(true)
     }
 
-    pub fn with_options(list: &'a ModSearchList, options: Options) -> Self {
+    pub fn with_options(list: &'a ModSearchList, options: ListOptions) -> Self {
         Self {
             the_list: list,
             options,
@@ -46,7 +46,7 @@ impl<'a> Builder<'a> {
     }
 }
 
-impl Display for Builder<'_> {
+impl Display for ListBuilder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.options.with_count {
             if self.the_list.count() == 0 {
