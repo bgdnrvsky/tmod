@@ -67,37 +67,17 @@ impl<'a> LinksBuilder<'a> {
 impl Display for LinksBuilder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let the = self.the_links;
-        let no_source = || "No source!";
+        let formatted = |url: Option<&Url>| {
+            url.map(Url::as_str)
+                .unwrap_or_else(|| "No source!")
+                .italic()
+        };
 
         writeln!(f, "\nLinks:")?;
         writeln!(f, "Website: {}", the.website().as_str().italic())?;
-
-        writeln!(
-            f,
-            "Wiki: {}",
-            the.wiki_url()
-                .map(Url::as_str)
-                .unwrap_or_else(no_source)
-                .italic()
-        )?;
-
-        writeln!(
-            f,
-            "Issues: {}",
-            the.issues_url()
-                .map(Url::as_str)
-                .unwrap_or_else(no_source)
-                .italic()
-        )?;
-
-        writeln!(
-            f,
-            "Source: {}",
-            the.source_url()
-                .map(Url::as_str)
-                .unwrap_or_else(no_source)
-                .italic()
-        )?;
+        writeln!(f, "Wiki: {}", formatted(the.wiki_url()))?;
+        writeln!(f, "Issues: {}", formatted(the.issues_url()))?;
+        writeln!(f, "Source: {}", formatted(the.source_url()))?;
 
         Ok(())
     }
