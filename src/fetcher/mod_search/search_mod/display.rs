@@ -22,8 +22,6 @@ pub struct ModOptions {
     pub with_thumbs_up_count: bool,
     #[arg(long, default_value_t = false)]
     pub with_download_count: bool,
-    #[arg(long, default_value_t = false)]
-    pub with_files: bool,
     #[clap(flatten)]
     pub links_options: Option<LinksOptions>,
 }
@@ -37,7 +35,6 @@ impl Default for ModOptions {
             with_summary: true,
             with_thumbs_up_count: false,
             with_download_count: false,
-            with_files: false,
             links_options: None,
         }
     }
@@ -97,11 +94,6 @@ impl<'a> ModBuilder<'a> {
         self
     }
 
-    pub fn with_files(mut self, value: bool) -> Self {
-        self.options.with_files = value;
-        self
-    }
-
     pub fn with_links_builder(mut self, options: LinksOptions) -> Self {
         self.options.links_options = Some(options);
         self
@@ -150,12 +142,6 @@ impl Display for ModBuilder<'_> {
             let builder = LinksBuilder::with_options(self.the_mod.links(), links_options);
 
             builder.fmt(f)?;
-        }
-
-        if self.options.with_files {
-            writeln!(f, "Files:")?;
-
-            write!(f, "{:#?}", self.the_mod.files)?;
         }
 
         Ok(())

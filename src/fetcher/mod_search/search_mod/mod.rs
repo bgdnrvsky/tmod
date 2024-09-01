@@ -22,8 +22,6 @@ pub struct SearchedMod {
     thumbs_up_count: usize,
     #[serde(rename = "downloadCount")]
     download_count: usize,
-    #[serde(rename = "latestFiles")]
-    files: Vec<ModFile>,
 }
 
 impl Fetchable for SearchedMod {
@@ -67,10 +65,6 @@ impl SearchedMod {
 
     pub fn download_count(&self) -> usize {
         self.download_count
-    }
-
-    pub fn files(&self) -> &[ModFile] {
-        &self.files
     }
 
     pub fn links(&self) -> &ModLinks {
