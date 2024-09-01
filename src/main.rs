@@ -206,6 +206,10 @@ fn main() -> anyhow::Result<()> {
                 println!("Dependencies:");
 
                 for file in the_mod.files() {
+                    if file.dependencies().is_empty() {
+                        continue;
+                    }
+
                     println!("For version: {}:", file.versions().join(" - ").italic());
 
                     for dep in file.dependencies() {
