@@ -19,8 +19,6 @@ pub struct ModOptions {
     #[arg(long, default_value_t = true)]
     pub with_summary: bool,
     #[arg(long, default_value_t = false)]
-    pub with_links: bool,
-    #[arg(long, default_value_t = false)]
     pub with_thumbs_up_count: bool,
     #[arg(long, default_value_t = false)]
     pub with_download_count: bool,
@@ -37,7 +35,6 @@ impl Default for ModOptions {
             with_name: true,
             with_slug: false,
             with_summary: true,
-            with_links: false,
             with_thumbs_up_count: false,
             with_download_count: false,
             with_files: false,
@@ -87,11 +84,6 @@ impl<'a> ModBuilder<'a> {
 
     pub fn with_summary(mut self, value: bool) -> Self {
         self.options.with_summary = value;
-        self
-    }
-
-    pub fn with_links(mut self, value: bool) -> Self {
-        self.options.with_links = value;
         self
     }
 
