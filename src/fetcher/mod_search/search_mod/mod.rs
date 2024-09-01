@@ -162,7 +162,6 @@ pub mod display;
 pub struct SearchedMod {
     id: usize,
     name: String,
-    #[allow(unused)]
     slug: String,
     summary: String,
     links: ModLinks,
@@ -263,7 +262,6 @@ impl Ord for SearchedMod {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModDependency {
     #[serde(rename = "modId")]
-    #[allow(unused)]
     id: usize,
 }
 

@@ -19,7 +19,6 @@ pub struct JarMod {
     zip: Jar,
 }
 
-#[allow(unused)]
 impl JarMod {
     pub fn name(&self) -> &str {
         self.r#type.name()
@@ -50,7 +49,6 @@ impl JarMod {
     }
 }
 
-#[allow(unused)]
 impl JarModType {
     pub fn name(&self) -> &str {
         match self {
