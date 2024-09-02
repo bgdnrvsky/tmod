@@ -37,7 +37,7 @@ impl Searcher {
         self.forge_versions.get_or_fetch_with_default(self)
     }
 
-    pub fn fabric_versions(&self) -> anyhow::Result<&Vec<SingleVersion>> {
+    pub fn fabric_versions(&self) -> anyhow::Result<&[SingleVersion]> {
         self.fabric_versions
             .get_or_fetch_with_default(self)
             .map(|item| item.0.as_ref())
