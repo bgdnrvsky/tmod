@@ -39,7 +39,8 @@ where
 
         if let Some(segments) = additional_parameters.get_path_segments() {
             url.path_segments_mut()
-                .map_err(|_| anyhow::anyhow!("Url cannot be a base"))?
+                .ok()
+                .context("Url cannot be a base")?
                 .extend(segments);
         }
 
