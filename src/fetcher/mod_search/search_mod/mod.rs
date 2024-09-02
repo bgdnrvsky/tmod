@@ -1,12 +1,7 @@
-use std::fmt::Display;
-
-use anyhow::Context;
 use serde::Deserialize;
 use serde_with::{serde_as, DisplayFromStr};
-use ureq::Response;
 use url::Url;
 
-use super::super::Fetchable;
 use super::mod_links::ModLinks;
 
 pub mod display;
@@ -22,28 +17,6 @@ pub struct SearchedMod {
     thumbs_up_count: usize,
     #[serde(rename = "downloadCount")]
     download_count: usize,
-}
-
-impl Fetchable for SearchedMod {
-    fn info() -> impl Display {
-        "Fetching Minecraft mod"
-    }
-
-    fn link() -> Url {
-        Url::parse("https://api.curseforge.com/v1/mods").unwrap()
-    }
-
-    fn parse(response: Response) -> anyhow::Result<Self> {
-        #[derive(Debug, Clone, Deserialize)]
-        struct Data {
-            data: SearchedMod,
-        }
-
-        response
-            .into_json::<Data>()
-            .context("Deserializing response")
-            .map(|data| data.data)
-    }
 }
 
 impl SearchedMod {

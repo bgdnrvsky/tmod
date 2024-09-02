@@ -76,7 +76,7 @@ impl Loader {
     pub fn new_checked(
         kind: Loaders,
         version: SingleVersion,
-        searcher: crate::fetcher::searcher::Searcher,
+        searcher: crate::fetcher::Searcher,
     ) -> anyhow::Result<Self> {
         // Check if version exists
         let exists: bool = match version {

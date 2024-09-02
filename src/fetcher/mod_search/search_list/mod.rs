@@ -1,12 +1,10 @@
-use std::{cmp::Reverse, collections::BTreeSet, fmt::Display};
+use std::{cmp::Reverse, collections::BTreeSet};
 
-use anyhow::Context;
 use serde::Deserialize;
 
-use super::super::Fetchable;
 use super::search_mod::SearchedMod;
 
-use super::super::{rq::*, Url};
+use super::super::rq::*;
 
 pub mod display;
 
@@ -14,20 +12,6 @@ pub mod display;
 pub struct ModSearchList {
     #[serde(rename = "data")]
     mods: BTreeSet<Reverse<SearchedMod>>,
-}
-
-impl Fetchable for ModSearchList {
-    fn link() -> Url {
-        Url::parse("https://api.curseforge.com/v1/mods/search").unwrap()
-    }
-
-    fn parse(response: Response) -> anyhow::Result<Self> {
-        response.into_json().context("Deserializing searched mods")
-    }
-
-    fn info() -> impl Display {
-        "Searching for mod"
-    }
 }
 
 impl ModSearchList {

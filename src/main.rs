@@ -4,7 +4,7 @@ use anyhow::Context;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use jars::{jar, JarOption};
-use tmod::{fetcher::searcher::Searcher, jar::JarMod, pool::Pool};
+use tmod::{fetcher::Searcher, jar::JarMod, pool::Pool};
 
 #[derive(Parser)]
 struct Cli {
@@ -87,7 +87,7 @@ fn main() -> anyhow::Result<()> {
             no_print,
             display_options,
         } => {
-            let searcher = Searcher::new();
+            let searcher = Searcher::new(false);
             let mut pool = Pool::new(&cli.pool_dir)
                 .context("Error initializing the pool (maybe you should init it?)")?;
 
@@ -180,7 +180,7 @@ fn main() -> anyhow::Result<()> {
             target,
             add_as_well,
         } => {
-            let searcher = Searcher::new();
+            let searcher = Searcher::new(false);
 
             let the_mod = match target {
                 SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
