@@ -91,6 +91,14 @@ impl Loader {
 
         Ok(Self { kind, version })
     }
+
+    pub fn kind(&self) -> Loaders {
+        self.kind
+    }
+
+    pub fn version(&self) -> &SingleVersion {
+        &self.version
+    }
 }
 
 impl TryFrom<usize> for Loaders {

@@ -48,6 +48,14 @@ impl Config {
 
         toml::from_str(&content).context("Deserializing")
     }
+
+    pub fn loader(&self) -> &Loader {
+        &self.loader
+    }
+
+    pub fn game_version(&self) -> &Version {
+        &self.game_version
+    }
 }
 
 #[cfg(test)]
