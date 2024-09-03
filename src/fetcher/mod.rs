@@ -10,8 +10,11 @@ use serde::Deserialize;
 use ureq as rq;
 use url::Url;
 
-use crate::version::SingleVersion;
-use mod_search::{search_list::ModSearchList, search_mod::SearchedMod};
+use crate::{pool::config::Config, version::SingleVersion};
+use mod_search::{
+    search_list::ModSearchList,
+    search_mod::{ModFile, SearchedMod},
+};
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
 
@@ -232,6 +235,41 @@ impl Searcher {
             Err(0) => Ok(None),
             Err(n) => anyhow::bail!("The list should have contained 1 mod, but found {n}"),
         }
+    }
+
+    pub fn get_mod_files(
+        &self,
+        the_mod: &SearchedMod,
+        config: &Config,
+    ) -> anyhow::Result<Vec<ModFile>> {
+        let url = Url::parse(
+            format!(
+                "https://api.curseforge.com/v1/mods/{id}/files",
+                id = the_mod.id()
+            )
+            .as_str(),
+        )
+        .unwrap();
+        let response = FetchParameters::new(url)
+            .silent(self.silent)
+            .add_query("gameVersion", config.game_version().to_string().as_str())
+            .add_query(
+                "modLoaderType",
+                (config.loader().kind() as u8).to_string().as_str(),
+            )
+            .with_info(format!("Getting mod files for '{}'", the_mod.slug()).as_str())
+            .fetch()
+            .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug()))?;
+
+        #[derive(Deserialize)]
+        struct Data {
+            data: Vec<ModFile>,
+        }
+
+        response
+            .into_json::<Data>()
+            .context("Deserializing mod files")
+            .map(|result| result.data)
     }
 }
 
