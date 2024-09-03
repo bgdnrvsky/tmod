@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::version::SingleVersion;
 
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use dialoguer::{Input, Select};
 use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -22,11 +22,12 @@ use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
     EnumIter,
 )]
 #[strum(ascii_case_insensitive)]
+#[repr(u8)]
 pub enum Loaders {
-    Forge,
-    Fabric,
-    Quilt,
-    NeoForge,
+    Forge = 1,
+    Fabric = 4,
+    Quilt = 5,
+    NeoForge = 6,
 }
 
 impl Loaders {
@@ -98,24 +99,6 @@ impl Loader {
 
     pub fn version(&self) -> &SingleVersion {
         &self.version
-    }
-}
-
-impl TryFrom<usize> for Loaders {
-    type Error = anyhow::Error;
-
-    fn try_from(loader_id: usize) -> Result<Self, Self::Error> {
-        match loader_id {
-            1 => Ok(Self::Forge),
-            4 => Ok(Self::Fabric),
-            5 => Ok(Self::Quilt),
-            6 => Ok(Self::NeoForge),
-            _ => Err(anyhow!(
-                "Unknown mod loader number {loader_id}\
-                             while processing JSON response\
-                             while searching for a mod"
-            )),
-        }
     }
 }
 
