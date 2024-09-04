@@ -219,6 +219,7 @@ impl Searcher {
 
         let url = Url::parse("https://api.curseforge.com/v1/mods/search").unwrap();
         let response = FetchParameters::new(url)
+            .silent(self.silent)
             .add_query("gameId", self.minecraft_id()?.to_string().as_str())
             .add_query("classId", mods_category.to_string().as_str())
             .add_query("slug", slug.as_ref())
