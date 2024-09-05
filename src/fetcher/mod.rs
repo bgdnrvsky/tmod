@@ -1,6 +1,6 @@
 pub mod mod_search;
 
-use std::cell::OnceCell;
+use std::cell::{LazyCell, OnceCell};
 use std::collections::HashMap;
 
 use anyhow::Context;
@@ -17,6 +17,8 @@ use mod_search::{
 };
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
+const API_URL: LazyCell<Url> =
+    LazyCell::new(|| Url::parse("https://api.curseforge.com/v1").unwrap());
 
 #[derive(Debug, Default)]
 pub struct Searcher {
@@ -38,7 +40,9 @@ impl Searcher {
 
     pub fn minecraft_id(&self) -> anyhow::Result<usize> {
         if self.minecraft_id.get().is_none() {
-            let url = Url::parse("https://api.curseforge.com/v1/games").unwrap();
+            let mut url = API_URL.clone();
+            url.path_segments_mut().unwrap().push("games");
+
             let response = FetchParameters::new(url, self.silent)
                 .with_info("Getting Minecraft id")
                 .fetch()
@@ -153,7 +157,9 @@ impl Searcher {
 
     pub fn curseforge_categories(&self) -> anyhow::Result<&HashMap<String, usize>> {
         if self.curseforge_categories.get().is_none() {
-            let url = Url::parse("https://api.curseforge.com/v1/categories").unwrap();
+            let mut url = API_URL.clone();
+            url.path_segments_mut().unwrap().push("categories");
+
             let response = FetchParameters::new(url, self.silent)
                 .add_query("gameId", &self.minecraft_id()?.to_string())
                 .add_query("classesOnly", "true")
@@ -187,7 +193,9 @@ impl Searcher {
     }
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
-        let url = Url::parse("https://api.curseforge.com/v1/mods").unwrap();
+        let mut url = API_URL.clone();
+        url.path_segments_mut().unwrap().push("mods");
+
         let response = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting Minecraft mod by id ({id})"))
             .with_segment(id)
@@ -211,7 +219,9 @@ impl Searcher {
             .get("Mods")
             .context("No category 'Mods' found")?;
 
-        let url = Url::parse("https://api.curseforge.com/v1/mods/search").unwrap();
+        let mut url = API_URL.clone();
+        url.path_segments_mut().unwrap().push("mods").push("search");
+
         let response = FetchParameters::new(url, self.silent)
             .add_query("gameId", self.minecraft_id()?.to_string().as_str())
             .add_query("classId", mods_category.to_string().as_str())
@@ -236,14 +246,12 @@ impl Searcher {
         the_mod: &SearchedMod,
         config: &Config,
     ) -> anyhow::Result<Vec<ModFile>> {
-        let url = Url::parse(
-            format!(
-                "https://api.curseforge.com/v1/mods/{id}/files",
-                id = the_mod.id()
-            )
-            .as_str(),
-        )
-        .unwrap();
+        let mut url = API_URL.clone();
+        url.path_segments_mut()
+            .unwrap()
+            .push("mods")
+            .push(the_mod.id().to_string().as_str())
+            .push("files");
 
         let response = FetchParameters::new(url, self.silent)
             .add_query("gameVersion", config.game_version().to_string().as_str())
