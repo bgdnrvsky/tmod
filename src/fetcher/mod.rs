@@ -161,10 +161,11 @@ impl Searcher {
         if self.curseforge_categories.get().is_none() {
             let mut url = API_URL.clone();
             url.path_segments_mut().unwrap().push("categories");
+            url.query_pairs_mut()
+                .append_pair("gameId", &self.minecraft_id()?.to_string())
+                .append_pair("classesOnly", "true");
 
             let response = FetchParameters::new(url, self.silent)
-                .add_query("gameId", &self.minecraft_id()?.to_string())
-                .add_query("classesOnly", "true")
                 .with_info("Getting game categories")
                 .fetch()
                 .context("Fetching game categories")?;
@@ -225,11 +226,12 @@ impl Searcher {
 
         let mut url = API_URL.clone();
         url.path_segments_mut().unwrap().push("mods").push("search");
+        url.query_pairs_mut()
+            .append_pair("gameId", self.minecraft_id()?.to_string().as_str())
+            .append_pair("classId", mods_category.to_string().as_str())
+            .append_pair("slug", slug.as_ref());
 
         let response = FetchParameters::new(url, self.silent)
-            .add_query("gameId", self.minecraft_id()?.to_string().as_str())
-            .add_query("classId", mods_category.to_string().as_str())
-            .add_query("slug", slug.as_ref())
             .with_info(format!("Searching for the mod '{}'", slug.as_ref()))
             .fetch()
             .with_context(|| format!("Fetching the mod '{}'", slug.as_ref()))?;
@@ -256,13 +258,14 @@ impl Searcher {
             .push("mods")
             .push(the_mod.id().to_string().as_str())
             .push("files");
-
-        let response = FetchParameters::new(url, self.silent)
-            .add_query("gameVersion", config.game_version().to_string().as_str())
-            .add_query(
+        url.query_pairs_mut()
+            .append_pair("gameVersion", config.game_version().to_string().as_str())
+            .append_pair(
                 "modLoaderType",
                 (config.loader().kind() as u8).to_string().as_str(),
-            )
+            );
+
+        let response = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting mod files for '{}'", the_mod.slug()).as_str())
             .fetch()
             .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug()))?;
@@ -297,11 +300,6 @@ impl FetchParameters {
 
     fn with_info(mut self, info: impl std::fmt::Display) -> Self {
         self.info = Some(info.to_string());
-        self
-    }
-
-    fn add_query(mut self, name: &str, value: &str) -> Self {
-        self.url.query_pairs_mut().append_pair(name, value);
         self
     }
 
