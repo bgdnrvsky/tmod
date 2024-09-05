@@ -39,8 +39,7 @@ impl Searcher {
     pub fn minecraft_id(&self) -> anyhow::Result<usize> {
         if self.minecraft_id.get().is_none() {
             let url = Url::parse("https://api.curseforge.com/v1/games").unwrap();
-            let response = FetchParameters::new(url)
-                .silent(self.silent)
+            let response = FetchParameters::new(url, self.silent)
                 .with_info("Getting Minecraft id")
                 .fetch()
                 .context("Fetching Minecraft id")?;
@@ -77,8 +76,7 @@ impl Searcher {
     pub fn minecraft_versions(&self) -> anyhow::Result<&[SingleVersion]> {
         if self.minecraft_versions.get().is_none() {
             let url = Url::parse("https://mc-versions-api.net/api/java").unwrap();
-            let response = FetchParameters::new(url)
-                .silent(self.silent)
+            let response = FetchParameters::new(url, self.silent)
                 .with_info("Getting Minecraft versions")
                 .fetch()
                 .context("Fetching Minecraft versions")?;
@@ -104,8 +102,7 @@ impl Searcher {
     pub fn forge_versions(&self) -> anyhow::Result<&HashMap<SingleVersion, Vec<SingleVersion>>> {
         if self.forge_versions.get().is_none() {
             let url = Url::parse("https://mc-versions-api.net/api/forge").unwrap();
-            let response = FetchParameters::new(url)
-                .silent(self.silent)
+            let response = FetchParameters::new(url, self.silent)
                 .with_info("Getting Forge versions")
                 .fetch()
                 .context("Fetching Forge versions")?;
@@ -131,8 +128,7 @@ impl Searcher {
     pub fn fabric_versions(&self) -> anyhow::Result<&[SingleVersion]> {
         if self.fabric_versions.get().is_none() {
             let url = Url::parse("https://meta.fabricmc.net/v2/versions/loader").unwrap();
-            let response = FetchParameters::new(url)
-                .silent(self.silent)
+            let response = FetchParameters::new(url, self.silent)
                 .with_info("Getting Fabric versions")
                 .fetch()
                 .context("Fetching Fabric versions")?;
@@ -158,8 +154,7 @@ impl Searcher {
     pub fn curseforge_categories(&self) -> anyhow::Result<&HashMap<String, usize>> {
         if self.curseforge_categories.get().is_none() {
             let url = Url::parse("https://api.curseforge.com/v1/categories").unwrap();
-            let response = FetchParameters::new(url)
-                .silent(self.silent)
+            let response = FetchParameters::new(url, self.silent)
                 .add_query("gameId", &self.minecraft_id()?.to_string())
                 .add_query("classesOnly", "true")
                 .with_info("Getting game categories")
@@ -193,8 +188,7 @@ impl Searcher {
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
         let url = Url::parse("https://api.curseforge.com/v1/mods").unwrap();
-        let response = FetchParameters::new(url)
-            .silent(self.silent)
+        let response = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting Minecraft mod by id ({id})"))
             .with_segment(id)
             .fetch()
@@ -218,8 +212,7 @@ impl Searcher {
             .context("No category 'Mods' found")?;
 
         let url = Url::parse("https://api.curseforge.com/v1/mods/search").unwrap();
-        let response = FetchParameters::new(url)
-            .silent(self.silent)
+        let response = FetchParameters::new(url, self.silent)
             .add_query("gameId", self.minecraft_id()?.to_string().as_str())
             .add_query("classId", mods_category.to_string().as_str())
             .add_query("slug", slug.as_ref())
@@ -251,8 +244,8 @@ impl Searcher {
             .as_str(),
         )
         .unwrap();
-        let response = FetchParameters::new(url)
-            .silent(self.silent)
+
+        let response = FetchParameters::new(url, self.silent)
             .add_query("gameVersion", config.game_version().to_string().as_str())
             .add_query(
                 "modLoaderType",
@@ -282,11 +275,11 @@ struct FetchParameters {
 }
 
 impl FetchParameters {
-    fn new(url: Url) -> Self {
+    fn new(url: Url, silent: bool) -> Self {
         Self {
             url,
             info: None,
-            silent: false,
+            silent,
         }
     }
 
@@ -297,11 +290,6 @@ impl FetchParameters {
 
     fn add_query(mut self, name: &str, value: &str) -> Self {
         self.url.query_pairs_mut().append_pair(name, value);
-        self
-    }
-
-    fn silent(mut self, silent: bool) -> Self {
-        self.silent = silent;
         self
     }
 
