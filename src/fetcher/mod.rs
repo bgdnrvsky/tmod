@@ -194,11 +194,13 @@ impl Searcher {
 
     pub fn search_mod_by_id(&self, id: usize) -> anyhow::Result<SearchedMod> {
         let mut url = API_URL.clone();
-        url.path_segments_mut().unwrap().push("mods");
+        url.path_segments_mut()
+            .unwrap()
+            .push("mods")
+            .push(id.to_string().as_str());
 
         let response = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting Minecraft mod by id ({id})"))
-            .with_segment(id)
             .fetch()
             .with_context(|| format!("Fetching mod {id}"))?;
 
@@ -322,14 +324,6 @@ impl FetchParameters {
         }
 
         response
-    }
-
-    fn with_segment(mut self, value: impl std::fmt::Display) -> Self {
-        self.url
-            .path_segments_mut()
-            .expect("The url can be a base")
-            .push(value.to_string().as_str());
-        self
     }
 }
 
