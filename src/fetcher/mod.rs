@@ -1,3 +1,4 @@
+#![allow(clippy::borrow_interior_mutable_const)]
 pub mod mod_search;
 
 use std::cell::{LazyCell, OnceCell};
@@ -17,6 +18,7 @@ use mod_search::{
 };
 
 pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm"; // https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround
+#[allow(clippy::declare_interior_mutable_const)]
 const API_URL: LazyCell<Url> =
     LazyCell::new(|| Url::parse("https://api.curseforge.com/v1").unwrap());
 
