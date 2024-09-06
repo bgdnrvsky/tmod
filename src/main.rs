@@ -143,8 +143,11 @@ fn main() -> anyhow::Result<()> {
             };
         }
         Commands::List => {
-            let pool = Pool::new(&cli.pool_dir)
-                .context("Error initializing the pool (maybe you should init it?)")?;
+            if !cli.pool_dir.try_exists().is_ok_and(|exists| exists) {
+                anyhow::bail!("The pool '{}' doesnt exist!", cli.pool_dir.display());
+            }
+
+            let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             let remotes = pool.remotes();
             let locals = pool.locals();
