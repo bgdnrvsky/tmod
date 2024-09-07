@@ -88,8 +88,7 @@ fn main() -> anyhow::Result<()> {
             display_options,
         } => {
             let searcher = Searcher::new(false);
-            let mut pool = Pool::new(&cli.pool_dir)
-                .context("Error initializing the pool (maybe you should init it?)")?;
+            let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             match subadd {
                 AddTargets::Remote(SearchTargets::Id { mod_id }) => {
@@ -143,10 +142,6 @@ fn main() -> anyhow::Result<()> {
             };
         }
         Commands::List => {
-            if !cli.pool_dir.try_exists().is_ok_and(|exists| exists) {
-                anyhow::bail!("The pool '{}' doesnt exist!", cli.pool_dir.display());
-            }
-
             let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             let remotes = pool.remotes();
@@ -163,8 +158,7 @@ fn main() -> anyhow::Result<()> {
             }
         }
         Commands::Remove { from, name } => {
-            let mut pool = Pool::new(&cli.pool_dir)
-                .context("Error initializing the pool (maybe you should init it?)")?;
+            let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             let present = match from {
                 Some(loc) => match loc {
@@ -199,8 +193,7 @@ fn main() -> anyhow::Result<()> {
             println!("{}", the_mod.display_with_options(display_options));
 
             if add_as_well {
-                let mut pool = Pool::new(&cli.pool_dir)
-                    .context("Error initializing the pool (maybe you should init it?)")?;
+                let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
                 pool.add_to_remotes(&the_mod)?;
             }

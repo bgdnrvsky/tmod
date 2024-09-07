@@ -38,6 +38,10 @@ impl Pool {
     }
 
     pub fn new(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        if !dir_path.as_ref().try_exists().is_ok_and(|exists| exists) {
+            anyhow::bail!("The pool '{}' doesnt exist!", dir_path.as_ref().display());
+        }
+
         anyhow::ensure!(
             fs::metadata(&dir_path)?.is_dir(),
             "The provided path should point to a directory"
