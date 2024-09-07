@@ -4,7 +4,12 @@ use anyhow::Context;
 use clap::{Parser, Subcommand, ValueEnum};
 use colored::Colorize;
 use jars::{jar, JarOption};
-use tmod::{fetcher::Searcher, jar::JarMod, pool::Pool};
+use ptree::TreeBuilder;
+use tmod::{
+    fetcher::{mod_search::search_mod::SearchedMod, Searcher},
+    jar::JarMod,
+    pool::{config::Config, Pool},
+};
 
 #[derive(Parser)]
 struct Cli {
@@ -46,6 +51,7 @@ enum Commands {
         #[command(subcommand)]
         target: SearchTargets,
     },
+    Tree,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -197,6 +203,81 @@ fn main() -> anyhow::Result<()> {
 
                 pool.add_to_remotes(&the_mod)?;
             }
+        }
+        Commands::Tree => {
+            let searcher = Searcher::new(true); // Make it silent
+            let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
+
+            let mut tree = TreeBuilder::new(String::from("Tmod"));
+
+            fn add_remote_to_tree(
+                searcher: &Searcher,
+                tree: &mut TreeBuilder,
+                the_mod: &SearchedMod,
+                config: &Config,
+            ) -> anyhow::Result<()> {
+                tree.begin_child(the_mod.slug().to_string());
+
+                let files = searcher.get_mod_files(the_mod, config)?;
+                let file = files.first().with_context(|| {
+                    format!("No files fetched for the mod '{}'", the_mod.slug())
+                })?;
+
+                for dep in file.dependencies() {
+                    add_remote_to_tree(
+                        searcher,
+                        tree,
+                        &searcher.search_mod_by_id(dep.id())?,
+                        config,
+                    )?;
+                }
+
+                tree.end_child();
+
+                Ok(())
+            }
+
+            fn add_local_to_tree(
+                searcher: &Searcher,
+                tree: &mut TreeBuilder,
+                the_mod: &JarMod,
+                config: &Config,
+            ) -> anyhow::Result<()> {
+                tree.begin_child(the_mod.name().to_string());
+
+                for dep in the_mod.dependencies().keys() {
+                    let remote = searcher.search_mod_by_slug(dep)?.context(
+                        "Mod doesn't exist when searching remote mod in jar dependencies",
+                    )?;
+
+                    add_remote_to_tree(searcher, tree, &remote, config)?;
+                }
+
+                tree.end_child();
+
+                Ok(())
+            }
+
+            tree.begin_child(String::from("Remotes"));
+
+            for slug in pool.remotes() {
+                let the_mod = searcher
+                    .search_mod_by_slug(slug)?
+                    .expect("If remote mod is in the pool, it exists");
+
+                add_remote_to_tree(&searcher, &mut tree, &the_mod, pool.config())?;
+            }
+
+            tree.end_child();
+            tree.begin_child(String::from("Locals"));
+
+            for local in pool.locals() {
+                add_local_to_tree(&searcher, &mut tree, local, pool.config())?;
+            }
+
+            tree.end_child();
+
+            ptree::print_tree(&tree.build()).context("Error displaying the tree")?;
         }
     }
 

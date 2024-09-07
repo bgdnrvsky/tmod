@@ -190,6 +190,8 @@ impl Pool {
     }
 
     pub fn add_to_remotes(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
+        // TODO: Check if the mod is compatible
+
         self.remotes.insert(the_mod.slug().to_string());
 
         self.write_remotes()
