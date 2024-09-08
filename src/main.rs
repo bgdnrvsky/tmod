@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use anyhow::Context;
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 use colored::Colorize;
 use jars::{jar, JarOption};
 use ptree::TreeBuilder;
@@ -41,8 +41,6 @@ enum Commands {
     /// Remove a mod from the `pool`
     Remove {
         name: String,
-        #[arg(value_enum)]
-        from: Option<Locations>,
     },
     /// Search a remote mod and print its info
     Info {
@@ -55,12 +53,6 @@ enum Commands {
         target: SearchTargets,
     },
     Tree,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Locations {
-    Remotes,
-    Locals,
 }
 
 #[derive(Debug, Subcommand)]
@@ -166,18 +158,10 @@ fn main() -> anyhow::Result<()> {
                 println!("\t- {}", l.name().italic().blue());
             }
         }
-        Commands::Remove { from, name } => {
+        Commands::Remove { name } => {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            let present = match from {
-                Some(loc) => match loc {
-                    Locations::Remotes => pool.remove_from_remotes(&name),
-                    Locations::Locals => pool.remove_from_locals(&name),
-                },
-                None => pool.remove_mod(&name),
-            }?;
-
-            if !present {
+            if !pool.remove_mod(&name)? {
                 println!("No mod {} was removed", name.italic().blue());
             }
         }
