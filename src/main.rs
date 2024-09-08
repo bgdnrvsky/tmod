@@ -40,7 +40,8 @@ enum Commands {
     },
     /// Remove a mod from the `pool`
     Remove {
-        name: String,
+        #[arg(required = true)]
+        names: Vec<String>,
     },
     /// Search a remote mod and print its info
     Info {
@@ -158,11 +159,13 @@ fn main() -> anyhow::Result<()> {
                 println!("\t- {}", l.name().italic().blue());
             }
         }
-        Commands::Remove { name } => {
+        Commands::Remove { names } => {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            if !pool.remove_mod(&name)? {
-                println!("No mod {} was removed", name.italic().blue());
+            for name in names {
+                if !pool.remove_mod(&name)? {
+                    println!("No mod {} was removed", name.italic().blue());
+                }
             }
         }
         Commands::Info {
