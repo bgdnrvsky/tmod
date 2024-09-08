@@ -17,6 +17,9 @@ struct Cli {
     pool_dir: PathBuf,
     #[command(subcommand)]
     command: Commands,
+    /// Disable loading messages when fetching
+    #[arg(short, long, default_value_t = false)]
+    quiet: bool,
 }
 
 #[derive(Debug, Subcommand)]
@@ -93,7 +96,7 @@ fn main() -> anyhow::Result<()> {
             no_print,
             display_options,
         } => {
-            let searcher = Searcher::new(false);
+            let searcher = Searcher::new(cli.quiet);
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             match subadd {
@@ -183,7 +186,7 @@ fn main() -> anyhow::Result<()> {
             target,
             add_as_well,
         } => {
-            let searcher = Searcher::new(false);
+            let searcher = Searcher::new(cli.quiet);
 
             let the_mod = match target {
                 SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
