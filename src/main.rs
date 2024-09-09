@@ -114,12 +114,11 @@ fn main() -> anyhow::Result<()> {
                     }
                 }
                 AddTargets::Jar { r#move, path } => {
-                    if path.extension().is_none()
-                        || path.extension().is_some_and(|ext| ext != "jar")
+                    if (path.extension().is_none()
+                        || path.extension().is_some_and(|ext| ext != "jar"))
+                        && !cli.quiet
                     {
-                        if !cli.quiet {
-                            eprintln!("WARNING: The file you provided doesn't seem like a jar");
-                        }
+                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
                     }
 
                     let jar = jar(&path, JarOption::default())
@@ -141,10 +140,8 @@ fn main() -> anyhow::Result<()> {
                             println!("Moving {}", path.display());
                             std::fs::remove_file(path).context("Removing jar")?;
                         }
-                    } else {
-                        if !cli.quiet {
-                            println!("Copying {}", path.display());
-                        }
+                    } else if !cli.quiet {
+                        println!("Copying {}", path.display());
                     }
 
                     pool.add_to_locals(jar).context("Adding to locals")?;
@@ -171,10 +168,8 @@ fn main() -> anyhow::Result<()> {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             for name in names {
-                if !pool.remove_mod(&name)? {
-                    if !cli.quiet {
-                        println!("No mod {} was removed", name.italic().blue());
-                    }
+                if !pool.remove_mod(&name)? && !cli.quiet {
+                    println!("No mod {} was removed", name.italic().blue());
                 }
             }
         }
