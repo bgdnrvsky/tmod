@@ -50,9 +50,6 @@ enum Commands {
     Info {
         #[clap(flatten)]
         display_options: ModOptions,
-        /// And also add the mod to the `pool`
-        #[arg(short, long, default_value_t = false)]
-        add_as_well: bool,
         #[command(subcommand)]
         target: SearchTargets,
     },
@@ -174,7 +171,6 @@ fn main() -> anyhow::Result<()> {
         Commands::Info {
             display_options,
             target,
-            add_as_well,
         } => {
             let searcher = Searcher::new(cli.quiet);
 
@@ -190,12 +186,6 @@ fn main() -> anyhow::Result<()> {
             };
 
             println!("{}", the_mod.display_with_options(display_options));
-
-            if add_as_well {
-                let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
-
-                pool.add_to_remotes(&the_mod)?;
-            }
         }
         Commands::Tree => {
             let searcher = Searcher::new(true); // Make it silent
