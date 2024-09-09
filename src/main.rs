@@ -96,7 +96,7 @@ fn main() -> anyhow::Result<()> {
                 AddTargets::Remote(SearchTargets::Id { mod_id }) => {
                     let the_mod = searcher.search_mod_by_id(mod_id)?;
 
-                    if !no_print {
+                    if !no_print && !cli.quiet {
                         print!("{}", the_mod.display_with_options(display_options));
                     }
 
@@ -104,7 +104,7 @@ fn main() -> anyhow::Result<()> {
                 }
                 AddTargets::Remote(SearchTargets::Slug { mod_slug }) => {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                        if !no_print {
+                        if !no_print && !cli.quiet {
                             print!("{}", the_mod.display_with_options(display_options));
                         }
 
@@ -117,7 +117,9 @@ fn main() -> anyhow::Result<()> {
                     if path.extension().is_none()
                         || path.extension().is_some_and(|ext| ext != "jar")
                     {
-                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                        if !cli.quiet {
+                            eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                        }
                     }
 
                     let jar = jar(&path, JarOption::default())
@@ -125,18 +127,24 @@ fn main() -> anyhow::Result<()> {
                         .and_then(JarMod::try_from)
                         .context("Reading jar")?;
 
-                    println!(
-                        "Jar info: name - {}, deps count - {}, incomps count - {}",
-                        jar.name().blue().italic(),
-                        jar.dependencies().len(),
-                        jar.incompatibilities().len()
-                    );
+                    if !cli.quiet {
+                        println!(
+                            "Jar info: name - {}, deps count - {}, incomps count - {}",
+                            jar.name().blue().italic(),
+                            jar.dependencies().len(),
+                            jar.incompatibilities().len()
+                        );
+                    }
 
                     if r#move {
-                        println!("Moving {}", path.display());
-                        std::fs::remove_file(path).context("Removing jar")?;
+                        if !cli.quiet {
+                            println!("Moving {}", path.display());
+                            std::fs::remove_file(path).context("Removing jar")?;
+                        }
                     } else {
-                        println!("Copying {}", path.display());
+                        if !cli.quiet {
+                            println!("Copying {}", path.display());
+                        }
                     }
 
                     pool.add_to_locals(jar).context("Adding to locals")?;
@@ -164,7 +172,9 @@ fn main() -> anyhow::Result<()> {
 
             for name in names {
                 if !pool.remove_mod(&name)? {
-                    println!("No mod {} was removed", name.italic().blue());
+                    if !cli.quiet {
+                        println!("No mod {} was removed", name.italic().blue());
+                    }
                 }
             }
         }
