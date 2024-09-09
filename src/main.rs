@@ -6,7 +6,10 @@ use colored::Colorize;
 use jars::{jar, JarOption};
 use ptree::TreeBuilder;
 use tmod::{
-    fetcher::{mod_search::search_mod::SearchedMod, Searcher},
+    fetcher::{
+        mod_search::search_mod::{display::ModOptions, SearchedMod},
+        Searcher,
+    },
     jar::JarMod,
     pool::{config::Config, Pool},
 };
@@ -34,7 +37,7 @@ enum Commands {
         #[arg(short, long, default_value_t = false)]
         no_print: bool,
         #[clap(flatten)]
-        display_options: tmod::fetcher::mod_search::search_mod::display::ModOptions,
+        display_options: ModOptions,
         #[command(subcommand)]
         subadd: AddTargets,
     },
@@ -46,7 +49,7 @@ enum Commands {
     /// Search a remote mod and print its info
     Info {
         #[clap(flatten)]
-        display_options: tmod::fetcher::mod_search::search_mod::display::ModOptions,
+        display_options: ModOptions,
         /// And also add the mod to the `pool`
         #[arg(short, long, default_value_t = false)]
         add_as_well: bool,
