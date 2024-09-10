@@ -234,9 +234,12 @@ fn main() -> anyhow::Result<()> {
                 tree.begin_child(the_mod.name().to_string());
 
                 for dep in the_mod.dependencies().keys() {
-                    let remote = searcher.search_mod_by_slug(dep)?.context(
-                        "Mod doesn't exist when searching remote mod in jar dependencies",
-                    )?;
+                    let remote = searcher.search_mod_by_slug(dep)?.with_context(|| {
+                        format!(
+                            "Mod '{}' doesn't exist when searching remote mod in jar dependencies",
+                            dep
+                        )
+                    })?;
 
                     add_remote_to_tree(searcher, tree, &remote, config)?;
                 }
