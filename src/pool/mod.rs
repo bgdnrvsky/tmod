@@ -12,7 +12,10 @@ use anyhow::Context;
 use jars::{jar, JarOptionBuilder};
 use zip::ZipWriter;
 
-use crate::{fetcher::mod_search::search_mod::SearchedMod, jar::JarMod};
+use crate::{
+    fetcher::{mod_search::search_mod::SearchedMod, Searcher},
+    jar::JarMod,
+};
 
 use config::Config;
 
@@ -189,9 +192,44 @@ impl Pool {
             .context("Saving pool")
     }
 
-    pub fn add_to_remotes(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
-        // TODO: Check if the mod is compatible
+    pub fn is_compatible(&self, the_mod: &SearchedMod, searcher: &Searcher) -> bool {
+        if !searcher
+            .get_mod_files(the_mod, &self.config)
+            .is_ok_and(|files| !files.is_empty())
+        {
+            return false;
+        }
 
+        // Unfortunately, CurseForge API doesn't include any information about incompatibilities
+        // when fetching mod files :(
+
+        for local in self.locals.iter() {
+            for incomp_slug in local.incompatibilities().keys() {
+                if *incomp_slug == the_mod.slug() {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    pub fn add_to_remotes_checked(
+        &mut self,
+        the_mod: &SearchedMod,
+        searcher: &Searcher,
+    ) -> anyhow::Result<()> {
+        if !self.is_compatible(the_mod, searcher) {
+            anyhow::bail!(
+                "The mod {slug} is not compatible with the pool!",
+                slug = the_mod.slug()
+            );
+        }
+
+        self.add_to_remotes_unchecked(the_mod)
+    }
+
+    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
         self.remotes.insert(the_mod.slug().to_string());
 
         self.write_remotes()

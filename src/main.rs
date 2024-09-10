@@ -100,7 +100,7 @@ fn main() -> anyhow::Result<()> {
                         print!("{}", the_mod.display_with_options(display_options));
                     }
 
-                    pool.add_to_remotes(&the_mod)?;
+                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
                 }
                 AddTargets::Remote(SearchTargets::Slug { mod_slug }) => {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
@@ -108,7 +108,7 @@ fn main() -> anyhow::Result<()> {
                             print!("{}", the_mod.display_with_options(display_options));
                         }
 
-                        pool.add_to_remotes(&the_mod)?;
+                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
                     } else {
                         anyhow::bail!("No mod `{mod_slug}` was found");
                     }
