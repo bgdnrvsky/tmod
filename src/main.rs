@@ -36,6 +36,9 @@ enum Commands {
         /// Do not print the mod to stdout
         #[arg(short, long, default_value_t = false)]
         no_print: bool,
+        /// Force add the mod
+        #[arg(short, long, default_value_t = false)]
+        force: bool,
         #[clap(flatten)]
         display_options: ModOptions,
         #[command(subcommand)]
@@ -88,6 +91,7 @@ fn main() -> anyhow::Result<()> {
             subadd,
             no_print,
             display_options,
+            force,
         } => {
             let searcher = Searcher::new(cli.quiet);
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
@@ -99,8 +103,11 @@ fn main() -> anyhow::Result<()> {
                     if !no_print && !cli.quiet {
                         print!("{}", the_mod.display_with_options(display_options));
                     }
-
-                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                    if !force {
+                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                    } else {
+                        pool.add_to_remotes_unchecked(&the_mod)?;
+                    }
                 }
                 AddTargets::Remote(SearchTargets::Slug { mod_slug }) => {
                     if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
@@ -108,7 +115,11 @@ fn main() -> anyhow::Result<()> {
                             print!("{}", the_mod.display_with_options(display_options));
                         }
 
-                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                        if !force {
+                            pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                        } else {
+                            pool.add_to_remotes_unchecked(&the_mod)?;
+                        }
                     } else {
                         anyhow::bail!("No mod `{mod_slug}` was found");
                     }
