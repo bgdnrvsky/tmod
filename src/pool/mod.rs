@@ -247,6 +247,8 @@ impl Pool {
 
     pub fn remove_from_locals(&mut self, name: &str) -> anyhow::Result<bool> {
         if let Some(idx) = self.locals.iter().position(|jar| jar.name() == name) {
+            fs::remove_file(self.path.join("locals").join(name.to_string() + ".jar"))
+                .with_context(|| format!("Deleting local JAR '{}.jar'", name))?;
             self.locals.swap_remove(idx);
             self.write_locals().map(|_| true)
         } else {
