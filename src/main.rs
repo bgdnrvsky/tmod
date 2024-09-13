@@ -97,31 +97,26 @@ fn main() -> anyhow::Result<()> {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             match subadd {
-                AddTargets::Remote(SearchTargets::Id { mod_id }) => {
-                    let the_mod = searcher.search_mod_by_id(mod_id)?;
+                AddTargets::Remote(search_target) => {
+                    let the_mod = match search_target {
+                        SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                        SearchTargets::Slug { mod_slug } => {
+                            if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                                the_mod
+                            } else {
+                                anyhow::bail!("No mod `{mod_slug}` was found");
+                            }
+                        }
+                    };
 
                     if !no_print && !cli.quiet {
                         print!("{}", the_mod.display_with_options(display_options));
                     }
-                    if !force {
-                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
-                    } else {
-                        pool.add_to_remotes_unchecked(&the_mod)?;
-                    }
-                }
-                AddTargets::Remote(SearchTargets::Slug { mod_slug }) => {
-                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                        if !no_print && !cli.quiet {
-                            print!("{}", the_mod.display_with_options(display_options));
-                        }
 
-                        if !force {
-                            pool.add_to_remotes_checked(&the_mod, &searcher)?;
-                        } else {
-                            pool.add_to_remotes_unchecked(&the_mod)?;
-                        }
+                    if !force {
+                        pool.add_to_remotes_unchecked(&the_mod)?;
                     } else {
-                        anyhow::bail!("No mod `{mod_slug}` was found");
+                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
                     }
                 }
                 AddTargets::Jar { r#move, path } => {
