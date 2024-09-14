@@ -66,6 +66,20 @@ impl TryFrom<&Jar> for FabricMod {
             .remove("minecraft")
             .unwrap_or_else(VersionReq::any);
 
+        // The JAR may contain some dependencies that are not remote,
+        // so if in the future we try to build a tree, for example,
+        // the searcher will not succeed to find the mod by slug online and error
+        dependencies = dependencies
+            .into_iter()
+            .filter_map(|(key, value)| {
+                if key.starts_with("fabric") {
+                    None
+                } else {
+                    Some((key, value))
+                }
+            })
+            .collect();
+
         Ok(Self {
             slug: fabric_json.id,
             version: fabric_json.version,

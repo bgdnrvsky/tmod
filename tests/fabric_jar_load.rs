@@ -20,7 +20,7 @@ fn load_fabric() -> anyhow::Result<()> {
 
     assert_eq!(sodium.version(), &Version::from_str("0.5.8+mc1.20.4")?);
 
-    assert!(!sodium.dependencies().is_empty());
+    assert!(sodium.dependencies().is_empty()); // It does contain internal dependencies though
     assert!(!sodium.incompatibilities().is_empty());
 
     assert_eq!(sodium.minecraft_version_needed(), &VersionReq::any());
