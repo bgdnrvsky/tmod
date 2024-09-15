@@ -20,7 +20,7 @@ struct Cli {
     pool_dir: PathBuf,
     #[command(subcommand)]
     command: Commands,
-    /// Disable loading messages when fetching
+    /// Dot not print Tmod log messages
     #[arg(short, long, default_value_t = false)]
     quiet: bool,
 }
