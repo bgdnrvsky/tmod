@@ -39,7 +39,10 @@ enum Commands {
         #[clap(flatten)]
         display_options: ModOptions,
         #[command(subcommand)]
-        subadd: AddTargets,
+        subadd: SearchTargets,
+        /// When adding a Jar, move the file instead of copying
+        #[arg(short, long, default_value_t = false)]
+        r#move: bool,
     },
     /// Remove a mod from the `pool`
     Remove {
@@ -62,19 +65,14 @@ enum SearchTargets {
     Id { mod_id: usize },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
     Slug { mod_slug: String },
+    /// Using your local Jar file
+    Jar { path: PathBuf },
 }
 
-#[derive(Debug, Subcommand)]
-enum AddTargets {
-    #[clap(flatten)]
-    Remote(SearchTargets),
-    /// Add your own jar file
-    Jar {
-        /// Move the file instead of default copying
-        #[arg(short, long, default_value_t = false)]
-        r#move: bool,
-        path: PathBuf,
-    },
+impl SearchTargets {
+    fn is_remote(&self) -> bool {
+        matches!(self, Self::Id { .. } | Self::Slug { .. })
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -88,67 +86,62 @@ fn main() -> anyhow::Result<()> {
             subadd,
             display_options,
             force,
+            r#move,
         } => {
             let searcher = Searcher::new(cli.quiet);
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            match subadd {
-                AddTargets::Remote(search_target) => {
-                    let the_mod = match search_target {
-                        SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                        SearchTargets::Slug { mod_slug } => {
-                            if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                                the_mod
-                            } else {
-                                anyhow::bail!("No mod `{mod_slug}` was found");
+            if subadd.is_remote() {
+                let the_mod = match subadd {
+                    SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                    SearchTargets::Slug { mod_slug } => {
+                        if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                            the_mod
+                        } else {
+                            anyhow::bail!("No mod `{mod_slug}` was found");
+                        }
+                    }
+                    SearchTargets::Jar { path: _ } => unreachable!("Remote check"),
+                };
+
+                if !cli.quiet {
+                    print!("{}", the_mod.display_with_options(display_options));
+                }
+
+                if force {
+                    pool.add_to_remotes_unchecked(&the_mod)?;
+                } else {
+                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                }
+            } else {
+                match subadd {
+                    SearchTargets::Jar { path } => {
+                        if (path.extension().is_none()
+                            || path.extension().is_some_and(|ext| ext != "jar"))
+                            && !cli.quiet
+                        {
+                            eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                        }
+
+                        let jar = jar(&path, JarOption::default())
+                            .context("Opening jar")
+                            .and_then(JarMod::try_from)
+                            .context("Reading jar")?;
+
+                        if r#move {
+                            if !cli.quiet {
+                                println!("Moving {}", path.display());
+                                std::fs::remove_file(path).context("Removing jar")?;
                             }
+                        } else if !cli.quiet {
+                            println!("Copying {}", path.display());
                         }
-                    };
 
-                    if !cli.quiet {
-                        print!("{}", the_mod.display_with_options(display_options));
+                        pool.add_to_locals(jar).context("Adding to locals")?;
                     }
-
-                    if force {
-                        pool.add_to_remotes_unchecked(&the_mod)?;
-                    } else {
-                        pool.add_to_remotes_checked(&the_mod, &searcher)?;
-                    }
+                    _ => unreachable!("Remote check"),
                 }
-                AddTargets::Jar { r#move, path } => {
-                    if (path.extension().is_none()
-                        || path.extension().is_some_and(|ext| ext != "jar"))
-                        && !cli.quiet
-                    {
-                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
-                    }
-
-                    let jar = jar(&path, JarOption::default())
-                        .context("Opening jar")
-                        .and_then(JarMod::try_from)
-                        .context("Reading jar")?;
-
-                    if !cli.quiet {
-                        println!(
-                            "Jar info: name - {}, deps count - {}, incomps count - {}",
-                            jar.name().blue().italic(),
-                            jar.dependencies().len(),
-                            jar.incompatibilities().len()
-                        );
-                    }
-
-                    if r#move {
-                        if !cli.quiet {
-                            println!("Moving {}", path.display());
-                            std::fs::remove_file(path).context("Removing jar")?;
-                        }
-                    } else if !cli.quiet {
-                        println!("Copying {}", path.display());
-                    }
-
-                    pool.add_to_locals(jar).context("Adding to locals")?;
-                }
-            };
+            }
         }
         Commands::List => {
             let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
@@ -189,6 +182,28 @@ fn main() -> anyhow::Result<()> {
                     } else {
                         anyhow::bail!("No mod `{mod_slug}` was found");
                     }
+                }
+                SearchTargets::Jar { path } => {
+                    if (path.extension().is_none()
+                        || path.extension().is_some_and(|ext| ext != "jar"))
+                        && !cli.quiet
+                    {
+                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                    }
+
+                    let jar = jar(&path, JarOption::default())
+                        .context("Opening jar")
+                        .and_then(JarMod::try_from)
+                        .context("Reading jar")?;
+
+                    println!(
+                        "Jar info: name - {}, deps count - {}, incomps count - {}",
+                        jar.name().blue().italic(),
+                        jar.dependencies().len(),
+                        jar.incompatibilities().len()
+                    );
+
+                    return Ok(());
                 }
             };
 
