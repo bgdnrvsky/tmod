@@ -33,9 +33,6 @@ enum Commands {
     List,
     /// Add minecraft mod to the `pool`
     Add {
-        /// Do not print the mod to stdout
-        #[arg(short, long, default_value_t = false)]
-        no_print: bool,
         /// Force add the mod
         #[arg(short, long, default_value_t = false)]
         force: bool,
@@ -89,7 +86,6 @@ fn main() -> anyhow::Result<()> {
         }
         Commands::Add {
             subadd,
-            no_print,
             display_options,
             force,
         } => {
@@ -109,7 +105,7 @@ fn main() -> anyhow::Result<()> {
                         }
                     };
 
-                    if !no_print && !cli.quiet {
+                    if !cli.quiet {
                         print!("{}", the_mod.display_with_options(display_options));
                     }
 
