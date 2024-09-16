@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use anyhow::Context;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use jars::{jar, JarOption};
 use ptree::TreeBuilder;
 use tmod::{
     fetcher::{
@@ -95,17 +94,7 @@ fn main() -> anyhow::Result<()> {
                     }
                 }
                 SearchTargets::Jar { path } => {
-                    if (path.extension().is_none()
-                        || path.extension().is_some_and(|ext| ext != "jar"))
-                        && !cli.quiet
-                    {
-                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
-                    }
-
-                    let jar = jar(&path, JarOption::default())
-                        .context("Opening jar")
-                        .and_then(JarMod::try_from)
-                        .context("Reading jar")?;
+                    let jar = JarMod::open(&path)?;
 
                     if r#move {
                         if !cli.quiet {
@@ -171,17 +160,7 @@ fn main() -> anyhow::Result<()> {
                     }
                 }
                 SearchTargets::Jar { path } => {
-                    if (path.extension().is_none()
-                        || path.extension().is_some_and(|ext| ext != "jar"))
-                        && !cli.quiet
-                    {
-                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
-                    }
-
-                    let jar = jar(&path, JarOption::default())
-                        .context("Opening jar")
-                        .and_then(JarMod::try_from)
-                        .context("Reading jar")?;
+                    let jar = JarMod::open(path)?;
 
                     println!(
                         "Jar info: name - {}, deps count - {}, incomps count - {}",

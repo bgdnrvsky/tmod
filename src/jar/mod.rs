@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::Path};
 
 use anyhow::Context;
-use jars::Jar;
+use jars::{jar, Jar, JarOption};
 
 use crate::version::{MultiVersion, SingleVersion};
 
@@ -20,6 +20,19 @@ pub struct JarMod {
 }
 
 impl JarMod {
+    pub fn open(path: impl AsRef<Path>) -> anyhow::Result<Self> {
+        let path = path.as_ref();
+
+        if !path.extension().is_some_and(|ext| ext == "jar") {
+            eprintln!("WARNING: The file you provided doesn't seem like a jar");
+        }
+
+        jar(path, JarOption::default())
+            .with_context(|| format!("Opening jar '{}'", path.display()))
+            .and_then(Self::try_from)
+            .with_context(|| format!("Reading jar '{}'", path.display()))
+    }
+
     pub fn name(&self) -> &str {
         self.r#type.name()
     }
