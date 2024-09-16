@@ -69,12 +69,6 @@ enum SearchTargets {
     Jar { path: PathBuf },
 }
 
-impl SearchTargets {
-    fn is_remote(&self) -> bool {
-        matches!(self, Self::Id { .. } | Self::Slug { .. })
-    }
-}
-
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
@@ -91,56 +85,49 @@ fn main() -> anyhow::Result<()> {
             let searcher = Searcher::new(cli.quiet);
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            if subadd.is_remote() {
-                let the_mod = match subadd {
-                    SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                    SearchTargets::Slug { mod_slug } => {
-                        if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                            the_mod
-                        } else {
-                            anyhow::bail!("No mod `{mod_slug}` was found");
-                        }
+            let the_mod = match subadd {
+                SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
+                SearchTargets::Slug { mod_slug } => {
+                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
+                        the_mod
+                    } else {
+                        anyhow::bail!("No mod `{mod_slug}` was found");
                     }
-                    SearchTargets::Jar { path: _ } => unreachable!("Remote check"),
-                };
-
-                if !cli.quiet {
-                    print!("{}", the_mod.display_with_options(display_options));
                 }
+                SearchTargets::Jar { path } => {
+                    if (path.extension().is_none()
+                        || path.extension().is_some_and(|ext| ext != "jar"))
+                        && !cli.quiet
+                    {
+                        eprintln!("WARNING: The file you provided doesn't seem like a jar");
+                    }
 
-                if force {
-                    pool.add_to_remotes_unchecked(&the_mod)?;
-                } else {
-                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                    let jar = jar(&path, JarOption::default())
+                        .context("Opening jar")
+                        .and_then(JarMod::try_from)
+                        .context("Reading jar")?;
+
+                    if r#move {
+                        if !cli.quiet {
+                            println!("Moving {}", path.display());
+                            std::fs::remove_file(path).context("Removing jar")?;
+                        }
+                    } else if !cli.quiet {
+                        println!("Copying {}", path.display());
+                    }
+
+                    return pool.add_to_locals(jar).context("Adding to locals");
                 }
+            };
+
+            if !cli.quiet {
+                print!("{}", the_mod.display_with_options(display_options));
+            }
+
+            if force {
+                pool.add_to_remotes_unchecked(&the_mod)?;
             } else {
-                match subadd {
-                    SearchTargets::Jar { path } => {
-                        if (path.extension().is_none()
-                            || path.extension().is_some_and(|ext| ext != "jar"))
-                            && !cli.quiet
-                        {
-                            eprintln!("WARNING: The file you provided doesn't seem like a jar");
-                        }
-
-                        let jar = jar(&path, JarOption::default())
-                            .context("Opening jar")
-                            .and_then(JarMod::try_from)
-                            .context("Reading jar")?;
-
-                        if r#move {
-                            if !cli.quiet {
-                                println!("Moving {}", path.display());
-                                std::fs::remove_file(path).context("Removing jar")?;
-                            }
-                        } else if !cli.quiet {
-                            println!("Copying {}", path.display());
-                        }
-
-                        pool.add_to_locals(jar).context("Adding to locals")?;
-                    }
-                    _ => unreachable!("Remote check"),
-                }
+                pool.add_to_remotes_checked(&the_mod, &searcher)?;
             }
         }
         Commands::List => {
