@@ -162,12 +162,29 @@ fn main() -> anyhow::Result<()> {
                 SearchTargets::Jar { path } => {
                     let jar = JarMod::open(path)?;
 
-                    println!(
-                        "Jar info: name - {}, deps count - {}, incomps count - {}",
-                        jar.name().blue().italic(),
-                        jar.dependencies().len(),
-                        jar.incompatibilities().len()
-                    );
+                    println!("Name: {}", jar.name().blue().italic());
+
+                    let dependencies = jar.dependencies();
+
+                    if !dependencies.is_empty() {
+                        println!();
+                        println!("Dependencies:");
+
+                        for (name, version) in dependencies {
+                            println!("\t- {name}({version})", name = name.green().italic());
+                        }
+                    }
+
+                    let incompatibilities = jar.incompatibilities();
+
+                    if !incompatibilities.is_empty() {
+                        println!();
+                        println!("Incompatibilities:");
+
+                        for (name, version) in incompatibilities {
+                            println!("\t- {name}({version})", name = name.red().bold());
+                        }
+                    }
 
                     return Ok(());
                 }
