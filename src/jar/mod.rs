@@ -109,7 +109,7 @@ impl JarModType {
     pub fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
         match self {
             Self::Fabric(the_mod) => the_mod
-                .dependencies()
+                .incompatibilities()
                 .iter()
                 .map(|(slug, req)| (slug.as_str(), req.clone().into()))
                 .collect(),
