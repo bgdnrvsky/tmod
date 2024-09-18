@@ -163,6 +163,9 @@ fn main() -> anyhow::Result<()> {
                     let jar = JarMod::open(path)?;
 
                     println!("Name: {}", jar.name().blue().italic());
+                    println!("Version: {}", jar.version());
+                    println!("Minecraft version required: {}", jar.minecraft_version());
+                    println!("Loader version required: {}", jar.loader_version());
 
                     let dependencies = jar.dependencies();
 
