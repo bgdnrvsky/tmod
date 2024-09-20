@@ -86,13 +86,7 @@ fn main() -> anyhow::Result<()> {
 
             let the_mod = match subadd {
                 SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                SearchTargets::Slug { mod_slug } => {
-                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                        the_mod
-                    } else {
-                        anyhow::bail!("No mod `{mod_slug}` was found");
-                    }
-                }
+                SearchTargets::Slug { mod_slug } => searcher.search_mod_by_slug(&mod_slug)?,
                 SearchTargets::Jar { path } => {
                     let jar = JarMod::open(&path)?;
 
@@ -152,13 +146,7 @@ fn main() -> anyhow::Result<()> {
 
             let the_mod = match target {
                 SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                SearchTargets::Slug { mod_slug } => {
-                    if let Some(the_mod) = searcher.search_mod_by_slug(&mod_slug)? {
-                        the_mod
-                    } else {
-                        anyhow::bail!("No mod `{mod_slug}` was found");
-                    }
-                }
+                SearchTargets::Slug { mod_slug } => searcher.search_mod_by_slug(&mod_slug)?,
                 SearchTargets::Jar { path } => {
                     let jar = JarMod::open(path)?;
 
@@ -237,7 +225,7 @@ fn main() -> anyhow::Result<()> {
                 tree.begin_child(the_mod.name().to_string());
 
                 for dep in the_mod.dependencies().keys() {
-                    let remote = searcher.search_mod_by_slug(dep)?.with_context(|| {
+                    let remote = searcher.search_mod_by_slug(dep).with_context(|| {
                         format!(
                             "Mod '{}' doesn't exist when searching remote mod in jar dependencies",
                             dep
@@ -256,7 +244,7 @@ fn main() -> anyhow::Result<()> {
 
             for slug in pool.remotes() {
                 let the_mod = searcher
-                    .search_mod_by_slug(slug)?
+                    .search_mod_by_slug(slug)
                     .expect("If remote mod is in the pool, it exists");
 
                 add_remote_to_tree(&searcher, &mut tree, &the_mod, pool.config())?;

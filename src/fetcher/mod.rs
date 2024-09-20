@@ -218,7 +218,7 @@ impl Searcher {
             .map(|data| data.data)
     }
 
-    pub fn search_mod_by_slug(&self, slug: impl AsRef<str>) -> anyhow::Result<Option<SearchedMod>> {
+    pub fn search_mod_by_slug(&self, slug: impl AsRef<str>) -> anyhow::Result<SearchedMod> {
         let mods_category = self
             .curseforge_categories()?
             .get("Mods")
@@ -241,8 +241,8 @@ impl Searcher {
             .context("Deserializing searched mods")?;
 
         match list.to_single_mod() {
-            Ok(r#mod) => Ok(Some(r#mod)),
-            Err(0) => Ok(None),
+            Ok(r#mod) => Ok(r#mod),
+            Err(0) => anyhow::bail!("The mod '{}' is not found", slug.as_ref()),
             Err(n) => anyhow::bail!("The list should have contained 1 mod, but found {n}"),
         }
     }
