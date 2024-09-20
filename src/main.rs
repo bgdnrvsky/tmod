@@ -103,14 +103,14 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            if !cli.quiet {
-                print!("{}", the_mod.display_with_options(display_options));
-            }
-
             if force {
                 pool.add_to_remotes_unchecked(&the_mod)?;
             } else {
                 pool.add_to_remotes_checked(&the_mod, &searcher)?;
+            }
+
+            if !cli.quiet {
+                print!("{}", the_mod.display_with_options(display_options));
             }
         }
         Commands::List => {
