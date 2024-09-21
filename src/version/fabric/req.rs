@@ -886,7 +886,7 @@ mod tests {
         let parsed = comp!("2.x.x");
         assert_to_string(parsed, "2.*");
 
-        assert!(Comparator::from_str("1.2.3-01").is_err()); // invalid leading zero in pre-release identifier
+        assert!(Comparator::from_str("1.2.3-01").is_ok()); // even if invalid leading zero in pre-release identifier
         assert!(Comparator::from_str("1.2.3+4.").is_err()); // empty identifier segment in build metadata
         assert!(Comparator::from_str(">").is_err()); // unexpected end of input while parsing major version number
         assert!(Comparator::from_str("1.").is_err()); // unexpected end of input while parsing minor version number

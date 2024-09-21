@@ -193,7 +193,7 @@ impl PreRelease {
     pub(crate) fn parse(input: &str) -> IResult<&str, Self> {
         preceded(
             char('-'),
-            separated_list1(char('.'), Identifier::parse(false)),
+            separated_list1(char('.'), Identifier::parse(true)),
         )
         .map(|idents| Self { idents })
         .parse(input)
@@ -297,7 +297,7 @@ mod tests {
         assert!(Version::from_str("1.2.3-").is_err()); // empty identifier segment in pre-release identifier
         assert!(Version::from_str("a.b.c").is_err()); // unexpected character 'a' while parsing major version number
         assert!(Version::from_str("1.2.3 abc").is_err()); // unexpected character ' ' after patch version number
-        assert!(Version::from_str("1.2.3-01").is_err()); // invalid leading zero in pre-release identifier
+        assert!(Version::from_str("1.2.3-01").is_ok()); // even invalid leading zero in pre-release identifier
         assert!(Version::from_str("1.2.3++").is_err()); // empty identifier segment in build metadata
         assert!(Version::from_str("07").is_err()); // invalid leading zero in major version number
         assert!(Version::from_str("111111111111111111111.0.0").is_err()); // value of major version number exceeds u64::MAX
