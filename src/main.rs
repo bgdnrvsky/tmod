@@ -91,9 +91,9 @@ fn main() -> anyhow::Result<()> {
                     let jar = JarMod::open(&path)?;
 
                     if r#move {
+                        std::fs::remove_file(&path).context("Removing jar")?;
                         if !cli.quiet {
                             println!("Moving {}", path.display());
-                            std::fs::remove_file(path).context("Removing jar")?;
                         }
                     } else if !cli.quiet {
                         println!("Copying {}", path.display());
