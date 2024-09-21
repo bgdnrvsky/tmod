@@ -35,6 +35,12 @@ impl Display for VersionRange {
 }
 
 impl VersionRange {
+    pub fn any() -> Self {
+        Self {
+            comparators: Vec::with_capacity(0),
+        }
+    }
+
     fn parse(s: &str) -> IResult<&str, Self> {
         separated_list1(terminated(char(','), space0), Comparator::parse)
             .map(|comparators| Self { comparators })
