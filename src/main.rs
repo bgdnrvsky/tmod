@@ -70,6 +70,7 @@ enum SearchTargets {
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
+    let mut searcher = Searcher::new(cli.quiet);
 
     match cli.command {
         Commands::Init => {
@@ -81,7 +82,6 @@ fn main() -> anyhow::Result<()> {
             force,
             r#move,
         } => {
-            let searcher = Searcher::new(cli.quiet);
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             let the_mod = match subadd {
@@ -142,8 +142,6 @@ fn main() -> anyhow::Result<()> {
             display_options,
             target,
         } => {
-            let searcher = Searcher::new(cli.quiet);
-
             let the_mod = match target {
                 SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
                 SearchTargets::Slug { mod_slug } => searcher.search_mod_by_slug(&mod_slug)?,
@@ -184,7 +182,7 @@ fn main() -> anyhow::Result<()> {
             println!("{}", the_mod.display_with_options(display_options));
         }
         Commands::Tree => {
-            let searcher = Searcher::new(true); // Make it silent
+            searcher.set_silent(true); // Make it silent
             let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
             let mut tree = TreeBuilder::new(String::from("Tmod"));

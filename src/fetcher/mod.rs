@@ -40,6 +40,10 @@ impl Searcher {
         }
     }
 
+    pub fn set_silent(&mut self, silent: bool) {
+        self.silent = silent
+    }
+
     pub fn minecraft_id(&self) -> anyhow::Result<usize> {
         if self.minecraft_id.get().is_none() {
             let mut url = API_URL.clone();
