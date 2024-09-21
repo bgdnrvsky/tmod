@@ -23,7 +23,7 @@ pub struct VersionReq {
 impl VersionReq {
     pub fn any() -> Self {
         Self {
-            comparators: Vec::new(),
+            comparators: Vec::with_capacity(0),
         }
     }
 
