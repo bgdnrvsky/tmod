@@ -80,6 +80,14 @@ impl TryFrom<&Jar> for FabricMod {
             })
             .collect();
 
+        // Remove more internal dependencies
+        dependencies.remove("java");
+
+        // Change some known edgecases where jar developers have made a mistake
+        if let Some(version) = dependencies.remove("fzzy_core") {
+            dependencies.insert(String::from("fzzy-core"), version);
+        }
+
         Ok(Self {
             slug: fabric_json.id,
             version: fabric_json.version,
