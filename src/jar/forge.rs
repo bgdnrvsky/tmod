@@ -65,7 +65,10 @@ impl TryFrom<&Jar> for ForgeMod {
         let mut dependencies = mod_deps
             .into_iter()
             .filter(|dependency| dependency.mandatory)
-            .filter(|dependency| dependency.side.is_needed_for_client())
+            .filter(|dependency| match &dependency.side {
+                Some(side) => side.is_needed_for_client(),
+                None => true,
+            })
             .map(|dependency| (dependency.id, dependency.versions))
             .collect::<HashMap<_, _>>();
 
@@ -121,7 +124,7 @@ struct ForgeModDep {
     id: String,
     #[serde(rename = "versionRange")]
     versions: String,
-    side: Side,
+    side: Option<Side>,
     mandatory: bool,
 }
 
@@ -129,5 +132,6 @@ struct ForgeModDep {
 #[derive(Debug, Deserialize)]
 struct ForgeToml {
     mods: [ModInfo; 1],
+    #[serde(default)]
     dependencies: HashMap<String, Vec<ForgeModDep>>,
 }
