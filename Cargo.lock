@@ -1409,7 +1409,6 @@ dependencies = [
  "itertools",
  "jars",
  "loading",
- "nom",
  "ptree",
  "serde",
  "serde_json",

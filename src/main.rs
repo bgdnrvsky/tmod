@@ -152,11 +152,11 @@ fn main() -> anyhow::Result<()> {
                     println!("Version: {}", jar.version());
                     println!(
                         "Minecraft version required: {}",
-                        jar.minecraft_version().unwrap_or_else(|| "Any")
+                        jar.minecraft_version().unwrap_or("Any")
                     );
                     println!(
                         "Loader version required: {}",
-                        jar.loader_version().unwrap_or_else(|| "Any")
+                        jar.loader_version().unwrap_or("Any")
                     );
 
                     let dependencies = jar.dependencies();

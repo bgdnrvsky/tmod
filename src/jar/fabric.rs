@@ -26,11 +26,11 @@ impl FabricMod {
     }
 
     pub fn loader_version_needed(&self) -> Option<&str> {
-        self.loader_version_needed.as_ref().map(String::as_str)
+        self.loader_version_needed.as_deref()
     }
 
     pub fn minecraft_version_needed(&self) -> Option<&str> {
-        self.minecraft_version_needed.as_ref().map(String::as_str)
+        self.minecraft_version_needed.as_deref()
     }
 
     pub fn dependencies(&self) -> &HashMap<String, String> {
