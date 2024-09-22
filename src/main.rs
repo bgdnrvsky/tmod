@@ -61,11 +61,20 @@ enum Commands {
 #[derive(Debug, Subcommand)]
 enum SearchTargets {
     /// Using CurseForge mod id
-    Id { mod_id: usize },
+    Id {
+        #[arg(required = true)]
+        mod_ids: Vec<usize>,
+    },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
-    Slug { mod_slug: String },
+    Slug {
+        #[arg(required = true)]
+        mod_slugs: Vec<String>,
+    },
     /// Using your local Jar file
-    Jar { path: PathBuf },
+    Jar {
+        #[arg(required = true)]
+        paths: Vec<PathBuf>,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -84,34 +93,50 @@ fn main() -> anyhow::Result<()> {
         } => {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            let the_mod = match subadd {
-                SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                SearchTargets::Slug { mod_slug } => searcher.search_mod_by_slug(&mod_slug)?,
-                SearchTargets::Jar { path } => {
-                    let jar = JarMod::open(&path)?;
+            let mods: anyhow::Result<Vec<SearchedMod>> = match subadd {
+                SearchTargets::Id { mod_ids } => mod_ids
+                    .into_iter()
+                    .map(|id| searcher.search_mod_by_id(id))
+                    .collect(),
+                SearchTargets::Slug { mod_slugs } => mod_slugs
+                    .into_iter()
+                    .map(|slug| searcher.search_mod_by_slug(&slug))
+                    .collect(),
+                SearchTargets::Jar { paths } => {
+                    for path in paths {
+                        let jar = JarMod::open(&path)?;
 
-                    if r#move {
-                        std::fs::remove_file(&path).context("Removing jar")?;
-                        if !cli.quiet {
-                            println!("Moving {}", path.display());
+                        if r#move {
+                            std::fs::remove_file(&path).context("Removing jar")?;
+                            if !cli.quiet {
+                                println!("Moving {}", path.display());
+                            }
+                        } else if !cli.quiet {
+                            println!("Copying {}", path.display());
                         }
-                    } else if !cli.quiet {
-                        println!("Copying {}", path.display());
+
+                        pool.add_to_locals(jar);
                     }
 
-                    return pool.add_to_locals(jar).context("Adding to locals");
+                    pool.save().context("Saving the pool")?;
+
+                    return Ok(());
                 }
             };
 
-            if force {
-                pool.add_to_remotes_unchecked(&the_mod)?;
-            } else {
-                pool.add_to_remotes_checked(&the_mod, &searcher)?;
+            for the_mod in mods? {
+                if force {
+                    pool.add_to_remotes_unchecked(&the_mod);
+                } else {
+                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                }
+
+                if !cli.quiet {
+                    print!("{}", the_mod.display_with_options(display_options));
+                }
             }
 
-            if !cli.quiet {
-                print!("{}", the_mod.display_with_options(display_options));
-            }
+            pool.save().context("Saving the pool")?;
         }
         Commands::List => {
             let pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
@@ -137,47 +162,57 @@ fn main() -> anyhow::Result<()> {
                     println!("No mod {} was removed", name.italic().blue());
                 }
             }
+
+            pool.save().context("Saving the pool")?;
         }
         Commands::Info {
             display_options,
             target,
         } => {
-            let the_mod = match target {
-                SearchTargets::Id { mod_id } => searcher.search_mod_by_id(mod_id)?,
-                SearchTargets::Slug { mod_slug } => searcher.search_mod_by_slug(&mod_slug)?,
-                SearchTargets::Jar { path } => {
-                    let jar = JarMod::open(path)?;
+            let mods: anyhow::Result<Vec<SearchedMod>> = match target {
+                SearchTargets::Id { mod_ids } => mod_ids
+                    .into_iter()
+                    .map(|id| searcher.search_mod_by_id(id))
+                    .collect(),
+                SearchTargets::Slug { mod_slugs } => mod_slugs
+                    .into_iter()
+                    .map(|slug| searcher.search_mod_by_slug(&slug))
+                    .collect(),
+                SearchTargets::Jar { paths } => {
+                    for path in paths {
+                        let jar = JarMod::open(path)?;
 
-                    println!("Name: {}", jar.name().blue().italic());
-                    println!("Version: {}", jar.version());
-                    println!(
-                        "Minecraft version required: {}",
-                        jar.minecraft_version().unwrap_or("Any")
-                    );
-                    println!(
-                        "Loader version required: {}",
-                        jar.loader_version().unwrap_or("Any")
-                    );
+                        println!("Name: {}", jar.name().blue().italic());
+                        println!("Version: {}", jar.version());
+                        println!(
+                            "Minecraft version required: {}",
+                            jar.minecraft_version().unwrap_or("Any")
+                        );
+                        println!(
+                            "Loader version required: {}",
+                            jar.loader_version().unwrap_or("Any")
+                        );
 
-                    let dependencies = jar.dependencies();
+                        let dependencies = jar.dependencies();
 
-                    if !dependencies.is_empty() {
-                        println!();
-                        println!("Dependencies:");
+                        if !dependencies.is_empty() {
+                            println!();
+                            println!("Dependencies:");
 
-                        for (name, version) in dependencies {
-                            println!("\t- {name}({version})", name = name.green().italic());
+                            for (name, version) in dependencies {
+                                println!("\t- {name}({version})", name = name.green().italic());
+                            }
                         }
-                    }
 
-                    let incompatibilities = jar.incompatibilities();
+                        let incompatibilities = jar.incompatibilities();
 
-                    if !incompatibilities.is_empty() {
-                        println!();
-                        println!("Incompatibilities:");
+                        if !incompatibilities.is_empty() {
+                            println!();
+                            println!("Incompatibilities:");
 
-                        for (name, version) in incompatibilities {
-                            println!("\t- {name}({version})", name = name.red().bold());
+                            for (name, version) in incompatibilities {
+                                println!("\t- {name}({version})", name = name.red().bold());
+                            }
                         }
                     }
 
@@ -185,7 +220,9 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            println!("{}", the_mod.display_with_options(display_options));
+            for the_mod in mods? {
+                println!("{}", the_mod.display_with_options(display_options));
+            }
         }
         Commands::Tree => {
             searcher.set_silent(true); // Make it silent

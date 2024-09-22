@@ -132,6 +132,7 @@ impl Pool {
 
     fn create_dir(&self) -> anyhow::Result<()> {
         fs::DirBuilder::new()
+            .recursive(true)
             .create(&self.path)
             .context("Creating dir")
     }
@@ -184,7 +185,7 @@ impl Pool {
         Ok(())
     }
 
-    fn save(&self) -> anyhow::Result<()> {
+    pub fn save(&self) -> anyhow::Result<()> {
         self.create_dir()
             .and_then(|_| Self::write_config(self))
             .and_then(|_| Self::write_remotes(self))
@@ -226,23 +227,19 @@ impl Pool {
             );
         }
 
-        self.add_to_remotes_unchecked(the_mod)
+        Ok(self.add_to_remotes_unchecked(the_mod))
     }
 
-    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
+    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) {
         self.remotes.insert(the_mod.slug().to_string());
-
-        self.write_remotes()
     }
 
-    pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
+    pub fn add_to_locals(&mut self, jar: JarMod) {
         self.locals.push(jar);
-
-        self.write_locals()
     }
 
     pub fn remove_mod(&mut self, name: &str) -> anyhow::Result<bool> {
-        Ok(self.remove_from_locals(name)? || self.remove_from_remotes(name)?)
+        Ok(self.remove_from_locals(name)? || self.remove_from_remotes(name))
     }
 
     pub fn remove_from_locals(&mut self, name: &str) -> anyhow::Result<bool> {
@@ -250,17 +247,13 @@ impl Pool {
             fs::remove_file(self.path.join("locals").join(name.to_string() + ".jar"))
                 .with_context(|| format!("Deleting local JAR '{}.jar'", name))?;
             self.locals.swap_remove(idx);
-            self.write_locals().map(|_| true)
+            Ok(true)
         } else {
             Ok(false)
         }
     }
 
-    pub fn remove_from_remotes(&mut self, name: &str) -> anyhow::Result<bool> {
-        if self.remotes.remove(name) {
-            self.write_remotes().map(|_| true)
-        } else {
-            Ok(false)
-        }
+    pub fn remove_from_remotes(&mut self, name: &str) -> bool {
+        self.remotes.remove(name)
     }
 }
