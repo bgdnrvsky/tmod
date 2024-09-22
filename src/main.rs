@@ -150,8 +150,14 @@ fn main() -> anyhow::Result<()> {
 
                     println!("Name: {}", jar.name().blue().italic());
                     println!("Version: {}", jar.version());
-                    println!("Minecraft version required: {}", jar.minecraft_version());
-                    println!("Loader version required: {}", jar.loader_version());
+                    println!(
+                        "Minecraft version required: {}",
+                        jar.minecraft_version().unwrap_or_else(|| "Any")
+                    );
+                    println!(
+                        "Loader version required: {}",
+                        jar.loader_version().unwrap_or_else(|| "Any")
+                    );
 
                     let dependencies = jar.dependencies();
 

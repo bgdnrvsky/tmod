@@ -11,7 +11,7 @@ use serde::Deserialize;
 use ureq as rq;
 use url::Url;
 
-use crate::{pool::config::Config, version::SingleVersion};
+use crate::pool::config::Config;
 use mod_search::{
     search_list::ModSearchList,
     search_mod::{ModFile, SearchedMod},
@@ -26,9 +26,9 @@ const API_URL: LazyCell<Url> =
 pub struct Searcher {
     silent: bool,
     minecraft_id: OnceCell<usize>,
-    minecraft_versions: OnceCell<Vec<SingleVersion>>,
-    forge_versions: OnceCell<HashMap<SingleVersion, Vec<SingleVersion>>>,
-    fabric_versions: OnceCell<Vec<SingleVersion>>,
+    minecraft_versions: OnceCell<Vec<String>>,
+    forge_versions: OnceCell<HashMap<String, Vec<String>>>,
+    fabric_versions: OnceCell<Vec<String>>,
     curseforge_categories: OnceCell<HashMap<String, usize>>,
 }
 
@@ -83,7 +83,7 @@ impl Searcher {
         Ok(self.minecraft_id.get().copied().unwrap())
     }
 
-    pub fn minecraft_versions(&self) -> anyhow::Result<&[SingleVersion]> {
+    pub fn minecraft_versions(&self) -> anyhow::Result<&[String]> {
         if self.minecraft_versions.get().is_none() {
             let url = Url::parse("https://mc-versions-api.net/api/java").unwrap();
             let response = FetchParameters::new(url, self.silent)
@@ -94,7 +94,7 @@ impl Searcher {
             let versions = {
                 #[derive(Debug, Clone, Deserialize)]
                 struct Data {
-                    result: Vec<SingleVersion>,
+                    result: Vec<String>,
                 }
 
                 response
@@ -109,7 +109,7 @@ impl Searcher {
         Ok(self.minecraft_versions.get().unwrap())
     }
 
-    pub fn forge_versions(&self) -> anyhow::Result<&HashMap<SingleVersion, Vec<SingleVersion>>> {
+    pub fn forge_versions(&self) -> anyhow::Result<&HashMap<String, Vec<String>>> {
         if self.forge_versions.get().is_none() {
             let url = Url::parse("https://mc-versions-api.net/api/forge").unwrap();
             let response = FetchParameters::new(url, self.silent)
@@ -120,7 +120,7 @@ impl Searcher {
             let versions = {
                 #[derive(Debug, Clone, Deserialize)]
                 struct Data {
-                    result: [HashMap<SingleVersion, Vec<SingleVersion>>; 1],
+                    result: [HashMap<String, Vec<String>>; 1],
                 }
 
                 response
@@ -135,7 +135,7 @@ impl Searcher {
         Ok(self.forge_versions.get().unwrap())
     }
 
-    pub fn fabric_versions(&self) -> anyhow::Result<&[SingleVersion]> {
+    pub fn fabric_versions(&self) -> anyhow::Result<&[String]> {
         if self.fabric_versions.get().is_none() {
             let url = Url::parse("https://meta.fabricmc.net/v2/versions/loader").unwrap();
             let response = FetchParameters::new(url, self.silent)
@@ -146,7 +146,7 @@ impl Searcher {
             let versions = {
                 #[derive(Debug, Clone, Deserialize)]
                 struct Item {
-                    version: SingleVersion,
+                    version: String,
                 }
 
                 response

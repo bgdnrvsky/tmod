@@ -3,8 +3,6 @@ use std::{collections::HashMap, path::Path};
 use anyhow::Context;
 use jars::{jar, Jar, JarOption};
 
-use crate::version::{MultiVersion, SingleVersion};
-
 pub mod fabric;
 pub mod forge;
 
@@ -37,23 +35,23 @@ impl JarMod {
         self.r#type.name()
     }
 
-    pub fn version(&self) -> SingleVersion {
+    pub fn version(&self) -> &str {
         self.r#type.version()
     }
 
-    pub fn minecraft_version(&self) -> MultiVersion {
+    pub fn minecraft_version(&self) -> Option<&str> {
         self.r#type.minecraft_version()
     }
 
-    pub fn loader_version(&self) -> MultiVersion {
+    pub fn loader_version(&self) -> Option<&str> {
         self.r#type.loader_version()
     }
 
-    pub fn dependencies(&self) -> HashMap<&str, MultiVersion> {
+    pub fn dependencies(&self) -> HashMap<&str, &str> {
         self.r#type.dependencies()
     }
 
-    pub fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
+    pub fn incompatibilities(&self) -> HashMap<&str, &str> {
         self.r#type.incompatibilities()
     }
 
@@ -70,48 +68,48 @@ impl JarModType {
         }
     }
 
-    pub fn version(&self) -> SingleVersion {
+    pub fn version(&self) -> &str {
         match self {
-            Self::Fabric(the_mod) => the_mod.version().clone().into(),
-            Self::Forge(the_mod) => the_mod.version().clone().into(),
+            Self::Fabric(the_mod) => the_mod.version(),
+            Self::Forge(the_mod) => the_mod.version(),
         }
     }
 
-    pub fn minecraft_version(&self) -> MultiVersion {
+    pub fn minecraft_version(&self) -> Option<&str> {
         match self {
-            Self::Fabric(the_mod) => the_mod.minecraft_version_needed().clone().into(),
-            Self::Forge(the_mod) => the_mod.minecraft_version_needed().clone().into(),
+            Self::Fabric(the_mod) => the_mod.minecraft_version_needed(),
+            Self::Forge(the_mod) => the_mod.minecraft_version_needed(),
         }
     }
 
-    pub fn loader_version(&self) -> MultiVersion {
+    pub fn loader_version(&self) -> Option<&str> {
         match self {
-            Self::Fabric(the_mod) => the_mod.loader_version_needed().clone().into(),
-            Self::Forge(the_mod) => the_mod.loader_version_needed().clone().into(),
+            Self::Fabric(the_mod) => the_mod.loader_version_needed(),
+            Self::Forge(the_mod) => the_mod.loader_version_needed(),
         }
     }
 
-    pub fn dependencies(&self) -> HashMap<&str, MultiVersion> {
+    pub fn dependencies(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
                 .dependencies()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
+                .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
             Self::Forge(the_mod) => the_mod
                 .dependencies()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
+                .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
         }
     }
 
-    pub fn incompatibilities(&self) -> HashMap<&str, MultiVersion> {
+    pub fn incompatibilities(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
                 .incompatibilities()
                 .iter()
-                .map(|(slug, req)| (slug.as_str(), req.clone().into()))
+                .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
             Self::Forge(_) => HashMap::with_capacity(0),
         }

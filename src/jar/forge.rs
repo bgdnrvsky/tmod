@@ -6,16 +6,14 @@ use serde::Deserialize;
 use serde_with::DeserializeFromStr;
 use strum::EnumString;
 
-use crate::version::maven::{Version, VersionRange};
-
 #[derive(Debug, Clone)]
 pub struct ForgeMod {
     slug: String,
-    version: Version,
-    loader_version_needed: VersionRange,
-    minecraft_version_needed: VersionRange,
+    version: String,
+    loader_version_needed: Option<String>,
+    minecraft_version_needed: Option<String>,
     /// Key: mod slug
-    dependencies: HashMap<String, VersionRange>,
+    dependencies: HashMap<String, String>,
 }
 
 impl ForgeMod {
@@ -23,19 +21,19 @@ impl ForgeMod {
         &self.slug
     }
 
-    pub fn version(&self) -> &Version {
+    pub fn version(&self) -> &str {
         &self.version
     }
 
-    pub fn loader_version_needed(&self) -> &VersionRange {
-        &self.loader_version_needed
+    pub fn loader_version_needed(&self) -> Option<&str> {
+        self.loader_version_needed.as_ref().map(String::as_str)
     }
 
-    pub fn minecraft_version_needed(&self) -> &VersionRange {
-        &self.minecraft_version_needed
+    pub fn minecraft_version_needed(&self) -> Option<&str> {
+        self.minecraft_version_needed.as_ref().map(String::as_str)
     }
 
-    pub fn dependencies(&self) -> &HashMap<String, VersionRange> {
+    pub fn dependencies(&self) -> &HashMap<String, String> {
         &self.dependencies
     }
 }
@@ -71,13 +69,9 @@ impl TryFrom<&Jar> for ForgeMod {
             .map(|dependency| (dependency.id, dependency.versions))
             .collect::<HashMap<_, _>>();
 
-        let loader_version_needed = dependencies
-            .remove("forge")
-            .unwrap_or_else(VersionRange::any);
+        let loader_version_needed = dependencies.remove("forge");
 
-        let minecraft_version_needed = dependencies
-            .remove("minecraft")
-            .unwrap_or_else(VersionRange::any);
+        let minecraft_version_needed = dependencies.remove("minecraft");
 
         Ok(Self {
             slug,
@@ -118,7 +112,7 @@ struct ModInfo {
     #[allow(unused)]
     #[serde(rename = "displayName")]
     display_name: Option<String>,
-    version: crate::version::maven::Version,
+    version: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -126,7 +120,7 @@ struct ForgeModDep {
     #[serde(rename = "modId")]
     id: String,
     #[serde(rename = "versionRange")]
-    versions: crate::version::maven::VersionRange,
+    versions: String,
     side: Side,
     mandatory: bool,
 }

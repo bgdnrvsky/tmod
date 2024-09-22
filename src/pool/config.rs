@@ -1,6 +1,5 @@
-use std::{fs, path::Path, str::FromStr};
+use std::{fs, path::Path};
 
-use crate::version::SingleVersion as Version;
 use anyhow::Context;
 use dialoguer::Input;
 use serde::{Deserialize, Serialize};
@@ -22,17 +21,14 @@ pub struct Config {
     /// Minecraft mod loader (forge or fabric)
     loader: Loader,
     /// Minecraft version target
-    game_version: Version,
+    game_version: String,
 }
 
 impl Config {
     pub fn init() -> anyhow::Result<Self> {
         let loader = Loader::prompt()?;
-        let game_version = Input::new()
+        let game_version = Input::<String>::new()
             .with_prompt("Game version")
-            .validate_with(|input: &String| -> anyhow::Result<()> {
-                Version::from_str(input).map(|_| ())
-            })
             .interact()
             .unwrap()
             .parse()?;
@@ -53,7 +49,7 @@ impl Config {
         &self.loader
     }
 
-    pub fn game_version(&self) -> &Version {
+    pub fn game_version(&self) -> &str {
         &self.game_version
     }
 }

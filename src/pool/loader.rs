@@ -1,7 +1,3 @@
-use std::str::FromStr;
-
-use crate::version::SingleVersion;
-
 use anyhow::Context;
 use dialoguer::{Input, Select};
 use serde::{Deserialize, Serialize};
@@ -52,17 +48,14 @@ impl Loaders {
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Loader {
     kind: Loaders,
-    version: SingleVersion,
+    version: String,
 }
 
 impl Loader {
     pub fn prompt() -> anyhow::Result<Self> {
         let kind = Loaders::prompt()?;
-        let version = Input::new()
+        let version = Input::<String>::new()
             .with_prompt("Loader version")
-            .validate_with(|input: &String| -> anyhow::Result<()> {
-                SingleVersion::from_str(input).map(|_| ())
-            })
             .interact()
             .unwrap()
             .parse()?;
@@ -70,22 +63,25 @@ impl Loader {
         Ok(Self { kind, version })
     }
 
-    pub fn new_unchecked(kind: Loaders, version: SingleVersion) -> Self {
+    pub fn new_unchecked(kind: Loaders, version: String) -> Self {
         Self { kind, version }
     }
 
     pub fn new_checked(
         kind: Loaders,
-        version: SingleVersion,
+        version: String,
         searcher: crate::fetcher::Searcher,
     ) -> anyhow::Result<Self> {
         // Check if version exists
-        let exists: bool = match version {
-            SingleVersion::Forge(_) => searcher
+        let exists: bool = match kind {
+            Loaders::Forge => searcher
                 .forge_versions()?
                 .values()
                 .any(|versions| versions.contains(&version)),
-            SingleVersion::Fabric(_) => searcher.fabric_versions()?.contains(&version),
+            Loaders::Fabric => searcher.fabric_versions()?.contains(&version),
+            // TODO
+            Loaders::Quilt => false,
+            Loaders::NeoForge => false,
         };
 
         anyhow::ensure!(exists, "The version {version} of the {kind} doesn't exist");
@@ -97,7 +93,7 @@ impl Loader {
         self.kind
     }
 
-    pub fn version(&self) -> &SingleVersion {
+    pub fn version(&self) -> &str {
         &self.version
     }
 }

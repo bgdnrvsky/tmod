@@ -4,18 +4,16 @@ use anyhow::Context;
 use jars::Jar;
 use serde::Deserialize;
 
-use crate::version::fabric::{Version, VersionReq};
-
 #[derive(Debug, Clone)]
 pub struct FabricMod {
     slug: String,
-    version: Version,
-    loader_version_needed: VersionReq,
-    minecraft_version_needed: VersionReq,
+    version: String,
+    loader_version_needed: Option<String>,
+    minecraft_version_needed: Option<String>,
     // Key: mod slug
-    dependencies: HashMap<String, VersionReq>,
+    dependencies: HashMap<String, String>,
     // Key: mod slug
-    incompatibilities: HashMap<String, VersionReq>,
+    incompatibilities: HashMap<String, String>,
 }
 
 impl FabricMod {
@@ -23,23 +21,23 @@ impl FabricMod {
         &self.slug
     }
 
-    pub fn version(&self) -> &Version {
+    pub fn version(&self) -> &str {
         &self.version
     }
 
-    pub fn loader_version_needed(&self) -> &VersionReq {
-        &self.loader_version_needed
+    pub fn loader_version_needed(&self) -> Option<&str> {
+        self.loader_version_needed.as_ref().map(String::as_str)
     }
 
-    pub fn minecraft_version_needed(&self) -> &VersionReq {
-        &self.minecraft_version_needed
+    pub fn minecraft_version_needed(&self) -> Option<&str> {
+        self.minecraft_version_needed.as_ref().map(String::as_str)
     }
 
-    pub fn dependencies(&self) -> &HashMap<String, VersionReq> {
+    pub fn dependencies(&self) -> &HashMap<String, String> {
         &self.dependencies
     }
 
-    pub fn incompatibilities(&self) -> &HashMap<String, VersionReq> {
+    pub fn incompatibilities(&self) -> &HashMap<String, String> {
         &self.incompatibilities
     }
 }
@@ -58,13 +56,9 @@ impl TryFrom<&Jar> for FabricMod {
 
         let incompatibilities = fabric_json.breaks;
 
-        let loader_version_needed = dependencies
-            .remove("fabricloader")
-            .unwrap_or_else(VersionReq::any);
+        let loader_version_needed = dependencies.remove("fabricloader");
 
-        let minecraft_version_needed = dependencies
-            .remove("minecraft")
-            .unwrap_or_else(VersionReq::any);
+        let minecraft_version_needed = dependencies.remove("minecraft");
 
         // The JAR may contain some dependencies that are not remote,
         // so if in the future we try to build a tree, for example,
@@ -110,9 +104,9 @@ impl TryFrom<Jar> for FabricMod {
 #[derive(Debug, Deserialize)]
 struct FabricJson {
     id: String,
-    version: Version,
+    version: String,
     #[serde(default)]
-    depends: HashMap<String, VersionReq>,
+    depends: HashMap<String, String>,
     #[serde(default)]
-    breaks: HashMap<String, VersionReq>,
+    breaks: HashMap<String, String>,
 }
