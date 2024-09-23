@@ -93,7 +93,7 @@ fn main() -> anyhow::Result<()> {
         } => {
             let mut pool = Pool::new(&cli.pool_dir).context("Error initializing the pool")?;
 
-            let mods: anyhow::Result<Vec<SearchedMod>> = match subadd {
+            let mods: Vec<anyhow::Result<_>> = match subadd {
                 SearchTargets::Id { mod_ids } => mod_ids
                     .into_iter()
                     .map(|id| searcher.search_mod_by_id(id))
@@ -104,18 +104,21 @@ fn main() -> anyhow::Result<()> {
                     .collect(),
                 SearchTargets::Jar { paths } => {
                     for path in paths {
-                        let jar = JarMod::open(&path)?;
+                        match JarMod::open(&path) {
+                            Ok(jar) => {
+                                if r#move {
+                                    std::fs::remove_file(&path).context("Removing jar")?;
+                                    if !cli.quiet {
+                                        println!("Moving {}", path.display());
+                                    }
+                                } else if !cli.quiet {
+                                    println!("Copying {}", path.display());
+                                }
 
-                        if r#move {
-                            std::fs::remove_file(&path).context("Removing jar")?;
-                            if !cli.quiet {
-                                println!("Moving {}", path.display());
+                                pool.add_to_locals(jar);
                             }
-                        } else if !cli.quiet {
-                            println!("Copying {}", path.display());
+                            Err(e) => eprintln!("Error adding local mod: {e}"),
                         }
-
-                        pool.add_to_locals(jar);
                     }
 
                     pool.save().context("Saving the pool")?;
@@ -124,15 +127,20 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            for the_mod in mods? {
-                if force {
-                    pool.add_to_remotes_unchecked(&the_mod);
-                } else {
-                    pool.add_to_remotes_checked(&the_mod, &searcher)?;
-                }
+            for the_mod in mods {
+                match the_mod {
+                    Ok(the_mod) => {
+                        if force {
+                            pool.add_to_remotes_unchecked(&the_mod);
+                        } else {
+                            pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                        }
 
-                if !cli.quiet {
-                    print!("{}", the_mod.display_with_options(display_options));
+                        if !cli.quiet {
+                            print!("{}", the_mod.display_with_options(display_options));
+                        }
+                    }
+                    Err(e) => eprintln!("Error adding remote mod: {e}"),
                 }
             }
 

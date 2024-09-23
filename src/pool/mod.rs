@@ -227,7 +227,8 @@ impl Pool {
             );
         }
 
-        Ok(self.add_to_remotes_unchecked(the_mod))
+        self.add_to_remotes_unchecked(the_mod);
+        Ok(())
     }
 
     pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) {
