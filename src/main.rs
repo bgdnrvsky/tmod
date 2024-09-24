@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Mutex};
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -77,9 +77,12 @@ enum SearchTargets {
     },
 }
 
+static SEARCHER: Mutex<Searcher> = Mutex::new(Searcher::new(false));
+
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    let mut searcher = Searcher::new(cli.quiet);
+    let mut searcher = SEARCHER.lock().unwrap();
+    searcher.set_silent(cli.quiet);
 
     match cli.command {
         Commands::Init => {

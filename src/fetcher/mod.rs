@@ -33,10 +33,14 @@ pub struct Searcher {
 }
 
 impl Searcher {
-    pub fn new(silent: bool) -> Self {
+    pub const fn new(silent: bool) -> Self {
         Self {
             silent,
-            ..Default::default()
+            minecraft_id: OnceCell::new(),
+            minecraft_versions: OnceCell::new(),
+            forge_versions: OnceCell::new(),
+            fabric_versions: OnceCell::new(),
+            curseforge_categories: OnceCell::new(),
         }
     }
 
