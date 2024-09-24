@@ -22,7 +22,10 @@ impl JarMod {
         let path = path.as_ref();
 
         if !path.extension().is_some_and(|ext| ext == "jar") {
-            eprintln!("WARNING: The file you provided doesn't seem like a jar");
+            eprintln!(
+                "WARNING: The file '{}' doesn't seem like a jar",
+                path.display()
+            );
         }
 
         jar(path, JarOption::default())
