@@ -62,7 +62,7 @@ impl Loader {
             .unwrap()
             .parse()?;
 
-        Ok(Self { kind, version })
+        Self::new_checked(kind, version)
     }
 
     pub fn new_unchecked(kind: Loaders, version: String) -> Self {
@@ -70,7 +70,10 @@ impl Loader {
     }
 
     pub fn new_checked(kind: Loaders, version: String) -> anyhow::Result<Self> {
-        let searcher = SEARCHER.lock().unwrap();
+        let mut searcher = SEARCHER.try_lock().unwrap();
+
+        let old_silent = searcher.silent();
+        searcher.set_silent(true);
 
         // Check if version exists
         let exists: bool = match kind {
@@ -83,6 +86,8 @@ impl Loader {
             Loaders::Quilt => false,
             Loaders::NeoForge => false,
         };
+
+        searcher.set_silent(old_silent);
 
         anyhow::ensure!(exists, "The version {version} of the {kind} doesn't exist");
 

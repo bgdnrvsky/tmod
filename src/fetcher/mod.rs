@@ -290,6 +290,10 @@ impl Searcher {
             .context("Deserializing mod files")
             .map(|result| result.data)
     }
+
+    pub fn silent(&self) -> bool {
+        self.silent
+    }
 }
 
 #[derive(Debug, Clone)]
