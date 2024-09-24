@@ -51,13 +51,14 @@ impl TryFrom<&Jar> for FabricMod {
             .get("fabric.mod.json")
             .context("No fabric.mod.json in jar file while processing fabric mod")?;
 
-        let fabric_json = serde_json::from_slice::<FabricJson>(content)?;
-        let mut dependencies = fabric_json.depends;
-
-        let incompatibilities = fabric_json.breaks;
+        let FabricJson {
+            slug,
+            version,
+            mut dependencies,
+            incompatibilities,
+        } = serde_json::from_slice::<FabricJson>(content)?;
 
         let loader_version_needed = dependencies.remove("fabricloader");
-
         let minecraft_version_needed = dependencies.remove("minecraft");
 
         // The JAR may contain some dependencies that are not remote,
@@ -83,8 +84,8 @@ impl TryFrom<&Jar> for FabricMod {
         }
 
         Ok(Self {
-            slug: fabric_json.id,
-            version: fabric_json.version,
+            slug,
+            version,
             loader_version_needed,
             minecraft_version_needed,
             dependencies,
@@ -103,10 +104,13 @@ impl TryFrom<Jar> for FabricMod {
 
 #[derive(Debug, Deserialize)]
 struct FabricJson {
-    id: String,
+    #[serde(rename = "id")]
+    slug: String,
     version: String,
     #[serde(default)]
-    depends: HashMap<String, String>,
+    #[serde(rename = "depends")]
+    dependencies: HashMap<String, String>,
     #[serde(default)]
-    breaks: HashMap<String, String>,
+    #[serde(rename = "breaks")]
+    incompatibilities: HashMap<String, String>,
 }
