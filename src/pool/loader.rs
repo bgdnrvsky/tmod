@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
 
+use crate::fetcher::SEARCHER;
+
 /// Various mod management systems for Minecraft
 #[derive(
     Debug,
@@ -67,11 +69,9 @@ impl Loader {
         Self { kind, version }
     }
 
-    pub fn new_checked(
-        kind: Loaders,
-        version: String,
-        searcher: crate::fetcher::Searcher,
-    ) -> anyhow::Result<Self> {
+    pub fn new_checked(kind: Loaders, version: String) -> anyhow::Result<Self> {
+        let searcher = SEARCHER.lock().unwrap();
+
         // Check if version exists
         let exists: bool = match kind {
             Loaders::Forge => searcher

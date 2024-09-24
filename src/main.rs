@@ -134,7 +134,7 @@ fn main() -> anyhow::Result<()> {
                         if force {
                             pool.add_to_remotes_unchecked(&the_mod);
                         } else {
-                            pool.add_to_remotes_checked(&the_mod, &searcher)?;
+                            pool.add_to_remotes_checked(&the_mod)?;
                         }
 
                         if !cli.quiet {

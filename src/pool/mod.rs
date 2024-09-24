@@ -13,7 +13,7 @@ use jars::{jar, JarOptionBuilder};
 use zip::ZipWriter;
 
 use crate::{
-    fetcher::{mod_search::search_mod::SearchedMod, Searcher},
+    fetcher::{mod_search::search_mod::SearchedMod, SEARCHER},
     jar::JarMod,
 };
 
@@ -193,7 +193,9 @@ impl Pool {
             .context("Saving pool")
     }
 
-    pub fn is_compatible(&self, the_mod: &SearchedMod, searcher: &Searcher) -> bool {
+    pub fn is_compatible(&self, the_mod: &SearchedMod) -> bool {
+        let searcher = SEARCHER.lock().unwrap();
+
         if !searcher
             .get_mod_files(the_mod, &self.config)
             .is_ok_and(|files| !files.is_empty())
@@ -215,12 +217,8 @@ impl Pool {
         true
     }
 
-    pub fn add_to_remotes_checked(
-        &mut self,
-        the_mod: &SearchedMod,
-        searcher: &Searcher,
-    ) -> anyhow::Result<()> {
-        if !self.is_compatible(the_mod, searcher) {
+    pub fn add_to_remotes_checked(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
+        if !self.is_compatible(the_mod) {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
                 slug = the_mod.slug()
