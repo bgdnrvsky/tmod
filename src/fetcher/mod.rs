@@ -3,6 +3,7 @@ pub mod mod_search;
 
 use std::cell::{LazyCell, OnceCell};
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 use anyhow::Context;
 use loading::{Loading, Spinner};
@@ -21,6 +22,7 @@ pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJ
 #[allow(clippy::declare_interior_mutable_const)]
 const API_URL: LazyCell<Url> =
     LazyCell::new(|| Url::parse("https://api.curseforge.com/v1").unwrap());
+pub static SEARCHER: Mutex<Searcher> = Mutex::new(Searcher::new(false));
 
 #[derive(Debug, Default)]
 pub struct Searcher {

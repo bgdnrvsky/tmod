@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Mutex};
+use std::path::PathBuf;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -7,7 +7,7 @@ use ptree::TreeBuilder;
 use tmod::{
     fetcher::{
         mod_search::search_mod::{display::ModOptions, SearchedMod},
-        Searcher,
+        Searcher, SEARCHER,
     },
     jar::JarMod,
     pool::{config::Config, Pool},
@@ -76,8 +76,6 @@ enum SearchTargets {
         paths: Vec<PathBuf>,
     },
 }
-
-static SEARCHER: Mutex<Searcher> = Mutex::new(Searcher::new(false));
 
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
