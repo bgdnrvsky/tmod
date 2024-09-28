@@ -29,7 +29,6 @@ pub struct Searcher {
     silent: bool,
     minecraft_id: OnceCell<usize>,
     minecraft_versions: OnceCell<Vec<String>>,
-    forge_versions: OnceCell<HashMap<String, Vec<String>>>,
     fabric_versions: OnceCell<Vec<String>>,
     curseforge_categories: OnceCell<HashMap<String, usize>>,
 }
@@ -40,7 +39,6 @@ impl Searcher {
             silent,
             minecraft_id: OnceCell::new(),
             minecraft_versions: OnceCell::new(),
-            forge_versions: OnceCell::new(),
             fabric_versions: OnceCell::new(),
             curseforge_categories: OnceCell::new(),
         }
@@ -113,32 +111,6 @@ impl Searcher {
         }
 
         Ok(self.minecraft_versions.get().unwrap())
-    }
-
-    pub fn forge_versions(&self) -> anyhow::Result<&HashMap<String, Vec<String>>> {
-        if self.forge_versions.get().is_none() {
-            let url = Url::parse("https://mc-versions-api.net/api/forge").unwrap();
-            let response = FetchParameters::new(url, self.silent)
-                .with_info("Getting Forge versions")
-                .fetch()
-                .context("Fetching Forge versions")?;
-
-            let versions = {
-                #[derive(Debug, Clone, Deserialize)]
-                struct Data {
-                    result: [HashMap<String, Vec<String>>; 1],
-                }
-
-                response
-                    .into_json::<Data>()
-                    .context("Deserializing Forge versions")
-                    .map(|Data { result: [version] }| version)
-            }?;
-
-            self.forge_versions.set(versions).unwrap();
-        }
-
-        Ok(self.forge_versions.get().unwrap())
     }
 
     pub fn fabric_versions(&self) -> anyhow::Result<&[String]> {
@@ -370,16 +342,6 @@ mod tests {
     fn minecraft_versions() -> anyhow::Result<()> {
         let searcher = Searcher::new(true);
         let versions = searcher.minecraft_versions()?;
-        assert!(!versions.is_empty());
-
-        Ok(())
-    }
-
-    #[test]
-    #[ignore = "might be very long (~15 secs)"]
-    fn forge_versions() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
-        let versions = searcher.forge_versions()?;
         assert!(!versions.is_empty());
 
         Ok(())
