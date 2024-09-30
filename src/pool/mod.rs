@@ -194,9 +194,9 @@ impl Pool {
     }
 
     pub fn is_compatible(&self, the_mod: &SearchedMod) -> bool {
-        let searcher = SEARCHER.lock().unwrap();
-
-        if !searcher
+        if !SEARCHER
+            .try_lock()
+            .unwrap()
             .get_mod_files(the_mod, &self.config)
             .is_ok_and(|files| !files.is_empty())
         {

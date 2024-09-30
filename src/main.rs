@@ -131,6 +131,8 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
+            drop(searcher);
+
             for the_mod in mods {
                 match the_mod {
                     Ok(the_mod) => {
