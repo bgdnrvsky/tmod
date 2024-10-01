@@ -10,4 +10,39 @@ Add a remote mod to `.tmod/remotes.json` using its slug, or add already existing
 
 Tmod keeps information about dependencies and incompabilites so you can add the single mod and all the necessary libraries for it will be already there !
 
-`TODO: Write more...`
+# Usage example
+
+## Initializing
+Let's start by `cd`ing into the folder where you wish to install mods.
+
+```sh
+$ cd ~/.minecraft/my-pack/ # or any folder you wish
+```
+
+Now you have to init `tmod`!
+
+```sh
+$ tmod init
+```
+
+## Choose the mod loader
+You will be prompted to choose the mod loader
+
+```
+Choose the mod loader:
+  Forge
+  Fabric
+  Quilt
+  NeoForge
+```
+
+Choose the loader you wish for your modpack using arrow keys, and confirm your choice with `Enter`. Let's say that I have chosen `Forge`
+
+## Enter the version
+You will be asked about the version of Minecraft that you are going to be using with your modpack.
+
+`Game version:`
+
+Now, enter the version. Let's say that I have entered the version `1.20.1`
+
+`TODO: Write more`
