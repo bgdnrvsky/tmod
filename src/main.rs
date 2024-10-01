@@ -110,12 +110,17 @@ fn main() -> anyhow::Result<()> {
                     for path in paths {
                         match JarMod::open(&path) {
                             Ok(jar) => {
+                                let to = pool.locals_path().join(jar.name()).with_extension("jar");
+
                                 if r#move {
-                                    std::fs::remove_file(&path).context("Removing jar")?;
+                                    std::fs::rename(&path, to).context("Moving jar")?;
+
                                     if !cli.quiet {
                                         println!("Moving {}", path.display());
                                     }
                                 } else if !cli.quiet {
+                                    std::fs::copy(&path, to).context("Copying jar")?;
+
                                     println!("Copying {}", path.display());
                                 }
 
@@ -124,8 +129,6 @@ fn main() -> anyhow::Result<()> {
                             Err(e) => eprintln!("Error adding local mod: {e}"),
                         }
                     }
-
-                    pool.save().context("Saving the pool")?;
 
                     return Ok(());
                 }

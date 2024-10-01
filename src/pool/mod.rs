@@ -145,20 +145,21 @@ impl Pool {
     }
 
     fn write_remotes(&self) -> anyhow::Result<()> {
-        let file = fs::File::create(self.path.join("remotes.json"))?;
+        let file = fs::File::create(self.remotes_path())?;
 
         serde_json::to_writer_pretty(file, &self.remotes).context("Writing remotes")
     }
 
     fn write_locals(&self) -> anyhow::Result<()> {
-        let locals_path = &self.path.join("locals");
+        let locals_path = self.locals_path();
+
         fs::DirBuilder::new()
             .recursive(true)
-            .create(locals_path)
+            .create(&locals_path)
             .context("Creating locals dir")?;
 
         for jar_mod in self.locals() {
-            let path = locals_path.join(format!("{}.jar", jar_mod.name()));
+            let path = locals_path.join(jar_mod.name()).with_extension("jar");
             let file = fs::File::create(&path)
                 .with_context(|| format!("Creating `{}` in locals", path.display()))?;
 
@@ -243,7 +244,7 @@ impl Pool {
 
     pub fn remove_from_locals(&mut self, name: &str) -> anyhow::Result<bool> {
         if let Some(idx) = self.locals.iter().position(|jar| jar.name() == name) {
-            fs::remove_file(self.path.join("locals").join(name.to_string() + ".jar"))
+            fs::remove_file(self.locals_path().join(name).with_extension("jar"))
                 .with_context(|| format!("Deleting local JAR '{}.jar'", name))?;
             self.locals.swap_remove(idx);
             Ok(true)
@@ -254,5 +255,17 @@ impl Pool {
 
     pub fn remove_from_remotes(&mut self, name: &str) -> bool {
         self.remotes.remove(name)
+    }
+
+    pub fn root_path(&self) -> &Path {
+        &self.path
+    }
+
+    pub fn remotes_path(&self) -> PathBuf {
+        self.root_path().join("remotes.json")
+    }
+
+    pub fn locals_path(&self) -> PathBuf {
+        self.root_path().join("locals/")
     }
 }
