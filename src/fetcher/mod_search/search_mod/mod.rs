@@ -83,11 +83,17 @@ impl Ord for SearchedMod {
 pub struct ModDependency {
     #[serde(rename = "modId")]
     id: usize,
+    #[serde(rename = "relationType")]
+    relation: usize,
 }
 
 impl ModDependency {
     pub fn id(&self) -> usize {
         self.id
+    }
+
+    pub fn relation(&self) -> usize {
+        self.relation
     }
 }
 
