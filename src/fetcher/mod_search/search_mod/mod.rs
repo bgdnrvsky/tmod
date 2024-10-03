@@ -115,6 +115,18 @@ impl RelationType {
     pub fn is_incompatible(&self) -> bool {
         matches!(self, Self::Incompatible)
     }
+
+    /// Returns `true` if the relation type is [`EmbeddedLibrary`].
+    ///
+    /// [`EmbeddedLibrary`]: RelationType::EmbeddedLibrary
+    #[must_use]
+    pub fn is_embedded_library(&self) -> bool {
+        matches!(self, Self::EmbeddedLibrary)
+    }
+
+    pub fn is_needed(&self) -> bool {
+        self.is_required_dependency() || self.is_incompatible() || self.is_embedded_library()
+    }
 }
 
 impl ModDependency {

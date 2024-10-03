@@ -262,12 +262,9 @@ impl Searcher {
 
         // Filter relations that are useless
         // Only keep relations that are either required dependencies or incompatible
-        files.iter_mut().for_each(|file| {
-            file.dependencies
-                .retain(|dep| dep.relation().is_required_dependency());
-            file.dependencies
-                .retain(|dep| dep.relation().is_incompatible());
-        });
+        for file in files.iter_mut() {
+            file.dependencies.retain(|dep| dep.relation().is_needed());
+        }
 
         Ok(files)
     }
