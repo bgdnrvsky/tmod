@@ -8,7 +8,7 @@ Tmod is a tool that allows you to quickly create and manage your Minecraft modpa
 
 Add a remote mod to `.tmod/remotes.json` using its slug, or add already existing JAR files to `.tmod/locals/` directory.
 
-Tmod keeps information about dependencies and incompabilites so you can add the single mod and all the necessary libraries for it will be already there !
+Tmod keeps information about dependencies and incompatibilities so you can add the single mod and all the necessary libraries for it will be already there !
 
 # Usage example
 
