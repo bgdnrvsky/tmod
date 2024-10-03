@@ -138,14 +138,14 @@ impl Pool {
     }
 
     fn write_config(&self) -> anyhow::Result<()> {
-        let mut file = fs::File::create(self.path.join("config.toml"))?;
+        let mut file = File::create(self.path.join("config.toml"))?;
 
         file.write_all(toml::to_string_pretty(&self.config)?.as_bytes())
             .context("Writing config")
     }
 
     fn write_remotes(&self) -> anyhow::Result<()> {
-        let file = fs::File::create(self.remotes_path())?;
+        let file = File::create(self.remotes_path())?;
 
         serde_json::to_writer_pretty(file, &self.remotes).context("Writing remotes")
     }
@@ -160,7 +160,7 @@ impl Pool {
 
         for jar_mod in self.locals() {
             let path = locals_path.join(jar_mod.name()).with_extension("jar");
-            let file = fs::File::create(&path)
+            let file = File::create(&path)
                 .with_context(|| format!("Creating `{}` in locals", path.display()))?;
 
             let mut writer = ZipWriter::new(file);
