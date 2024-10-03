@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use serde_repr::Deserialize_repr;
 use serde_with::{serde_as, DisplayFromStr};
 use url::Url;
 
@@ -84,7 +85,18 @@ pub struct ModDependency {
     #[serde(rename = "modId")]
     id: usize,
     #[serde(rename = "relationType")]
-    relation: usize,
+    relation: RelationType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize_repr)]
+#[repr(u8)]
+pub enum RelationType {
+    EmbeddedLibrary = 1,
+    OptionalDependency = 2,
+    RequiredDependency = 3,
+    Tool = 4,
+    Incompatible = 5,
+    Include = 6,
 }
 
 impl ModDependency {
@@ -92,7 +104,7 @@ impl ModDependency {
         self.id
     }
 
-    pub fn relation(&self) -> usize {
+    pub fn relation(&self) -> RelationType {
         self.relation
     }
 }
