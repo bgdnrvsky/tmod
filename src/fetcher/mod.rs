@@ -247,20 +247,29 @@ impl Searcher {
                 (config.loader().kind() as u8).to_string().as_str(),
             );
 
-        let response = FetchParameters::new(url, self.silent)
+        let mut files = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting mod files for '{}'", the_mod.slug()).as_str())
             .fetch()
-            .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug()))?;
+            .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug()))?
+            .into_json::<Data>()
+            .context("Deserializing mod files")
+            .map(|result| result.data)?;
 
         #[derive(Deserialize)]
         struct Data {
             data: Vec<ModFile>,
         }
 
-        response
-            .into_json::<Data>()
-            .context("Deserializing mod files")
-            .map(|result| result.data)
+        // Filter relations that are useless
+        // Only keep relations that are either required dependencies or incompatible
+        files.iter_mut().for_each(|file| {
+            file.dependencies
+                .retain(|dep| dep.relation().is_required_dependency());
+            file.dependencies
+                .retain(|dep| dep.relation().is_incompatible());
+        });
+
+        Ok(files)
     }
 
     pub fn silent(&self) -> bool {

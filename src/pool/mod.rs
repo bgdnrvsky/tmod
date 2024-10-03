@@ -194,32 +194,58 @@ impl Pool {
             .context("Saving pool")
     }
 
-    pub fn is_compatible(&self, the_mod: &SearchedMod) -> bool {
-        if !SEARCHER
+    pub fn is_compatible(&self, the_mod: &SearchedMod) -> anyhow::Result<bool> {
+        let files = SEARCHER
             .try_lock()
             .unwrap()
-            .get_mod_files(the_mod, &self.config)
-            .is_ok_and(|files| !files.is_empty())
-        {
-            return false;
+            .get_mod_files(the_mod, &self.config)?;
+
+        if files.is_empty() {
+            return Ok(false);
         }
 
-        // Unfortunately, CurseForge API doesn't include any information about incompatibilities
-        // when fetching mod files :(
+        // TODO: Choose the last file (by timestamp)
+        for inc_id in files
+            .first()
+            .expect("Checked it above")
+            .dependencies()
+            .iter()
+            .filter(|dep| dep.relation().is_incompatible())
+            .map(|dep| dep.id())
+        {
+            // Get all incompatibilities for the file, and check if it is present in the pool
+            let inc = SEARCHER
+                .try_lock()
+                .unwrap()
+                .search_mod_by_id(inc_id)
+                .with_context(|| format!("Couldn't find the incompatibility id ({inc_id})"))?;
 
-        for local in self.locals.iter() {
-            for incomp_slug in local.incompatibilities().keys() {
-                if *incomp_slug == the_mod.slug() {
-                    return false;
+            for remote_slug in self.remotes().iter() {
+                if inc.slug() == remote_slug {
+                    return Ok(false);
+                }
+            }
+
+            for local_slug in self.locals().iter().map(|jar| jar.name()) {
+                if inc.slug() == local_slug {
+                    return Ok(false);
                 }
             }
         }
 
-        true
+        for local in self.locals.iter() {
+            for incomp_slug in local.incompatibilities().keys() {
+                if *incomp_slug == the_mod.slug() {
+                    return Ok(false);
+                }
+            }
+        }
+
+        Ok(true)
     }
 
     pub fn add_to_remotes_checked(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
-        if !self.is_compatible(the_mod) {
+        if !self.is_compatible(the_mod)? {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
                 slug = the_mod.slug()

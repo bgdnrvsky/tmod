@@ -99,6 +99,24 @@ pub enum RelationType {
     Include = 6,
 }
 
+impl RelationType {
+    /// Returns `true` if the relation type is [`RequiredDependency`].
+    ///
+    /// [`RequiredDependency`]: RelationType::RequiredDependency
+    #[must_use]
+    pub fn is_required_dependency(&self) -> bool {
+        matches!(self, Self::RequiredDependency)
+    }
+
+    /// Returns `true` if the relation type is [`Incompatible`].
+    ///
+    /// [`Incompatible`]: RelationType::Incompatible
+    #[must_use]
+    pub fn is_incompatible(&self) -> bool {
+        matches!(self, Self::Incompatible)
+    }
+}
+
 impl ModDependency {
     pub fn id(&self) -> usize {
         self.id
@@ -122,7 +140,7 @@ pub struct ModFile {
     url: Url,
     #[serde(rename = "gameVersions")]
     versions: Vec<String>,
-    dependencies: Vec<ModDependency>,
+    pub dependencies: Vec<ModDependency>,
 }
 
 impl ModFile {
