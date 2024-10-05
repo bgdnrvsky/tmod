@@ -81,7 +81,7 @@ impl Ord for SearchedMod {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct ModDependency {
+pub struct ModRelation {
     #[serde(rename = "modId")]
     id: usize,
     #[serde(rename = "relationType")]
@@ -129,7 +129,7 @@ impl RelationType {
     }
 }
 
-impl ModDependency {
+impl ModRelation {
     pub fn id(&self) -> usize {
         self.id
     }
@@ -152,15 +152,12 @@ pub struct ModFile {
     url: Url,
     #[serde(rename = "gameVersions")]
     versions: Vec<String>,
-    pub dependencies: Vec<ModDependency>,
+    #[serde(rename = "dependencies")]
+    pub relations: Vec<ModRelation>,
 }
 
 impl ModFile {
     pub fn versions(&self) -> &[String] {
         &self.versions
-    }
-
-    pub fn dependencies(&self) -> &[ModDependency] {
-        &self.dependencies
     }
 }

@@ -263,7 +263,7 @@ impl Searcher {
         // Filter relations that are useless
         // Only keep relations that are either required dependencies or incompatible
         for file in files.iter_mut() {
-            file.dependencies.retain(|dep| dep.relation().is_needed());
+            file.relations.retain(|dep| dep.relation().is_needed());
         }
 
         Ok(files)

@@ -208,7 +208,7 @@ impl Pool {
         for inc_id in files
             .first()
             .expect("Checked it above")
-            .dependencies()
+            .relations
             .iter()
             .filter(|dep| dep.relation().is_incompatible())
             .map(|dep| dep.id())

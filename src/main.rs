@@ -264,7 +264,7 @@ fn main() -> anyhow::Result<()> {
                     format!("No files fetched for the mod '{}'", the_mod.slug())
                 })?;
 
-                for dep in file.dependencies() {
+                for dep in file.relations.iter() {
                     add_remote_to_tree(
                         searcher,
                         tree,
