@@ -63,28 +63,28 @@ impl Cli {
 
                 let mods: Vec<anyhow::Result<_>> = match add_target {
                     SearchTargets::Id { mod_ids } => mod_ids
-                        .into_iter()
+                        .iter()
                         .map(|&id| searcher.search_mod_by_id(id))
                         .collect(),
                     SearchTargets::Slug { mod_slugs } => mod_slugs
-                        .into_iter()
+                        .iter()
                         .map(|slug| searcher.search_mod_by_slug(slug))
                         .collect(),
                     SearchTargets::Jar { paths } => {
                         for path in paths {
-                            match JarMod::open(&path) {
+                            match JarMod::open(path) {
                                 Ok(jar) => {
                                     let to =
                                         pool.locals_path().join(jar.name()).with_extension("jar");
 
                                     if *r#move {
-                                        std::fs::rename(&path, to).context("Moving jar")?;
+                                        std::fs::rename(path, to).context("Moving jar")?;
 
                                         if !self.quiet {
                                             println!("Moving {}", path.display());
                                         }
                                     } else if !self.quiet {
-                                        std::fs::copy(&path, to).context("Copying jar")?;
+                                        std::fs::copy(path, to).context("Copying jar")?;
 
                                         println!("Copying {}", path.display());
                                     }
@@ -124,7 +124,7 @@ impl Cli {
                 let mut pool = self.new_pool()?;
 
                 for name in names {
-                    if !pool.remove_mod(&name)? && !self.quiet {
+                    if !pool.remove_mod(name)? && !self.quiet {
                         println!("No mod {} was removed", name.italic().blue());
                     }
                 }
@@ -139,12 +139,12 @@ impl Cli {
 
                 let mods: Vec<anyhow::Result<_>> = match target {
                     SearchTargets::Id { mod_ids } => mod_ids
-                        .into_iter()
+                        .iter()
                         .map(|&id| searcher.search_mod_by_id(id))
                         .collect(),
                     SearchTargets::Slug { mod_slugs } => mod_slugs
-                        .into_iter()
-                        .map(|slug| searcher.search_mod_by_slug(&slug))
+                        .iter()
+                        .map(|slug| searcher.search_mod_by_slug(slug))
                         .collect(),
                     SearchTargets::Jar { paths } => {
                         for path in paths {
