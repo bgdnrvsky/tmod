@@ -357,4 +357,15 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn curseforge_categories() -> anyhow::Result<()> {
+        let searcher = Searcher::new(true);
+        let categories = searcher.curseforge_categories()?;
+
+        assert!(!categories.is_empty());
+        assert!(categories.contains_key("Mods"));
+
+        Ok(())
+    }
 }
