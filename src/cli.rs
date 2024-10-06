@@ -203,7 +203,7 @@ impl Cli {
                 let mut searcher = Self::get_searcher_mut();
                 searcher.set_silent(true); // Make it silent
 
-                let pool = Pool::new(&self.pool_dir).context("Error initializing the pool")?;
+                let pool = Pool::read(&self.pool_dir).context("Error initializing the pool")?;
 
                 let mut tree = TreeBuilder::new(String::from("Tmod"));
 
@@ -292,7 +292,7 @@ impl Cli {
     }
 
     fn new_pool(&self) -> anyhow::Result<Pool> {
-        Pool::new(&self.pool_dir).with_context(|| {
+        Pool::read(&self.pool_dir).with_context(|| {
             format!(
                 "Error initializing the pool from {}",
                 self.pool_dir.display()

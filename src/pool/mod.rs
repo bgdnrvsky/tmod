@@ -40,7 +40,7 @@ impl Pool {
         pool.save().map(|_| pool)
     }
 
-    pub fn new(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
+    pub fn read(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
         if !dir_path.as_ref().try_exists().is_ok_and(|exists| exists) {
             anyhow::bail!("The pool '{}' doesnt exist!", dir_path.as_ref().display());
         }

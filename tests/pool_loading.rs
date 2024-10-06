@@ -3,7 +3,7 @@ use tmod::pool::Pool;
 
 #[test]
 fn read_pool() -> anyhow::Result<()> {
-    let pool = Pool::new("tests/test_pool").context("Reading pool")?;
+    let pool = Pool::read("tests/test_pool").context("Reading pool")?;
 
     let remotes = pool.remotes;
     assert!(remotes.contains("foo"));
