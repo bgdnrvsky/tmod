@@ -103,15 +103,15 @@ impl<'a> ModBuilder<'a> {
 impl Display for ModBuilder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.options.with_id {
-            write!(f, "(id: {}) ", self.the_mod.id().to_string().bold())?;
+            write!(f, "(id: {}) ", self.the_mod.id.to_string().bold())?;
         }
 
         if self.options.with_name {
-            write!(f, "{} ", self.the_mod.name().blue())?;
+            write!(f, "{} ", self.the_mod.name.blue())?;
         }
 
         if self.options.with_slug {
-            write!(f, "(slug: {}) ", self.the_mod.slug().bold())?;
+            write!(f, "(slug: {}) ", self.the_mod.slug.bold())?;
         }
 
         if self.options.with_thumbs_up_count || self.options.with_download_count {
@@ -135,11 +135,11 @@ impl Display for ModBuilder<'_> {
         }
 
         if self.options.with_summary {
-            write!(f, "- {}", self.the_mod.summary().italic())?;
+            write!(f, "- {}", self.the_mod.summary.italic())?;
         }
 
         if let Some(links_options) = self.options.links_options {
-            let builder = LinksBuilder::with_options(self.the_mod.links(), links_options);
+            let builder = LinksBuilder::with_options(&self.the_mod.links, links_options);
 
             builder.fmt(f)?;
         }

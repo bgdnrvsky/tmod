@@ -34,8 +34,8 @@ impl Cli {
             Commands::List => {
                 let pool = self.new_pool()?;
 
-                let remotes = pool.remotes();
-                let locals = pool.locals();
+                let remotes = pool.remotes;
+                let locals = pool.locals;
 
                 if remotes.is_empty() && locals.is_empty() {
                     println!("Empty!");
@@ -213,18 +213,18 @@ impl Cli {
                     the_mod: &SearchedMod,
                     config: &Config,
                 ) -> anyhow::Result<()> {
-                    tree.begin_child(the_mod.slug().to_string());
+                    tree.begin_child(the_mod.slug.to_string());
 
                     let files = searcher.get_mod_files(the_mod, config)?;
                     let file = files.iter().max_by_key(|file| file.date).with_context(|| {
-                        format!("No files fetched for the mod '{}'", the_mod.slug())
+                        format!("No files fetched for the mod '{}'", the_mod.slug)
                     })?;
 
                     for dep in file.relations.iter() {
                         add_remote_to_tree(
                             searcher,
                             tree,
-                            &searcher.search_mod_by_id(dep.id())?,
+                            &searcher.search_mod_by_id(dep.id)?,
                             config,
                         )?;
                     }
@@ -257,19 +257,19 @@ impl Cli {
 
                 tree.begin_child(String::from("Remotes"));
 
-                for slug in pool.remotes() {
+                for slug in pool.remotes.iter() {
                     let the_mod = searcher
                         .search_mod_by_slug(slug)
                         .expect("If remote mod is in the pool, it exists");
 
-                    add_remote_to_tree(&searcher, &mut tree, &the_mod, pool.config())?;
+                    add_remote_to_tree(&searcher, &mut tree, &the_mod, &pool.config)?;
                 }
 
                 tree.end_child();
                 tree.begin_child(String::from("Locals"));
 
-                for local in pool.locals() {
-                    add_local_to_tree(&searcher, &mut tree, local, pool.config())?;
+                for local in pool.locals.iter() {
+                    add_local_to_tree(&searcher, &mut tree, local, &pool.config)?;
                 }
 
                 tree.end_child();

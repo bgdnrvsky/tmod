@@ -10,46 +10,18 @@ pub mod display;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct SearchedMod {
-    id: usize,
-    name: String,
-    slug: String,
-    summary: String,
-    links: ModLinks,
+    pub id: usize,
+    pub name: String,
+    pub slug: String,
+    pub summary: String,
+    pub links: ModLinks,
     #[serde(rename = "thumbsUpCount")]
-    thumbs_up_count: usize,
+    pub thumbs_up_count: usize,
     #[serde(rename = "downloadCount")]
-    download_count: usize,
+    pub download_count: usize,
 }
 
 impl SearchedMod {
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn slug(&self) -> &str {
-        &self.slug
-    }
-
-    pub fn thumbs_up_count(&self) -> usize {
-        self.thumbs_up_count
-    }
-
-    pub fn download_count(&self) -> usize {
-        self.download_count
-    }
-
-    pub fn links(&self) -> &ModLinks {
-        &self.links
-    }
-
-    pub fn summary(&self) -> &str {
-        &self.summary
-    }
-
     pub fn display(&self) -> display::ModBuilder {
         display::ModBuilder::new(self)
     }
@@ -84,9 +56,9 @@ impl Ord for SearchedMod {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModRelation {
     #[serde(rename = "modId")]
-    id: usize,
+    pub id: usize,
     #[serde(rename = "relationType")]
-    relation: RelationType,
+    pub relation: RelationType,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize_repr)]
@@ -130,16 +102,6 @@ impl RelationType {
     }
 }
 
-impl ModRelation {
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn relation(&self) -> RelationType {
-        self.relation
-    }
-}
-
 #[allow(unused)]
 #[serde_as]
 #[derive(Debug, Clone, Deserialize)]
@@ -154,13 +116,7 @@ pub struct ModFile {
     #[serde(rename = "downloadUrl")]
     url: Url,
     #[serde(rename = "gameVersions")]
-    versions: Vec<String>,
+    pub versions: Vec<String>,
     #[serde(rename = "dependencies")]
     pub relations: Vec<ModRelation>,
-}
-
-impl ModFile {
-    pub fn versions(&self) -> &[String] {
-        &self.versions
-    }
 }

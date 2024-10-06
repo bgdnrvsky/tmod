@@ -67,24 +67,25 @@ impl<'a> LinksBuilder<'a> {
 impl Display for LinksBuilder<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let the = self.the_links;
-        let formatted = |url: Option<&Url>| {
-            url.map(Url::as_str)
+        let formatted = |url: &Option<Url>| {
+            url.as_ref()
+                .map(Url::as_str)
                 .unwrap_or_else(|| "No source!")
                 .italic()
         };
 
         writeln!(f, "\nLinks:")?;
         if self.options.with_website {
-            writeln!(f, "Website: {}", the.website().as_str().italic())?;
+            writeln!(f, "Website: {}", the.website.as_str().italic())?;
         }
         if self.options.with_wiki {
-            writeln!(f, "Wiki: {}", formatted(the.wiki_url()))?;
+            writeln!(f, "Wiki: {}", formatted(&the.wiki))?;
         }
         if self.options.with_issues {
-            writeln!(f, "Issues: {}", formatted(the.issues_url()))?;
+            writeln!(f, "Issues: {}", formatted(&the.issues))?;
         }
         if self.options.with_source {
-            writeln!(f, "Source: {}", formatted(the.source_url()))?;
+            writeln!(f, "Source: {}", formatted(&the.source))?;
         }
 
         Ok(())

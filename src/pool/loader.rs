@@ -46,16 +46,12 @@ impl Loaders {
 /// ```
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Loader {
-    kind: Loaders,
+    pub kind: Loaders,
 }
 
 impl Loader {
     pub fn prompt() -> anyhow::Result<Self> {
         Loaders::prompt().map(|kind| Self { kind })
-    }
-
-    pub fn kind(&self) -> Loaders {
-        self.kind
     }
 }
 

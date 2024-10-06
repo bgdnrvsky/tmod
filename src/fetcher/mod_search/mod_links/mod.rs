@@ -10,36 +10,16 @@ pub mod display;
 pub struct ModLinks {
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "websiteUrl")]
-    website: Url,
+    pub website: Url,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    wiki: Option<Url>,
+    pub wiki: Option<Url>,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    issues: Option<Url>,
+    pub issues: Option<Url>,
     #[serde_as(as = "Option<DisplayFromStr>")]
-    source: Option<Url>,
+    pub source: Option<Url>,
 }
 
 impl ModLinks {
-    pub fn website(&self) -> &Url {
-        &self.website
-    }
-
-    pub fn curseforge_url(&self) -> &Url {
-        &self.website
-    }
-
-    pub fn wiki_url(&self) -> Option<&Url> {
-        self.wiki.as_ref()
-    }
-
-    pub fn issues_url(&self) -> Option<&Url> {
-        self.issues.as_ref()
-    }
-
-    pub fn source_url(&self) -> Option<&Url> {
-        self.source.as_ref()
-    }
-
     pub fn display(&self) -> display::LinksBuilder {
         display::LinksBuilder::new(self)
     }

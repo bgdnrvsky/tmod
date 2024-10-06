@@ -20,10 +20,10 @@ use crate::{
 use config::Config;
 
 pub struct Pool {
-    path: PathBuf,
-    config: Config,
-    remotes: HashSet<String>,
-    locals: Vec<JarMod>,
+    pub path: PathBuf,
+    pub config: Config,
+    pub remotes: HashSet<String>,
+    pub locals: Vec<JarMod>,
 }
 
 impl Pool {
@@ -118,18 +118,6 @@ impl Pool {
         })
     }
 
-    pub fn remotes(&self) -> &HashSet<String> {
-        &self.remotes
-    }
-
-    pub fn locals(&self) -> &[JarMod] {
-        &self.locals
-    }
-
-    pub fn config(&self) -> &Config {
-        &self.config
-    }
-
     fn create_dir(&self) -> anyhow::Result<()> {
         fs::DirBuilder::new()
             .recursive(true)
@@ -158,7 +146,7 @@ impl Pool {
             .create(&locals_path)
             .context("Creating locals dir")?;
 
-        for jar_mod in self.locals() {
+        for jar_mod in self.locals.iter() {
             let path = locals_path.join(jar_mod.name()).with_extension("jar");
             let file = File::create(&path)
                 .with_context(|| format!("Creating `{}` in locals", path.display()))?;
@@ -210,8 +198,8 @@ impl Pool {
             .expect("Files contains at least on file")
             .relations
             .iter()
-            .filter(|dep| dep.relation().is_incompatible())
-            .map(|dep| dep.id())
+            .filter(|dep| dep.relation.is_incompatible())
+            .map(|dep| dep.id)
         {
             // Get all incompatibilities for the file, and check if it is present in the pool
             let inc = SEARCHER
@@ -220,14 +208,14 @@ impl Pool {
                 .search_mod_by_id(inc_id)
                 .with_context(|| format!("Couldn't find the incompatibility id ({inc_id})"))?;
 
-            for remote_slug in self.remotes().iter() {
-                if inc.slug() == remote_slug {
+            for remote_slug in self.remotes.iter() {
+                if inc.slug == *remote_slug {
                     return Ok(false);
                 }
             }
 
-            for local_slug in self.locals().iter().map(|jar| jar.name()) {
-                if inc.slug() == local_slug {
+            for local_slug in self.locals.iter().map(|jar| jar.name()) {
+                if inc.slug == local_slug {
                     return Ok(false);
                 }
             }
@@ -235,7 +223,7 @@ impl Pool {
 
         for local in self.locals.iter() {
             for incomp_slug in local.incompatibilities().keys() {
-                if *incomp_slug == the_mod.slug() {
+                if *incomp_slug == the_mod.slug {
                     return Ok(false);
                 }
             }
@@ -248,7 +236,7 @@ impl Pool {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
-                slug = the_mod.slug()
+                slug = the_mod.slug
             );
         }
 
@@ -257,7 +245,7 @@ impl Pool {
     }
 
     pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) {
-        self.remotes.insert(the_mod.slug().to_string());
+        self.remotes.insert(the_mod.slug.to_string());
     }
 
     pub fn add_to_locals(&mut self, jar: JarMod) {

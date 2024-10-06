@@ -11,14 +11,10 @@ pub mod display;
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModSearchList {
     #[serde(rename = "data")]
-    mods: BTreeSet<Reverse<SearchedMod>>,
+    pub mods: BTreeSet<Reverse<SearchedMod>>,
 }
 
 impl ModSearchList {
-    pub fn mods(&self) -> &BTreeSet<Reverse<SearchedMod>> {
-        &self.mods
-    }
-
     pub fn count(&self) -> usize {
         self.mods.len()
     }

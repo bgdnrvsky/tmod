@@ -8,34 +8,12 @@ use strum::EnumString;
 
 #[derive(Debug, Clone)]
 pub struct ForgeMod {
-    slug: String,
-    version: String,
-    loader_version_needed: Option<String>,
-    minecraft_version_needed: Option<String>,
+    pub slug: String,
+    pub version: String,
+    pub loader_version_needed: Option<String>,
+    pub minecraft_version_needed: Option<String>,
     /// Key: mod slug
-    dependencies: HashMap<String, String>,
-}
-
-impl ForgeMod {
-    pub fn slug(&self) -> &str {
-        &self.slug
-    }
-
-    pub fn version(&self) -> &str {
-        &self.version
-    }
-
-    pub fn loader_version_needed(&self) -> Option<&str> {
-        self.loader_version_needed.as_deref()
-    }
-
-    pub fn minecraft_version_needed(&self) -> Option<&str> {
-        self.minecraft_version_needed.as_deref()
-    }
-
-    pub fn dependencies(&self) -> &HashMap<String, String> {
-        &self.dependencies
-    }
+    pub dependencies: HashMap<String, String>,
 }
 
 impl TryFrom<&Jar> for ForgeMod {

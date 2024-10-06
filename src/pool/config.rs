@@ -19,9 +19,9 @@ use super::loader::Loader;
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Config {
     /// Minecraft mod loader (forge or fabric)
-    loader: Loader,
+    pub loader: Loader,
     /// Minecraft version target
-    game_version: String,
+    pub game_version: String,
 }
 
 impl Config {
@@ -43,14 +43,6 @@ impl Config {
         let content = fs::read_to_string(path).context("Reading file content")?;
 
         toml::from_str(&content).context("Deserializing")
-    }
-
-    pub fn loader(&self) -> &Loader {
-        &self.loader
-    }
-
-    pub fn game_version(&self) -> &str {
-        &self.game_version
     }
 }
 

@@ -6,40 +6,14 @@ use serde::Deserialize;
 
 #[derive(Debug, Clone)]
 pub struct FabricMod {
-    slug: String,
-    version: String,
-    loader_version_needed: Option<String>,
-    minecraft_version_needed: Option<String>,
+    pub slug: String,
+    pub version: String,
+    pub loader_version_needed: Option<String>,
+    pub minecraft_version_needed: Option<String>,
     // Key: mod slug
-    dependencies: HashMap<String, String>,
+    pub dependencies: HashMap<String, String>,
     // Key: mod slug
-    incompatibilities: HashMap<String, String>,
-}
-
-impl FabricMod {
-    pub fn slug(&self) -> &str {
-        &self.slug
-    }
-
-    pub fn version(&self) -> &str {
-        &self.version
-    }
-
-    pub fn loader_version_needed(&self) -> Option<&str> {
-        self.loader_version_needed.as_deref()
-    }
-
-    pub fn minecraft_version_needed(&self) -> Option<&str> {
-        self.minecraft_version_needed.as_deref()
-    }
-
-    pub fn dependencies(&self) -> &HashMap<String, String> {
-        &self.dependencies
-    }
-
-    pub fn incompatibilities(&self) -> &HashMap<String, String> {
-        &self.incompatibilities
-    }
+    pub incompatibilities: HashMap<String, String>,
 }
 
 impl TryFrom<&Jar> for FabricMod {

@@ -26,7 +26,7 @@ pub static SEARCHER: Mutex<Searcher> = Mutex::new(Searcher::new(false));
 
 #[derive(Debug, Default)]
 pub struct Searcher {
-    silent: bool,
+    pub silent: bool,
     minecraft_id: OnceCell<usize>,
     minecraft_versions: OnceCell<Vec<String>>,
     fabric_versions: OnceCell<Vec<String>>,
@@ -238,19 +238,19 @@ impl Searcher {
         url.path_segments_mut()
             .unwrap()
             .push("mods")
-            .push(the_mod.id().to_string().as_str())
+            .push(the_mod.id.to_string().as_str())
             .push("files");
         url.query_pairs_mut()
-            .append_pair("gameVersion", config.game_version().to_string().as_str())
+            .append_pair("gameVersion", config.game_version.to_string().as_str())
             .append_pair(
                 "modLoaderType",
-                (config.loader().kind() as u8).to_string().as_str(),
+                (config.loader.kind as u8).to_string().as_str(),
             );
 
         let mut files = FetchParameters::new(url, self.silent)
-            .with_info(format!("Getting mod files for '{}'", the_mod.slug()).as_str())
+            .with_info(format!("Getting mod files for '{}'", the_mod.slug).as_str())
             .fetch()
-            .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug()))?
+            .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug))?
             .into_json::<Data>()
             .context("Deserializing mod files")
             .map(|result| result.data)?;
@@ -263,14 +263,10 @@ impl Searcher {
         // Filter relations that are useless
         // Only keep relations that are either required dependencies or incompatible
         for file in files.iter_mut() {
-            file.relations.retain(|dep| dep.relation().is_needed());
+            file.relations.retain(|dep| dep.relation.is_needed());
         }
 
         Ok(files)
-    }
-
-    pub fn silent(&self) -> bool {
-        self.silent
     }
 }
 
@@ -328,10 +324,10 @@ mod tests {
         let searcher = Searcher::new(true);
 
         let alexs_mobs = searcher.search_mod_by_id(426558)?;
-        assert_eq!(alexs_mobs.slug(), "alexs-mobs");
+        assert_eq!(alexs_mobs.slug, "alexs-mobs");
 
         let jei = searcher.search_mod_by_id(238222)?;
-        assert_eq!(jei.slug(), "jei");
+        assert_eq!(jei.slug, "jei");
 
         Ok(())
     }

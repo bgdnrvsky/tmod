@@ -66,41 +66,41 @@ impl JarMod {
 impl JarModType {
     pub fn name(&self) -> &str {
         match self {
-            Self::Fabric(the_mod) => the_mod.slug(),
-            Self::Forge(the_mod) => the_mod.slug(),
+            Self::Fabric(the_mod) => &the_mod.slug,
+            Self::Forge(the_mod) => &the_mod.slug,
         }
     }
 
     pub fn version(&self) -> &str {
         match self {
-            Self::Fabric(the_mod) => the_mod.version(),
-            Self::Forge(the_mod) => the_mod.version(),
+            Self::Fabric(the_mod) => &the_mod.version,
+            Self::Forge(the_mod) => &the_mod.version,
         }
     }
 
     pub fn minecraft_version(&self) -> Option<&str> {
         match self {
-            Self::Fabric(the_mod) => the_mod.minecraft_version_needed(),
-            Self::Forge(the_mod) => the_mod.minecraft_version_needed(),
+            Self::Fabric(the_mod) => the_mod.minecraft_version_needed.as_deref(),
+            Self::Forge(the_mod) => the_mod.minecraft_version_needed.as_deref(),
         }
     }
 
     pub fn loader_version(&self) -> Option<&str> {
         match self {
-            Self::Fabric(the_mod) => the_mod.loader_version_needed(),
-            Self::Forge(the_mod) => the_mod.loader_version_needed(),
+            Self::Fabric(the_mod) => the_mod.loader_version_needed.as_deref(),
+            Self::Forge(the_mod) => the_mod.loader_version_needed.as_deref(),
         }
     }
 
     pub fn dependencies(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
-                .dependencies()
+                .dependencies
                 .iter()
                 .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
             Self::Forge(the_mod) => the_mod
-                .dependencies()
+                .dependencies
                 .iter()
                 .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
@@ -110,7 +110,7 @@ impl JarModType {
     pub fn incompatibilities(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
-                .incompatibilities()
+                .incompatibilities
                 .iter()
                 .map(|(slug, req)| (slug.as_str(), req.as_str()))
                 .collect(),
