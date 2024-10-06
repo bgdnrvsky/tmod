@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 use anyhow::Context;
+use chrono::{DateTime, Utc};
 use loading::{Loading, Spinner};
 use rq::Response;
 use serde::Deserialize;
@@ -226,6 +227,34 @@ impl Searcher {
             Ok(r#mod) => Ok(r#mod),
             Err(0) => anyhow::bail!("The mod '{}' is not found", slug.as_ref()),
             Err(n) => anyhow::bail!("The list should have contained 1 mod, but found {n}"),
+        }
+    }
+
+    /// If the timestamp is Some, searches for the file with the same timestamp,
+    /// if None, gets the latest file published
+    pub fn get_needed_mod_file(
+        &self,
+        the_mod: &SearchedMod,
+        config: &Config,
+        timestamp: Option<DateTime<Utc>>,
+    ) -> anyhow::Result<ModFile> {
+        let files = Self::get_mod_files(self, the_mod, config)?;
+
+        if let Some(time) = timestamp {
+            files
+                .into_iter()
+                .find(|file| file.date == time)
+                .with_context(|| {
+                    format!(
+                        "The file with specified timestamp ({}) wasn't found in files",
+                        time
+                    )
+                })
+        } else {
+            files
+                .into_iter()
+                .max_by_key(|file| file.date)
+                .context("Fetched files contains 0 files")
         }
     }
 

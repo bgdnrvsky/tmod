@@ -41,7 +41,7 @@ impl Cli {
                     println!("Empty!");
                 } else if !remotes.is_empty() {
                     println!("Remotes:");
-                    for r in remotes {
+                    for r in remotes.keys() {
                         println!("\t- {}", r.italic().blue());
                     }
                 } else if !locals.is_empty() {
@@ -104,10 +104,16 @@ impl Cli {
                 for the_mod in mods {
                     match the_mod {
                         Ok(the_mod) => {
+                            let file = Self::get_searcher().get_needed_mod_file(
+                                &the_mod,
+                                &pool.config,
+                                None,
+                            )?;
+
                             if *force {
-                                pool.add_to_remotes_unchecked(&the_mod);
+                                pool.add_to_remotes_unchecked(&the_mod, &file);
                             } else {
-                                pool.add_to_remotes_checked(&the_mod)?;
+                                pool.add_to_remotes_checked(&the_mod, &file)?;
                             }
 
                             if !self.quiet {
@@ -257,7 +263,7 @@ impl Cli {
 
                 tree.begin_child(String::from("Remotes"));
 
-                for slug in pool.remotes.iter() {
+                for slug in pool.remotes.keys() {
                     let the_mod = searcher
                         .search_mod_by_slug(slug)
                         .expect("If remote mod is in the pool, it exists");

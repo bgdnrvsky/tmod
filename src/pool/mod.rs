@@ -2,18 +2,22 @@ pub mod config;
 pub mod loader;
 
 use std::{
-    collections::HashSet,
+    collections::HashMap,
     fs::{self, File},
     io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
 use anyhow::Context;
+use chrono::{DateTime, Utc};
 use jars::{jar, JarOptionBuilder};
 use zip::ZipWriter;
 
 use crate::{
-    fetcher::{mod_search::search_mod::SearchedMod, SEARCHER},
+    fetcher::{
+        mod_search::search_mod::{ModFile, SearchedMod},
+        SEARCHER,
+    },
     jar::JarMod,
 };
 
@@ -22,7 +26,8 @@ use config::Config;
 pub struct Pool {
     pub path: PathBuf,
     pub config: Config,
-    pub remotes: HashSet<String>,
+    /// Slug - File timestamp
+    pub remotes: HashMap<String, DateTime<Utc>>,
     pub locals: Vec<JarMod>,
 }
 
@@ -183,19 +188,17 @@ impl Pool {
     }
 
     pub fn is_compatible(&self, the_mod: &SearchedMod) -> anyhow::Result<bool> {
-        let files = SEARCHER
+        let file = SEARCHER
             .try_lock()
             .unwrap()
-            .get_mod_files(the_mod, &self.config)?;
+            .get_needed_mod_file(the_mod, &self.config, None);
 
-        if files.is_empty() {
+        if file.is_err() {
             return Ok(false);
         }
 
-        for inc_id in files
-            .iter()
-            .max_by_key(|file| file.date)
-            .expect("Files contains at least on file")
+        for inc_id in file
+            .unwrap()
             .relations
             .iter()
             .filter(|dep| dep.relation.is_incompatible())
@@ -208,7 +211,7 @@ impl Pool {
                 .search_mod_by_id(inc_id)
                 .with_context(|| format!("Couldn't find the incompatibility id ({inc_id})"))?;
 
-            for remote_slug in self.remotes.iter() {
+            for remote_slug in self.remotes.keys() {
                 if inc.slug == *remote_slug {
                     return Ok(false);
                 }
@@ -232,7 +235,11 @@ impl Pool {
         Ok(true)
     }
 
-    pub fn add_to_remotes_checked(&mut self, the_mod: &SearchedMod) -> anyhow::Result<()> {
+    pub fn add_to_remotes_checked(
+        &mut self,
+        the_mod: &SearchedMod,
+        mod_file: &ModFile,
+    ) -> anyhow::Result<()> {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
@@ -240,12 +247,12 @@ impl Pool {
             );
         }
 
-        self.add_to_remotes_unchecked(the_mod);
+        self.add_to_remotes_unchecked(the_mod, mod_file);
         Ok(())
     }
 
-    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod) {
-        self.remotes.insert(the_mod.slug.to_string());
+    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod, mod_file: &ModFile) {
+        self.remotes.insert(the_mod.slug.to_string(), mod_file.date);
     }
 
     pub fn add_to_locals(&mut self, jar: JarMod) {
@@ -268,7 +275,7 @@ impl Pool {
     }
 
     pub fn remove_from_remotes(&mut self, name: &str) -> bool {
-        self.remotes.remove(name)
+        self.remotes.remove(name).is_some()
     }
 
     pub fn root_path(&self) -> &Path {
