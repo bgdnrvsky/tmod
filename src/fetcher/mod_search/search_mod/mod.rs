@@ -149,7 +149,7 @@ pub struct ModFile {
     #[serde(rename = "downloadCount")]
     download_count: usize,
     #[serde(rename = "fileDate")]
-    date: DateTime<Utc>,
+    pub date: DateTime<Utc>,
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "downloadUrl")]
     url: Url,

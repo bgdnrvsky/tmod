@@ -204,10 +204,10 @@ impl Pool {
             return Ok(false);
         }
 
-        // TODO: Choose the last file (by timestamp)
         for inc_id in files
-            .first()
-            .expect("Checked it above")
+            .iter()
+            .max_by_key(|file| file.date)
+            .expect("Files contains at least on file")
             .relations
             .iter()
             .filter(|dep| dep.relation().is_incompatible())

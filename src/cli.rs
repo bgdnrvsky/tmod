@@ -216,7 +216,7 @@ impl Cli {
                     tree.begin_child(the_mod.slug().to_string());
 
                     let files = searcher.get_mod_files(the_mod, config)?;
-                    let file = files.first().with_context(|| {
+                    let file = files.iter().max_by_key(|file| file.date).with_context(|| {
                         format!("No files fetched for the mod '{}'", the_mod.slug())
                     })?;
 
