@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use serde_with::{serde_as, DisplayFromStr};
@@ -147,6 +148,8 @@ pub struct ModFile {
     file_name: String,
     #[serde(rename = "downloadCount")]
     download_count: usize,
+    #[serde(rename = "fileDate")]
+    date: DateTime<Utc>,
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "downloadUrl")]
     url: Url,
