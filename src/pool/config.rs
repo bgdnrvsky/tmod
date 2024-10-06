@@ -14,7 +14,6 @@ use super::loader::Loader;
 ///
 /// [loader]
 /// kind = "forge"
-/// version = "47.2.0"
 /// ```
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Config {
@@ -58,23 +57,9 @@ mod config_deserializer_tests {
 
             [loader]
             kind = "forge"
-            version = "47.2.0"
             "#,
         );
 
         assert!(config.is_ok());
-    }
-
-    #[test]
-    #[should_panic]
-    fn missing() {
-        toml::from_str::<Config>(
-            r#"
-            [loader]
-            kind = "forge"
-            version = "47.2.0"
-            "#,
-        )
-        .expect("Should fail since game version is missing");
     }
 }
