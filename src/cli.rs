@@ -13,7 +13,7 @@ use tmod::{
         Searcher, SEARCHER,
     },
     jar::JarMod,
-    pool::{config::Config, Pool},
+    pool::{config::Config, loader::Loaders, Pool},
 };
 
 #[derive(Parser)]
@@ -140,6 +140,9 @@ impl Cli {
             Commands::Info {
                 display_options,
                 target,
+                timestamp,
+                kind,
+                game_version,
             } => {
                 let searcher = Self::get_searcher();
 
@@ -197,7 +200,32 @@ impl Cli {
                 for the_mod in mods {
                     match the_mod {
                         Ok(the_mod) => {
-                            println!("{}", the_mod.display_with_options(*display_options))
+                            let file = match (kind, game_version) {
+                                (Some(kind), Some(version)) => {
+                                    let config = Config {
+                                        loader: tmod::pool::loader::Loader { kind: *kind },
+                                        game_version: version.to_string(),
+                                    };
+                                    Some(
+                                        searcher
+                                            .get_needed_mod_file(&the_mod, &config, *timestamp)?,
+                                    )
+                                }
+                                _ => None,
+                            };
+
+                            println!("{}", the_mod.display_with_options(*display_options));
+
+                            if let Some(file) = file {
+                                println!("Relations:");
+                                for relation in file.relations.iter() {
+                                    println!(
+                                        "\t - {id} ({rel_type:?})",
+                                        id = relation.id,
+                                        rel_type = relation.relation
+                                    );
+                                }
+                            }
                         }
                         Err(e) => eprintln!("Couldn't get info for the mod: {e}"),
                     }
@@ -333,10 +361,18 @@ enum Commands {
     },
     /// Search a remote mod and print its info
     Info {
-        #[clap(flatten)]
-        display_options: ModOptions,
         #[command(subcommand)]
         target: SearchTargets,
+        /// If not specified, fetches the latest available version of the mod
+        #[arg(short, long)]
+        timestamp: Option<chrono::DateTime<chrono::Utc>>,
+        // TODO: Reuse Config struct
+        #[arg(long)]
+        kind: Option<Loaders>,
+        #[arg(long)]
+        game_version: Option<String>,
+        #[clap(flatten)]
+        display_options: ModOptions,
     },
     Tree,
 }
