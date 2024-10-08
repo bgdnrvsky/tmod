@@ -232,7 +232,7 @@ impl Searcher {
 
     /// If the timestamp is Some, searches for the file with the same timestamp,
     /// if None, gets the latest file published
-    pub fn get_needed_mod_file(
+    pub fn get_specific_mod_file(
         &self,
         the_mod: &SearchedMod,
         config: &Config,

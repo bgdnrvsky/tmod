@@ -104,7 +104,7 @@ impl Cli {
                 for the_mod in mods {
                     match the_mod {
                         Ok(the_mod) => {
-                            let file = Self::get_searcher().get_needed_mod_file(
+                            let file = Self::get_searcher().get_specific_mod_file(
                                 &the_mod,
                                 &pool.config,
                                 None,
@@ -208,7 +208,7 @@ impl Cli {
                                     };
                                     Some(
                                         searcher
-                                            .get_needed_mod_file(&the_mod, &config, *timestamp)?,
+                                            .get_specific_mod_file(&the_mod, &config, *timestamp)?,
                                     )
                                 }
                                 _ => None,

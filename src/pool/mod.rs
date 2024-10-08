@@ -191,7 +191,7 @@ impl Pool {
         let file = SEARCHER
             .try_lock()
             .unwrap()
-            .get_needed_mod_file(the_mod, &self.config, None);
+            .get_specific_mod_file(the_mod, &self.config, None);
 
         if file.is_err() {
             return Ok(false);
