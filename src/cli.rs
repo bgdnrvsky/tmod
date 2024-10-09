@@ -27,6 +27,67 @@ pub struct Cli {
     pub quiet: bool,
 }
 
+#[derive(Debug, Subcommand)]
+enum Commands {
+    /// Initialize a new `pool`
+    Init,
+    /// List the mods in the `pool`
+    List,
+    /// Add minecraft mod to the `pool`
+    Add {
+        /// Force add the mod
+        #[arg(short, long, default_value_t = false)]
+        force: bool,
+        #[clap(flatten)]
+        display_options: ModOptions,
+        #[command(subcommand)]
+        add_target: SearchTargets,
+        /// When adding a Jar, move the file instead of copying
+        #[arg(short, long, default_value_t = false)]
+        r#move: bool,
+    },
+    /// Remove a mod from the `pool`
+    Remove {
+        #[arg(required = true)]
+        names: Vec<String>,
+    },
+    /// Search a remote mod and print its info
+    Info {
+        #[command(subcommand)]
+        target: SearchTargets,
+        /// If not specified, fetches the latest available version of the mod
+        #[arg(short, long)]
+        timestamp: Option<chrono::DateTime<chrono::Utc>>,
+        // TODO: Reuse Config struct
+        #[arg(long)]
+        kind: Option<Loaders>,
+        #[arg(long)]
+        game_version: Option<String>,
+        #[clap(flatten)]
+        display_options: ModOptions,
+    },
+    Tree,
+}
+
+#[derive(Debug, Subcommand)]
+enum SearchTargets {
+    /// Using CurseForge mod id
+    Id {
+        #[arg(required = true)]
+        mod_ids: Vec<usize>,
+    },
+    /// Using mod's 'slug' (slug is not always the same as the mod name)
+    Slug {
+        #[arg(required = true)]
+        mod_slugs: Vec<String>,
+    },
+    /// Using your local Jar file
+    Jar {
+        #[arg(required = true)]
+        paths: Vec<PathBuf>,
+    },
+}
+
 impl Cli {
     pub fn run(&self) -> anyhow::Result<()> {
         match &self.command {
@@ -333,65 +394,4 @@ impl Cli {
             )
         })
     }
-}
-
-#[derive(Debug, Subcommand)]
-enum Commands {
-    /// Initialize a new `pool`
-    Init,
-    /// List the mods in the `pool`
-    List,
-    /// Add minecraft mod to the `pool`
-    Add {
-        /// Force add the mod
-        #[arg(short, long, default_value_t = false)]
-        force: bool,
-        #[clap(flatten)]
-        display_options: ModOptions,
-        #[command(subcommand)]
-        add_target: SearchTargets,
-        /// When adding a Jar, move the file instead of copying
-        #[arg(short, long, default_value_t = false)]
-        r#move: bool,
-    },
-    /// Remove a mod from the `pool`
-    Remove {
-        #[arg(required = true)]
-        names: Vec<String>,
-    },
-    /// Search a remote mod and print its info
-    Info {
-        #[command(subcommand)]
-        target: SearchTargets,
-        /// If not specified, fetches the latest available version of the mod
-        #[arg(short, long)]
-        timestamp: Option<chrono::DateTime<chrono::Utc>>,
-        // TODO: Reuse Config struct
-        #[arg(long)]
-        kind: Option<Loaders>,
-        #[arg(long)]
-        game_version: Option<String>,
-        #[clap(flatten)]
-        display_options: ModOptions,
-    },
-    Tree,
-}
-
-#[derive(Debug, Subcommand)]
-enum SearchTargets {
-    /// Using CurseForge mod id
-    Id {
-        #[arg(required = true)]
-        mod_ids: Vec<usize>,
-    },
-    /// Using mod's 'slug' (slug is not always the same as the mod name)
-    Slug {
-        #[arg(required = true)]
-        mod_slugs: Vec<String>,
-    },
-    /// Using your local Jar file
-    Jar {
-        #[arg(required = true)]
-        paths: Vec<PathBuf>,
-    },
 }
