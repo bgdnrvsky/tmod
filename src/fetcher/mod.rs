@@ -271,10 +271,7 @@ impl Searcher {
             .push("files");
         url.query_pairs_mut()
             .append_pair("gameVersion", config.game_version.to_string().as_str())
-            .append_pair(
-                "modLoaderType",
-                (config.loader.kind as u8).to_string().as_str(),
-            );
+            .append_pair("modLoaderType", (config.loader as u8).to_string().as_str());
 
         let mut files = FetchParameters::new(url, self.silent)
             .with_info(format!("Getting mod files for '{}'", the_mod.slug).as_str())

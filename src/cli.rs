@@ -264,7 +264,7 @@ impl Cli {
                             let file = match (kind, game_version) {
                                 (Some(kind), Some(version)) => {
                                     let config = Config {
-                                        loader: tmod::pool::loader::Loader { kind: *kind },
+                                        loader: *kind,
                                         game_version: version.to_string(),
                                     };
                                     Some(

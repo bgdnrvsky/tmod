@@ -1,4 +1,2 @@
 game_version = "1.20.1"
-
-[loader]
-kind = "forge"
+loader = "forge"
