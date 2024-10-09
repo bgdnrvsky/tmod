@@ -13,7 +13,7 @@ use tmod::{
         Searcher, SEARCHER,
     },
     jar::JarMod,
-    pool::{config::Config, loader::Loaders, Pool},
+    pool::{config::Config, Pool},
 };
 
 #[derive(Parser)]
@@ -58,11 +58,8 @@ enum Commands {
         /// If not specified, fetches the latest available version of the mod
         #[arg(short, long)]
         timestamp: Option<chrono::DateTime<chrono::Utc>>,
-        // TODO: Reuse Config struct
-        #[arg(long)]
-        kind: Option<Loaders>,
-        #[arg(long)]
-        game_version: Option<String>,
+        #[clap(flatten)]
+        config: Option<Config>,
         #[clap(flatten)]
         display_options: ModOptions,
     },
@@ -202,8 +199,7 @@ impl Cli {
                 display_options,
                 target,
                 timestamp,
-                kind,
-                game_version,
+                config,
             } => {
                 let searcher = Self::get_searcher();
 
@@ -261,18 +257,11 @@ impl Cli {
                 for the_mod in mods {
                     match the_mod {
                         Ok(the_mod) => {
-                            let file = match (kind, game_version) {
-                                (Some(kind), Some(version)) => {
-                                    let config = Config {
-                                        loader: *kind,
-                                        game_version: version.to_string(),
-                                    };
-                                    Some(
-                                        searcher
-                                            .get_specific_mod_file(&the_mod, &config, *timestamp)?,
-                                    )
-                                }
-                                _ => None,
+                            let file = match config {
+                                Some(config) => Some(
+                                    searcher.get_specific_mod_file(&the_mod, config, *timestamp)?,
+                                ),
+                                None => None,
                             };
 
                             println!("{}", the_mod.display_with_options(*display_options));

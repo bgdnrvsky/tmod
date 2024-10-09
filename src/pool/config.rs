@@ -1,6 +1,7 @@
 use std::{fs, path::Path};
 
 use anyhow::Context;
+use clap::Args;
 use dialoguer::Input;
 use serde::{Deserialize, Serialize};
 
@@ -13,11 +14,13 @@ use super::loader::Loaders;
 /// game_version = "1.20.1"
 /// loader = "forge"
 /// ```
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Args, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Config {
     /// Minecraft mod loader
+    #[arg(required = false, value_enum, short, long)]
     pub loader: Loaders,
     /// Minecraft version target
+    #[arg(required = false, short = 'v', long)]
     pub game_version: String,
 }
 

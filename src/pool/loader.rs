@@ -1,4 +1,5 @@
 use anyhow::Context;
+use clap::ValueEnum;
 use dialoguer::Select;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
@@ -8,6 +9,7 @@ use strum::{Display, EnumIter, EnumString, IntoEnumIterator};
     Debug,
     Copy,
     Clone,
+    ValueEnum,
     EnumString,
     DeserializeFromStr,
     SerializeDisplay,
