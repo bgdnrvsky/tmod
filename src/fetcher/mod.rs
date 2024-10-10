@@ -394,4 +394,19 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn mod_by_slug() -> anyhow::Result<()> {
+        let searcher = Searcher::new(true);
+
+        let alexs_mobs = searcher.search_mod_by_slug("alexs-mobs")?;
+        assert_eq!(alexs_mobs.id, 426558);
+        
+        let jei = searcher.search_mod_by_slug("jei")?;
+        assert_eq!(jei.id, 238222);
+
+        assert!(searcher.search_mod_by_slug("alexs_mobs").is_err());
+
+        Ok(())
+    }
 }
