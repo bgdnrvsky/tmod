@@ -343,6 +343,8 @@ impl FetchParameters {
 
 #[cfg(test)]
 mod tests {
+    use crate::pool::loader::Loaders;
+
     use super::*;
 
     #[test]
@@ -401,11 +403,26 @@ mod tests {
 
         let alexs_mobs = searcher.search_mod_by_slug("alexs-mobs")?;
         assert_eq!(alexs_mobs.id, 426558);
-        
+
         let jei = searcher.search_mod_by_slug("jei")?;
         assert_eq!(jei.id, 238222);
 
         assert!(searcher.search_mod_by_slug("alexs_mobs").is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn mod_files() -> anyhow::Result<()> {
+        let searcher = Searcher::new(true);
+        let config = Config::new(Loaders::Forge, String::from("1.20.1"));
+        let alexs_mobs = searcher.search_mod_by_id(426558)?;
+
+        let files = searcher.get_mod_files(&alexs_mobs, &config)?;
+        assert!(
+            !files.is_empty(),
+            "Since the mod 'alexs-mobs' is compatible, we should get some files"
+        );
 
         Ok(())
     }

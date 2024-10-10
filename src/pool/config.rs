@@ -25,6 +25,13 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn new(loader: Loaders, game_version: String) -> Self {
+        Self {
+            loader,
+            game_version,
+        }
+    }
+
     pub fn init() -> anyhow::Result<Self> {
         let loader = Loaders::prompt()?;
         let game_version = Input::<String>::new()
