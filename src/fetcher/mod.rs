@@ -318,11 +318,12 @@ impl FetchParameters {
     }
 
     fn fetch(self) -> anyhow::Result<Response> {
+        let loading_info = self.info.unwrap_or_else(|| String::from("Fetching data"));
         let loading = if self.silent {
             None
         } else {
             let loading = Loading::new(Spinner::default());
-            loading.info(self.info.unwrap_or_else(|| String::from("Fetching data")));
+            loading.info(&loading_info);
             loading.text("Fetching");
 
             Some(loading)
@@ -331,13 +332,23 @@ impl FetchParameters {
         let response = rq::get(self.url.as_str())
             .set("x-api-key", TOKEN)
             .call()
-            .context("Getting a response from CurseForge");
+            .context("Getting a response from CurseForge")?;
 
         if let Some(loading) = loading {
             loading.end()
         }
 
-        response
+        if response.status() != 200 {
+            anyhow::bail!(
+                "{info} from {url} failed with status {status} ({status_text})",
+                status = response.status(),
+                status_text = response.status_text(),
+                info = loading_info,
+                url = response.get_url() // The actual URL can be different from the one we requested
+            );
+        }
+
+        Ok(response)
     }
 }
 
