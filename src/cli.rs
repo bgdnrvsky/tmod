@@ -267,8 +267,13 @@ impl Cli {
                             println!("{}", the_mod.display_with_options(*display_options));
 
                             if let Some(file) = file {
-                                println!("Relations:");
-                                for relation in file.relations.iter() {
+                                let relations = file.relations;
+
+                                if !relations.is_empty() {
+                                    println!("Relations:");
+                                }
+
+                                for relation in relations.iter() {
                                     println!(
                                         "\t - {id} ({rel_type:?})",
                                         id = relation.id,
