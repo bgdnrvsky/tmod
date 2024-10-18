@@ -4,7 +4,7 @@ pub mod loader;
 use std::{
     collections::HashMap,
     fs::{self, File},
-    io::{BufReader, Write},
+    io::Write,
     path::{Path, PathBuf},
 };
 
@@ -79,19 +79,17 @@ impl Pool {
             Config::from_toml(file.path()).context("Deserializing `config.toml`")?
         };
 
-        // Check if `remotes.json` file exists
+        // Check if `remotes.toml` file exists
         let remotes = {
-            let file = find_entry("remotes.json")?;
+            let file = find_entry("remotes.toml")?;
 
             anyhow::ensure!(
                 file.metadata()?.is_file(),
-                "`remotes.json` is expected to be a file"
+                "`remotes.toml` is expected to be a file"
             );
 
-            let file = File::open(file.path()).context("Opening `remotes.json`")?;
-            let reader = BufReader::new(file);
-
-            serde_json::from_reader(reader).context("Deserializing `remotes.json`")?
+            let content = fs::read_to_string(file.path()).context("Reading `remotes.toml`")?;
+            toml::from_str(&content).context("Deserializing `remotes.toml`")?
         };
 
         // Check if `locals` directory exists
@@ -138,9 +136,11 @@ impl Pool {
     }
 
     fn write_remotes(&self) -> anyhow::Result<()> {
-        let file = File::create(self.remotes_path())?;
+        let mut file = File::create(self.remotes_path())?;
+        let content = toml::to_string_pretty(&self.remotes).context("Serializing remotes")?;
 
-        serde_json::to_writer_pretty(file, &self.remotes).context("Writing remotes")
+        file.write_all(content.as_bytes())
+            .context("Writing remotes")
     }
 
     fn write_locals(&self) -> anyhow::Result<()> {
@@ -283,7 +283,7 @@ impl Pool {
     }
 
     pub fn remotes_path(&self) -> PathBuf {
-        self.root_path().join("remotes.json")
+        self.root_path().join("remotes.toml")
     }
 
     pub fn locals_path(&self) -> PathBuf {
