@@ -2,9 +2,9 @@ pub mod config;
 pub mod loader;
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{self, File},
-    io::Write,
+    io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
@@ -27,14 +27,16 @@ use config::Config;
 pub struct Pool {
     pub path: PathBuf,
     pub config: Config,
-    pub remotes: HashMap<String, DepInfo>,
+    pub manually_added: HashSet<String>,
+    pub locks: HashMap<String, DepInfo>,
     pub locals: Vec<JarMod>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DepInfo {
-    /// Timestamp of the mod that we add, not the timestamp of dependency
     timestamp: DateTime<Utc>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     dependencies: Vec<String>,
 }
 
@@ -45,7 +47,8 @@ impl Pool {
         let pool = Self {
             path: path.as_ref().to_owned(),
             config,
-            remotes: Default::default(),
+            locks: Default::default(),
+            manually_added: Default::default(),
             locals: Default::default(),
         };
 
@@ -86,17 +89,31 @@ impl Pool {
             Config::from_toml(file.path()).context("Deserializing `config.toml`")?
         };
 
-        // Check if `Tmod.toml` file exists
-        let remotes = {
-            let file = find_entry("Tmod.toml")?;
+        // Check if `Tmod.json` file exists
+        let manually_added = {
+            let file = find_entry("Tmod.json")?;
 
             anyhow::ensure!(
                 file.metadata()?.is_file(),
-                "`Tmod.toml` is expected to be a file"
+                "`Tmod.json` is expected to be a file"
             );
 
-            let content = fs::read_to_string(file.path()).context("Reading `Tmod.toml`")?;
-            toml::from_str(&content).context("Deserializing `Tmod.toml`")?
+            let file = File::open(file.path()).context("Reading `Tmod.json`")?;
+            let reader = BufReader::new(file);
+
+            serde_json::from_reader(reader).context("Deserializing `Tmod.json`")?
+        };
+
+        let locks = {
+            let file = find_entry("Tmod.lock")?;
+
+            anyhow::ensure!(
+                file.metadata()?.is_file(),
+                "`Tmod.lock` is expected to be a file"
+            );
+
+            let content = fs::read_to_string(file.path()).context("Reading `Tmod.lock`")?;
+            toml::from_str(&content).context("Deserializing `Tmod.lock`")?
         };
 
         // Check if `locals` directory exists
@@ -122,7 +139,8 @@ impl Pool {
 
         Ok(Self {
             config,
-            remotes,
+            manually_added,
+            locks,
             locals,
             path: dir_path.as_ref().to_owned(),
         })
@@ -143,11 +161,15 @@ impl Pool {
     }
 
     fn write_remotes(&self) -> anyhow::Result<()> {
-        let mut file = File::create(self.remotes_path())?;
-        let content = toml::to_string_pretty(&self.remotes).context("Serializing remotes")?;
+        // Writing tmod file
+        let file = File::create(self.remotes_path())?;
+        serde_json::to_writer_pretty(file, &self.manually_added).context("Writing remotes")?;
 
-        file.write_all(content.as_bytes())
-            .context("Writing remotes")
+        // Writing lock file
+        let mut file = File::create(self.locks_path())?;
+        let content = toml::to_string_pretty(&self.locks).context("Serializing locks")?;
+
+        file.write_all(content.as_bytes()).context("Writing locks")
     }
 
     fn write_locals(&self) -> anyhow::Result<()> {
@@ -218,7 +240,7 @@ impl Pool {
                 .search_mod_by_id(inc_id)
                 .with_context(|| format!("Couldn't find the incompatibility id ({inc_id})"))?;
 
-            for remote_slug in self.remotes.keys() {
+            for remote_slug in self.manually_added.iter() {
                 if inc.slug == *remote_slug {
                     return Ok(false);
                 }
@@ -246,6 +268,7 @@ impl Pool {
         &mut self,
         the_mod: &SearchedMod,
         mod_file: ModFile,
+        manual: bool,
     ) -> anyhow::Result<()> {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
@@ -254,15 +277,15 @@ impl Pool {
             );
         }
 
-        self.add_to_remotes_unchecked(the_mod, mod_file)
+        self.add_to_remotes_unchecked(the_mod, mod_file, manual)
     }
 
     pub fn add_to_remotes_unchecked(
         &mut self,
         the_mod: &SearchedMod,
         mod_file: ModFile,
+        manual: bool,
     ) -> anyhow::Result<()> {
-        let timestamp = mod_file.date;
         let searcher = SEARCHER.try_lock().unwrap();
         let relations = mod_file
             .relations
@@ -280,26 +303,29 @@ impl Pool {
 
         drop(searcher);
 
-        let mut dep_info = DepInfo {
-            timestamp,
-            dependencies: Vec::with_capacity(relations.len()),
+        let dep_info = DepInfo {
+            timestamp: mod_file.date,
+            dependencies: relations
+                .iter()
+                .map(|the_mod| the_mod.slug.clone())
+                .collect(),
         };
 
-        for relation in relations.iter() {
-            dep_info.dependencies.push(relation.slug.clone());
+        if manual {
+            self.manually_added.insert(the_mod.slug.to_string());
         }
 
-        self.remotes.insert(the_mod.slug.to_string(), dep_info);
-
-        // Now, add each dependency to the pool as well
         for relation in relations {
             let the_file = SEARCHER.try_lock().unwrap().get_specific_mod_file(
                 &relation,
                 &self.config,
                 None,
             )?;
-            self.add_to_remotes_checked(&relation, the_file)?;
+
+            self.add_to_remotes_checked(&relation, the_file, false)?;
         }
+
+        self.locks.insert(the_mod.slug.to_string(), dep_info);
 
         Ok(())
     }
@@ -323,8 +349,9 @@ impl Pool {
         }
     }
 
+    /// Returns whether the remote mod was already present
     pub fn remove_from_remotes(&mut self, name: &str) -> bool {
-        self.remotes.remove(name).is_some()
+        self.manually_added.remove(name) && self.locks.remove(name).is_some()
     }
 
     pub fn root_path(&self) -> &Path {
@@ -332,7 +359,11 @@ impl Pool {
     }
 
     pub fn remotes_path(&self) -> PathBuf {
-        self.root_path().join("Tmod.toml")
+        self.root_path().join("Tmod.json")
+    }
+
+    pub fn locks_path(&self) -> PathBuf {
+        self.root_path().join("Tmod.lock")
     }
 
     pub fn locals_path(&self) -> PathBuf {

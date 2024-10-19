@@ -92,14 +92,14 @@ impl Cli {
             Commands::List => {
                 let pool = self.new_pool()?;
 
-                let remotes = pool.remotes;
+                let remotes = pool.manually_added;
                 let locals = pool.locals;
 
                 if remotes.is_empty() && locals.is_empty() {
                     println!("Empty!");
                 } else if !remotes.is_empty() {
                     println!("Remotes:");
-                    for r in remotes.keys() {
+                    for r in remotes.iter() {
                         println!("\t- {}", r.italic().blue());
                     }
                 } else if !locals.is_empty() {
@@ -169,9 +169,9 @@ impl Cli {
                             )?;
 
                             if *force {
-                                pool.add_to_remotes_unchecked(&the_mod, file)?;
+                                pool.add_to_remotes_unchecked(&the_mod, file, true)?;
                             } else {
-                                pool.add_to_remotes_checked(&the_mod, file)?;
+                                pool.add_to_remotes_checked(&the_mod, file, true)?;
                             }
 
                             if !self.quiet {
@@ -346,7 +346,7 @@ impl Cli {
 
                 tree.begin_child(String::from("Remotes"));
 
-                for slug in pool.remotes.keys() {
+                for slug in pool.manually_added.iter() {
                     let the_mod = searcher
                         .search_mod_by_slug(slug)
                         .expect("If remote mod is in the pool, it exists");
