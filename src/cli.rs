@@ -169,9 +169,9 @@ impl Cli {
                             )?;
 
                             if *force {
-                                pool.add_to_remotes_unchecked(&the_mod, &file);
+                                pool.add_to_remotes_unchecked(&the_mod, file)?;
                             } else {
-                                pool.add_to_remotes_checked(&the_mod, &file)?;
+                                pool.add_to_remotes_checked(&the_mod, file)?;
                             }
 
                             if !self.quiet {

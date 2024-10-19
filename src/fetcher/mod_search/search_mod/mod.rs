@@ -117,6 +117,7 @@ pub struct ModFile {
     url: Url,
     #[serde(rename = "gameVersions")]
     pub versions: Vec<String>,
+    /// Only needed relations are kept
     #[serde(rename = "dependencies")]
     pub relations: Vec<ModRelation>,
 }

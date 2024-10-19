@@ -11,6 +11,7 @@ use std::{
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use jars::{jar, JarOptionBuilder};
+use serde::{Deserialize, Serialize};
 use zip::ZipWriter;
 
 use crate::{
@@ -26,9 +27,15 @@ use config::Config;
 pub struct Pool {
     pub path: PathBuf,
     pub config: Config,
-    /// Slug - File timestamp
-    pub remotes: HashMap<String, DateTime<Utc>>,
+    pub remotes: HashMap<String, DepInfo>,
     pub locals: Vec<JarMod>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct DepInfo {
+    /// Timestamp of the mod that we add, not the timestamp of dependency
+    timestamp: DateTime<Utc>,
+    dependencies: Vec<String>,
 }
 
 impl Pool {
@@ -238,7 +245,7 @@ impl Pool {
     pub fn add_to_remotes_checked(
         &mut self,
         the_mod: &SearchedMod,
-        mod_file: &ModFile,
+        mod_file: ModFile,
     ) -> anyhow::Result<()> {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
@@ -247,12 +254,54 @@ impl Pool {
             );
         }
 
-        self.add_to_remotes_unchecked(the_mod, mod_file);
-        Ok(())
+        self.add_to_remotes_unchecked(the_mod, mod_file)
     }
 
-    pub fn add_to_remotes_unchecked(&mut self, the_mod: &SearchedMod, mod_file: &ModFile) {
-        self.remotes.insert(the_mod.slug.to_string(), mod_file.date);
+    pub fn add_to_remotes_unchecked(
+        &mut self,
+        the_mod: &SearchedMod,
+        mod_file: ModFile,
+    ) -> anyhow::Result<()> {
+        let timestamp = mod_file.date;
+        let searcher = SEARCHER.try_lock().unwrap();
+        let relations = mod_file
+            .relations
+            .into_iter()
+            .map(|relation| {
+                searcher.search_mod_by_id(relation.id).with_context(|| {
+                    format!(
+                        "Searching a relation id={} while adding mod '{}'",
+                        relation.id, the_mod.slug
+                    )
+                })
+            })
+            .collect::<anyhow::Result<Vec<_>>>()
+            .with_context(|| format!("Searching relations of the mod '{}'", the_mod.slug))?;
+
+        drop(searcher);
+
+        let mut dep_info = DepInfo {
+            timestamp,
+            dependencies: Vec::with_capacity(relations.len()),
+        };
+
+        for relation in relations.iter() {
+            dep_info.dependencies.push(relation.slug.clone());
+        }
+
+        self.remotes.insert(the_mod.slug.to_string(), dep_info);
+
+        // Now, add each dependency to the pool as well
+        for relation in relations {
+            let the_file = SEARCHER.try_lock().unwrap().get_specific_mod_file(
+                &relation,
+                &self.config,
+                None,
+            )?;
+            self.add_to_remotes_checked(&relation, the_file)?;
+        }
+
+        Ok(())
     }
 
     pub fn add_to_locals(&mut self, jar: JarMod) {
