@@ -79,17 +79,17 @@ impl Pool {
             Config::from_toml(file.path()).context("Deserializing `config.toml`")?
         };
 
-        // Check if `remotes.toml` file exists
+        // Check if `Tmod.toml` file exists
         let remotes = {
-            let file = find_entry("remotes.toml")?;
+            let file = find_entry("Tmod.toml")?;
 
             anyhow::ensure!(
                 file.metadata()?.is_file(),
-                "`remotes.toml` is expected to be a file"
+                "`Tmod.toml` is expected to be a file"
             );
 
-            let content = fs::read_to_string(file.path()).context("Reading `remotes.toml`")?;
-            toml::from_str(&content).context("Deserializing `remotes.toml`")?
+            let content = fs::read_to_string(file.path()).context("Reading `Tmod.toml`")?;
+            toml::from_str(&content).context("Deserializing `Tmod.toml`")?
         };
 
         // Check if `locals` directory exists
@@ -283,7 +283,7 @@ impl Pool {
     }
 
     pub fn remotes_path(&self) -> PathBuf {
-        self.root_path().join("remotes.toml")
+        self.root_path().join("Tmod.toml")
     }
 
     pub fn locals_path(&self) -> PathBuf {
