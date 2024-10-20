@@ -1,4 +1,5 @@
 use std::{
+    io::Write,
     ops::{Deref, DerefMut},
     path::PathBuf,
 };
@@ -86,7 +87,7 @@ enum SearchTargets {
 }
 
 impl Cli {
-    pub fn run(&self) -> anyhow::Result<()> {
+    pub fn run(&self, writer: &mut impl Write) -> anyhow::Result<()> {
         match &self.command {
             Commands::Init => Pool::init(&self.pool_dir).map(|_| ()),
             Commands::List => {
@@ -96,15 +97,15 @@ impl Cli {
                 let locals = pool.locals;
 
                 if remotes.is_empty() && locals.is_empty() {
-                    println!("Empty!");
+                    writeln!(writer, "Empty!")?;
                 } else if !remotes.is_empty() {
-                    println!("Remotes:");
+                    writeln!(writer, "Remotes:")?;
                     for r in remotes.iter() {
-                        println!("\t- {}", r.italic().blue());
+                        writeln!(writer, "\t- {}", r.italic().blue())?;
                     }
                 } else if !locals.is_empty() {
                     for l in locals {
-                        println!("\t - {}", l.name().italic().blue());
+                        writeln!(writer, "\t - {}", l.name().italic().blue())?;
                     }
                 }
 
@@ -139,12 +140,12 @@ impl Cli {
                                         std::fs::rename(path, to).context("Moving jar")?;
 
                                         if !self.quiet {
-                                            println!("Moving {}", path.display());
+                                            writeln!(writer, "Moving {}", path.display())?;
                                         }
                                     } else if !self.quiet {
                                         std::fs::copy(path, to).context("Copying jar")?;
 
-                                        println!("Copying {}", path.display());
+                                        writeln!(writer, "Copying {}", path.display())?;
                                     }
 
                                     pool.add_to_locals(jar);
@@ -175,7 +176,11 @@ impl Cli {
                             }
 
                             if !self.quiet {
-                                print!("{}", the_mod.display_with_options(*display_options));
+                                write!(
+                                    writer,
+                                    "{}",
+                                    the_mod.display_with_options(*display_options)
+                                )?;
                             }
                         }
                         Err(e) => eprintln!("Couldn't add remote mod: {}", e),
@@ -189,7 +194,7 @@ impl Cli {
 
                 for name in names {
                     if !pool.remove_mod(name)? && !self.quiet {
-                        println!("No mod {} was removed", name.italic().blue());
+                        writeln!(writer, "No mod {} was removed", name.italic().blue())?;
                     }
                 }
 
@@ -216,8 +221,8 @@ impl Cli {
                         for path in paths {
                             let jar = JarMod::open(path)?;
 
-                            println!("Name: {}", jar.name().blue().italic());
-                            println!("Version: {}", jar.version());
+                            writeln!(writer, "Name: {}", jar.name().blue().italic())?;
+                            writeln!(writer, "Version: {}", jar.version())?;
                             println!(
                                 "Minecraft version required: {}",
                                 jar.minecraft_version().unwrap_or("Any")
@@ -230,22 +235,30 @@ impl Cli {
                             let dependencies = jar.dependencies();
 
                             if !dependencies.is_empty() {
-                                println!();
-                                println!("Dependencies:");
+                                writeln!(writer)?;
+                                writeln!(writer, "Dependencies:")?;
 
                                 for (name, version) in dependencies {
-                                    println!("\t- {name}({version})", name = name.green().italic());
+                                    writeln!(
+                                        writer,
+                                        "\t- {name}({version})",
+                                        name = name.green().italic()
+                                    )?;
                                 }
                             }
 
                             let incompatibilities = jar.incompatibilities();
 
                             if !incompatibilities.is_empty() {
-                                println!();
-                                println!("Incompatibilities:");
+                                writeln!(writer)?;
+                                writeln!(writer, "Incompatibilities:")?;
 
                                 for (name, version) in incompatibilities {
-                                    println!("\t- {name}({version})", name = name.red().bold());
+                                    writeln!(
+                                        writer,
+                                        "\t- {name}({version})",
+                                        name = name.red().bold()
+                                    )?;
                                 }
                             }
                         }
@@ -264,13 +277,13 @@ impl Cli {
                                 None => None,
                             };
 
-                            println!("{}", the_mod.display_with_options(*display_options));
+                            writeln!(writer, "{}", the_mod.display_with_options(*display_options))?;
 
                             if let Some(file) = file {
                                 let relations = file.relations;
 
                                 if !relations.is_empty() {
-                                    println!("Relations:");
+                                    writeln!(writer, "Relations:")?;
                                 }
 
                                 for relation in relations.iter() {
