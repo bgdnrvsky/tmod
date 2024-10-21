@@ -118,23 +118,25 @@ impl Pool {
 
         // Check if `locals` directory exists
         let locals = {
-            let dir = find_entry("locals")?;
+            if let Ok(dir) = find_entry("locals") {
+                anyhow::ensure!(
+                    dir.metadata()?.is_dir(),
+                    "`locals` is expected to be a directory"
+                );
 
-            anyhow::ensure!(
-                dir.metadata()?.is_dir(),
-                "`locals` is expected to be a directory"
-            );
-
-            fs::read_dir(dir.path())
-                .context("Reading `locals` directory")?
-                .map(|entry| {
-                    entry.context("Reading entry").and_then(|entry| {
-                        jar(entry.path(), JarOptionBuilder::default())
-                            .context("Reading jar file")
-                            .and_then(JarMod::try_from)
+                fs::read_dir(dir.path())
+                    .context("Reading `locals` directory")?
+                    .map(|entry| {
+                        entry.context("Reading entry").and_then(|entry| {
+                            jar(entry.path(), JarOptionBuilder::default())
+                                .context("Reading jar file")
+                                .and_then(JarMod::try_from)
+                        })
                     })
-                })
-                .collect::<Result<Vec<_>, _>>()?
+                    .collect::<Result<Vec<_>, _>>()?
+            } else {
+                Vec::with_capacity(0)
+            }
         };
 
         Ok(Self {
