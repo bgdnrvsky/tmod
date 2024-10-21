@@ -98,14 +98,20 @@ impl Cli {
 
                 if remotes.is_empty() && locals.is_empty() {
                     writeln!(writer, "Empty!")?;
-                } else if !remotes.is_empty() {
+                    return Ok(());
+                }
+
+                if !remotes.is_empty() {
                     writeln!(writer, "Remotes:")?;
                     for r in remotes.iter() {
                         writeln!(writer, "\t- {}", r.italic().blue())?;
                     }
-                } else if !locals.is_empty() {
+                }
+
+                if !locals.is_empty() {
+                    writeln!(writer, "Locals:")?;
                     for l in locals {
-                        writeln!(writer, "\t - {}", l.name().italic().blue())?;
+                        writeln!(writer, "\t- {}", l.name().italic().blue())?;
                     }
                 }
 
