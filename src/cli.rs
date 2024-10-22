@@ -1,4 +1,5 @@
 use std::{
+    fs::{DirBuilder, File},
     io::Write,
     ops::{Deref, DerefMut},
     path::PathBuf,
@@ -63,6 +64,11 @@ enum Commands {
         config: Option<Config>,
         #[clap(flatten)]
         display_options: ModOptions,
+    },
+    /// Download all the mods to the folder
+    Install {
+        #[arg(short, long, default_value = "mods", value_name = "PATH")]
+        out_dir: PathBuf,
     },
     Tree,
 }
@@ -383,6 +389,39 @@ impl Cli {
                 tree.end_child();
 
                 ptree::print_tree(&tree.build()).context("Error displaying the tree")
+            }
+            Commands::Install { out_dir } => {
+                let pool = self.new_pool()?;
+
+                // Create output directory
+                DirBuilder::new().create(out_dir).with_context(|| {
+                    format!("Creating output directory '{}'", out_dir.display())
+                })?;
+
+                let searcher = Self::get_searcher();
+
+                for (slug, dep_info) in pool.locks.iter() {
+                    let the_mod = searcher.search_mod_by_slug(slug)?;
+                    let file = searcher.get_specific_mod_file(
+                        &the_mod,
+                        &pool.config,
+                        Some(dep_info.timestamp),
+                    )?;
+
+                    // Download the file
+                    let response = searcher.download_file(&file)?;
+
+                    // Create the file
+                    let path = &out_dir.join(file.file_name);
+                    let mut file = File::create(path)
+                        .with_context(|| format!("Creating file '{}'", path.display()))?;
+
+                    std::io::copy(&mut response.into_reader(), &mut file).with_context(|| {
+                        format!("Writing content to the file '{}'", path.display())
+                    })?;
+                }
+
+                Ok(())
             }
         }
     }

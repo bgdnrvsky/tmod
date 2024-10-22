@@ -107,14 +107,14 @@ impl RelationType {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ModFile {
     #[serde(rename = "fileName")]
-    file_name: String,
+    pub file_name: String,
     #[serde(rename = "downloadCount")]
-    download_count: usize,
+    pub download_count: usize,
     #[serde(rename = "fileDate")]
     pub date: DateTime<Utc>,
     #[serde_as(as = "DisplayFromStr")]
     #[serde(rename = "downloadUrl")]
-    url: Url,
+    pub url: Url,
     #[serde(rename = "gameVersions")]
     pub versions: Vec<String>,
     /// Only needed relations are kept

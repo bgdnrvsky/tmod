@@ -294,6 +294,14 @@ impl Searcher {
 
         Ok(files)
     }
+
+    pub fn download_file(&self, mod_file: &ModFile) -> anyhow::Result<Response> {
+        let info = format!("Downloading the mod from {}", mod_file.url);
+        FetchParameters::new(mod_file.url.clone(), self.silent)
+            .with_info(info.clone())
+            .fetch()
+            .with_context(|| info)
+    }
 }
 
 #[derive(Debug, Clone)]

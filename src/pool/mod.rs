@@ -34,10 +34,10 @@ pub struct Pool {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DepInfo {
-    timestamp: DateTime<Utc>,
+    pub timestamp: DateTime<Utc>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
-    dependencies: Vec<String>,
+    pub dependencies: Vec<String>,
 }
 
 impl Pool {
