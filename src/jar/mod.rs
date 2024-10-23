@@ -50,6 +50,7 @@ impl JarMod {
         self.r#type.loader_version()
     }
 
+    // TODO: Introduce dependencies substitutions and deletion for cli
     pub fn dependencies(&self) -> HashMap<&str, &str> {
         self.r#type.dependencies()
     }

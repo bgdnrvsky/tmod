@@ -334,6 +334,8 @@ impl Pool {
 
     pub fn add_to_locals(&mut self, jar: JarMod) {
         self.locals.push(jar);
+
+        // TODO: Add all dependencies of the jar
     }
 
     pub fn remove_mod(&mut self, name: &str) -> anyhow::Result<bool> {
