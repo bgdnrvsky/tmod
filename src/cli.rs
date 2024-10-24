@@ -76,20 +76,11 @@ enum Commands {
 #[derive(Debug, Subcommand)]
 enum ModTargets {
     /// Using CurseForge mod id
-    Id {
-        #[arg(required = true)]
-        mod_ids: Vec<usize>,
-    },
+    Id { mod_id: usize },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
-    Slug {
-        #[arg(required = true)]
-        mod_slugs: Vec<String>,
-    },
+    Slug { mod_slug: String },
     /// Using your local Jar file
-    Jar {
-        #[arg(required = true)]
-        paths: Vec<PathBuf>,
-    },
+    Jar { path: PathBuf },
 }
 
 impl Cli {
@@ -103,8 +94,7 @@ impl Cli {
                 let locals = pool.locals;
 
                 if remotes.is_empty() && locals.is_empty() {
-                    writeln!(writer, "Empty!")?;
-                    return Ok(());
+                    return writeln!(writer, "Empty!").context("IO");
                 }
 
                 if !remotes.is_empty() {
@@ -132,71 +122,49 @@ impl Cli {
                 let searcher = Self::get_searcher();
                 let mut pool = self.new_pool()?;
 
-                let mods: Vec<anyhow::Result<_>> = match add_target {
-                    ModTargets::Id { mod_ids } => mod_ids
-                        .iter()
-                        .map(|&id| searcher.search_mod_by_id(id))
-                        .collect(),
-                    ModTargets::Slug { mod_slugs } => mod_slugs
-                        .iter()
-                        .map(|slug| searcher.search_mod_by_slug(slug))
-                        .collect(),
-                    ModTargets::Jar { paths } => {
-                        for path in paths {
-                            match JarMod::open(path) {
-                                Ok(jar) => {
-                                    let to =
-                                        pool.locals_path().join(jar.name()).with_extension("jar");
+                let remote_mod = match add_target {
+                    ModTargets::Jar { path } => {
+                        let jar = JarMod::open(path)
+                            .with_context(|| format!("Opening jar '{}'", path.display()))?;
 
-                                    if *r#move {
-                                        std::fs::rename(path, to).context("Moving jar")?;
+                        let to = pool.locals_path().join(jar.name()).with_extension("jar");
 
-                                        if !self.quiet {
-                                            writeln!(writer, "Moving {}", path.display())?;
-                                        }
-                                    } else if !self.quiet {
-                                        std::fs::copy(path, to).context("Copying jar")?;
+                        if *r#move {
+                            std::fs::rename(path, to).context("Moving jar")?;
 
-                                        writeln!(writer, "Copying {}", path.display())?;
-                                    }
-
-                                    pool.add_to_locals(jar);
-                                }
-                                Err(e) => eprintln!("Error adding local mod: {e}"),
+                            if !self.quiet {
+                                writeln!(writer, "Moving {}", path.display())?;
                             }
+                        } else if !self.quiet {
+                            std::fs::copy(path, to).context("Copying jar")?;
+
+                            writeln!(writer, "Copying {}", path.display())?;
                         }
 
-                        return Ok(());
+                        pool.add_to_locals(jar);
+                        return pool.save().context("Saving the pool");
                     }
+                    ModTargets::Id { mod_id } => searcher.search_mod_by_id(*mod_id)?,
+                    ModTargets::Slug { mod_slug } => searcher.search_mod_by_slug(mod_slug)?,
                 };
 
                 drop(searcher);
 
-                for the_mod in mods {
-                    match the_mod {
-                        Ok(the_mod) => {
-                            let file = Self::get_searcher().get_specific_mod_file(
-                                &the_mod,
-                                &pool.config,
-                                None,
-                            )?;
+                let file =
+                    Self::get_searcher().get_specific_mod_file(&remote_mod, &pool.config, None)?;
 
-                            if *force {
-                                pool.add_to_remotes_unchecked(&the_mod, file, true)?;
-                            } else {
-                                pool.add_to_remotes_checked(&the_mod, file, true)?;
-                            }
+                if *force {
+                    pool.add_to_remotes_unchecked(&remote_mod, file, true)?;
+                } else {
+                    pool.add_to_remotes_checked(&remote_mod, file, true)?;
+                }
 
-                            if !self.quiet {
-                                write!(
-                                    writer,
-                                    "{}",
-                                    the_mod.display_with_options(*display_options)
-                                )?;
-                            }
-                        }
-                        Err(e) => eprintln!("Couldn't add remote mod: {}", e),
-                    }
+                if !self.quiet {
+                    write!(
+                        writer,
+                        "{}",
+                        remote_mod.display_with_options(*display_options)
+                    )?;
                 }
 
                 pool.save().context("Saving the pool")
@@ -220,94 +188,86 @@ impl Cli {
             } => {
                 let searcher = Self::get_searcher();
 
-                let mods: Vec<anyhow::Result<_>> = match target {
-                    ModTargets::Id { mod_ids } => mod_ids
-                        .iter()
-                        .map(|&id| searcher.search_mod_by_id(id))
-                        .collect(),
-                    ModTargets::Slug { mod_slugs } => mod_slugs
-                        .iter()
-                        .map(|slug| searcher.search_mod_by_slug(slug))
-                        .collect(),
-                    ModTargets::Jar { paths } => {
-                        for path in paths {
-                            let jar = JarMod::open(path)?;
+                let remote_mod = match target {
+                    ModTargets::Id { mod_id } => searcher.search_mod_by_id(*mod_id),
+                    ModTargets::Slug { mod_slug } => searcher.search_mod_by_slug(mod_slug),
+                    ModTargets::Jar { path } => {
+                        let jar = JarMod::open(path)?;
 
-                            writeln!(writer, "Name: {}", jar.name().blue().italic())?;
-                            writeln!(writer, "Version: {}", jar.version())?;
-                            println!(
-                                "Minecraft version required: {}",
-                                jar.minecraft_version().unwrap_or("Any")
-                            );
-                            println!(
-                                "Loader version required: {}",
-                                jar.loader_version().unwrap_or("Any")
-                            );
+                        writeln!(writer, "Name: {}", jar.name().blue().italic())?;
+                        writeln!(writer, "Version: {}", jar.version())?;
+                        writeln!(
+                            writer,
+                            "Minecraft version required: {}",
+                            jar.minecraft_version().unwrap_or("Any")
+                        )?;
+                        writeln!(
+                            writer,
+                            "Loader version required: {}",
+                            jar.loader_version().unwrap_or("Any")
+                        )?;
 
-                            let dependencies = jar.dependencies();
+                        let dependencies = jar.dependencies();
 
-                            if !dependencies.is_empty() {
-                                writeln!(writer)?;
-                                writeln!(writer, "Dependencies:")?;
+                        if !dependencies.is_empty() {
+                            writeln!(writer)?;
+                            writeln!(writer, "Dependencies:")?;
 
-                                for (name, version) in dependencies {
-                                    writeln!(
-                                        writer,
-                                        "\t- {name}({version})",
-                                        name = name.green().italic()
-                                    )?;
-                                }
+                            for (name, version) in dependencies {
+                                writeln!(
+                                    writer,
+                                    "\t- {name}({version})",
+                                    name = name.green().italic()
+                                )?;
                             }
+                        }
 
-                            let incompatibilities = jar.incompatibilities();
+                        let incompatibilities = jar.incompatibilities();
 
-                            if !incompatibilities.is_empty() {
-                                writeln!(writer)?;
-                                writeln!(writer, "Incompatibilities:")?;
+                        if !incompatibilities.is_empty() {
+                            writeln!(writer)?;
+                            writeln!(writer, "Incompatibilities:")?;
 
-                                for (name, version) in incompatibilities {
-                                    writeln!(
-                                        writer,
-                                        "\t- {name}({version})",
-                                        name = name.red().bold()
-                                    )?;
-                                }
+                            for (name, version) in incompatibilities {
+                                writeln!(
+                                    writer,
+                                    "\t- {name}({version})",
+                                    name = name.red().bold()
+                                )?;
                             }
                         }
 
                         return Ok(());
                     }
+                }?;
+
+                let file = match config {
+                    Some(config) => {
+                        Some(searcher.get_specific_mod_file(&remote_mod, config, *timestamp)?)
+                    }
+                    None => None,
                 };
 
-                for the_mod in mods {
-                    match the_mod {
-                        Ok(the_mod) => {
-                            let file = match config {
-                                Some(config) => Some(
-                                    searcher.get_specific_mod_file(&the_mod, config, *timestamp)?,
-                                ),
-                                None => None,
-                            };
+                writeln!(
+                    writer,
+                    "{}",
+                    remote_mod.display_with_options(*display_options)
+                )?;
 
-                            writeln!(writer, "{}", the_mod.display_with_options(*display_options))?;
+                if let Some(file) = file {
+                    let relations = file.relations;
 
-                            if let Some(file) = file {
-                                let relations = file.relations;
+                    if !relations.is_empty() {
+                        writeln!(writer, "Relations:")?;
+                    }
 
-                                if !relations.is_empty() {
-                                    writeln!(writer, "Relations:")?;
-                                }
-
-                                for relation in relations.iter() {
-                                    println!(
-                                        "\t - {id} ({rel_type:?})",
-                                        id = relation.id,
-                                        rel_type = relation.relation
-                                    );
-                                }
-                            }
-                        }
-                        Err(e) => eprintln!("Couldn't get info for the mod: {e}"),
+                    for relation in relations.iter() {
+                        writeln!(
+                            writer,
+                            "\t - {id} ({rel_type:?})",
+                            id = relation.id,
+                            rel_type = relation.relation
+                        )?;
                     }
                 }
 
