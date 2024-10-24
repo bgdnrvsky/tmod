@@ -43,7 +43,7 @@ enum Commands {
         #[clap(flatten)]
         display_options: ModOptions,
         #[command(subcommand)]
-        add_target: SearchTargets,
+        add_target: ModTargets,
         /// When adding a Jar, move the file instead of copying
         #[arg(short, long, default_value_t = false)]
         r#move: bool,
@@ -56,7 +56,7 @@ enum Commands {
     /// Search a remote mod and print its info
     Info {
         #[command(subcommand)]
-        target: SearchTargets,
+        target: ModTargets,
         /// If not specified, fetches the latest available version of the mod
         #[arg(short, long)]
         timestamp: Option<chrono::DateTime<chrono::Utc>>,
@@ -74,7 +74,7 @@ enum Commands {
 }
 
 #[derive(Debug, Subcommand)]
-enum SearchTargets {
+enum ModTargets {
     /// Using CurseForge mod id
     Id {
         #[arg(required = true)]
@@ -133,15 +133,15 @@ impl Cli {
                 let mut pool = self.new_pool()?;
 
                 let mods: Vec<anyhow::Result<_>> = match add_target {
-                    SearchTargets::Id { mod_ids } => mod_ids
+                    ModTargets::Id { mod_ids } => mod_ids
                         .iter()
                         .map(|&id| searcher.search_mod_by_id(id))
                         .collect(),
-                    SearchTargets::Slug { mod_slugs } => mod_slugs
+                    ModTargets::Slug { mod_slugs } => mod_slugs
                         .iter()
                         .map(|slug| searcher.search_mod_by_slug(slug))
                         .collect(),
-                    SearchTargets::Jar { paths } => {
+                    ModTargets::Jar { paths } => {
                         for path in paths {
                             match JarMod::open(path) {
                                 Ok(jar) => {
@@ -221,15 +221,15 @@ impl Cli {
                 let searcher = Self::get_searcher();
 
                 let mods: Vec<anyhow::Result<_>> = match target {
-                    SearchTargets::Id { mod_ids } => mod_ids
+                    ModTargets::Id { mod_ids } => mod_ids
                         .iter()
                         .map(|&id| searcher.search_mod_by_id(id))
                         .collect(),
-                    SearchTargets::Slug { mod_slugs } => mod_slugs
+                    ModTargets::Slug { mod_slugs } => mod_slugs
                         .iter()
                         .map(|slug| searcher.search_mod_by_slug(slug))
                         .collect(),
-                    SearchTargets::Jar { paths } => {
+                    ModTargets::Jar { paths } => {
                         for path in paths {
                             let jar = JarMod::open(path)?;
 
