@@ -37,9 +37,6 @@ enum Commands {
     List,
     /// Add minecraft mod to the `pool`
     Add {
-        /// Force add the mod
-        #[arg(short, long, default_value_t = false)]
-        force: bool,
         #[clap(flatten)]
         display_options: ModOptions,
         #[command(subcommand)]
@@ -114,7 +111,6 @@ impl Cli {
                 Ok(())
             }
             Commands::Add {
-                force,
                 display_options,
                 add_target,
                 r#move,
@@ -153,11 +149,7 @@ impl Cli {
                 let file =
                     Self::get_searcher().get_specific_mod_file(&remote_mod, &pool.config, None)?;
 
-                if *force {
-                    pool.add_to_remotes_unchecked(&remote_mod, file, true)?;
-                } else {
-                    pool.add_to_remotes_checked(&remote_mod, file, true)?;
-                }
+                pool.add_to_remotes(&remote_mod, file, true)?;
 
                 if !self.quiet {
                     write!(

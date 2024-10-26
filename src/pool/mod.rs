@@ -266,7 +266,7 @@ impl Pool {
         Ok(true)
     }
 
-    pub fn add_to_remotes_checked(
+    pub fn add_to_remotes(
         &mut self,
         the_mod: &SearchedMod,
         mod_file: ModFile,
@@ -279,15 +279,6 @@ impl Pool {
             );
         }
 
-        self.add_to_remotes_unchecked(the_mod, mod_file, manual)
-    }
-
-    pub fn add_to_remotes_unchecked(
-        &mut self,
-        the_mod: &SearchedMod,
-        mod_file: ModFile,
-        manual: bool,
-    ) -> anyhow::Result<()> {
         let searcher = SEARCHER.try_lock().unwrap();
         let relations = mod_file
             .relations
@@ -324,7 +315,7 @@ impl Pool {
                 None,
             )?;
 
-            self.add_to_remotes_checked(&relation, the_file, false)?;
+            self.add_to_remotes(&relation, the_file, false)?;
         }
 
         self.locks.insert(the_mod.slug.to_string(), dep_info);
