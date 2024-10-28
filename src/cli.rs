@@ -115,7 +115,6 @@ impl Cli {
                 add_target,
                 r#move,
             } => {
-                let searcher = Self::get_searcher();
                 let mut pool = self.new_pool()?;
 
                 let remote_mod = match add_target {
@@ -137,14 +136,14 @@ impl Cli {
                             writeln!(writer, "Copying {}", path.display())?;
                         }
 
-                        pool.add_to_locals(jar);
+                        pool.add_to_locals(jar).context("Adding jar to the pool")?;
                         return pool.save().context("Saving the pool");
                     }
-                    ModTargets::Id { mod_id } => searcher.search_mod_by_id(*mod_id)?,
-                    ModTargets::Slug { mod_slug } => searcher.search_mod_by_slug(mod_slug)?,
+                    ModTargets::Id { mod_id } => Self::get_searcher().search_mod_by_id(*mod_id)?,
+                    ModTargets::Slug { mod_slug } => {
+                        Self::get_searcher().search_mod_by_slug(mod_slug)?
+                    }
                 };
-
-                drop(searcher);
 
                 pool.add_to_remotes(&remote_mod, true)?;
 

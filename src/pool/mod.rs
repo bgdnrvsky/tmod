@@ -310,10 +310,17 @@ impl Pool {
         Ok(())
     }
 
-    pub fn add_to_locals(&mut self, jar: JarMod) {
+    pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
+        let searcher = SEARCHER.try_lock().unwrap();
+
+        for slug in jar.dependencies().keys() {
+            let the_mod = searcher.search_mod_by_slug(slug)?;
+            self.add_to_remotes(&the_mod, true)?;
+        }
+
         self.locals.push(jar);
 
-        // TODO: Add all dependencies of the jar
+        Ok(())
     }
 
     pub fn remove_mod(&mut self, name: &str) -> anyhow::Result<bool> {
