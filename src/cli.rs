@@ -146,10 +146,7 @@ impl Cli {
 
                 drop(searcher);
 
-                let file =
-                    Self::get_searcher().get_specific_mod_file(&remote_mod, &pool.config, None)?;
-
-                pool.add_to_remotes(&remote_mod, file, true)?;
+                pool.add_to_remotes(&remote_mod, true)?;
 
                 if !self.quiet {
                     write!(

@@ -15,10 +15,7 @@ use serde::{Deserialize, Serialize};
 use zip::ZipWriter;
 
 use crate::{
-    fetcher::{
-        mod_search::search_mod::{ModFile, SearchedMod},
-        SEARCHER,
-    },
+    fetcher::{mod_search::search_mod::SearchedMod, SEARCHER},
     jar::JarMod,
 };
 
@@ -266,12 +263,7 @@ impl Pool {
         Ok(true)
     }
 
-    pub fn add_to_remotes(
-        &mut self,
-        the_mod: &SearchedMod,
-        mod_file: ModFile,
-        manual: bool,
-    ) -> anyhow::Result<()> {
+    pub fn add_to_remotes(&mut self, the_mod: &SearchedMod, manual: bool) -> anyhow::Result<()> {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
@@ -280,7 +272,8 @@ impl Pool {
         }
 
         let searcher = SEARCHER.try_lock().unwrap();
-        let relations = mod_file
+        let file = searcher.get_specific_mod_file(the_mod, &self.config, None)?;
+        let relations = file
             .relations
             .into_iter()
             .map(|relation| {
@@ -297,7 +290,7 @@ impl Pool {
         drop(searcher);
 
         let dep_info = DepInfo {
-            timestamp: mod_file.date,
+            timestamp: file.date,
             dependencies: relations
                 .iter()
                 .map(|the_mod| the_mod.slug.clone())
@@ -309,13 +302,7 @@ impl Pool {
         }
 
         for relation in relations {
-            let the_file = SEARCHER.try_lock().unwrap().get_specific_mod_file(
-                &relation,
-                &self.config,
-                None,
-            )?;
-
-            self.add_to_remotes(&relation, the_file, false)?;
+            self.add_to_remotes(&relation, false)?;
         }
 
         self.locks.insert(the_mod.slug.to_string(), dep_info);
