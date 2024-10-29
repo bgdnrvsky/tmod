@@ -348,7 +348,13 @@ impl Cli {
 
                 let searcher = Self::get_searcher();
 
-                for (slug, dep_info) in pool.locks.iter() {
+                fn install_mod(
+                    out_dir: &std::path::Path,
+                    searcher: &Searcher,
+                    pool: &Pool,
+                    slug: impl AsRef<str>,
+                ) -> anyhow::Result<()> {
+                    let dep_info = pool.locks.get(slug.as_ref()).context("Invalid lock file")?;
                     let the_mod = searcher.search_mod_by_slug(slug)?;
                     let file = searcher.get_specific_mod_file(
                         &the_mod,
@@ -367,6 +373,16 @@ impl Cli {
                     std::io::copy(&mut response.into_reader(), &mut file).with_context(|| {
                         format!("Writing content to the file '{}'", path.display())
                     })?;
+
+                    for slug in dep_info.dependencies.iter() {
+                        install_mod(out_dir, searcher, pool, slug)?;
+                    }
+
+                    Ok(())
+                }
+
+                for slug in pool.manually_added.iter() {
+                    install_mod(out_dir, &searcher, &pool, slug)?;
                 }
 
                 Ok(())
