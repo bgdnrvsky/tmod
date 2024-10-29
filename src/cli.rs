@@ -385,6 +385,18 @@ impl Cli {
                     install_mod(out_dir, &searcher, &pool, slug)?;
                 }
 
+                // Install local mods
+                let locals = std::fs::read_dir(pool.locals_path())?;
+
+                for entry in locals {
+                    let entry = entry?;
+
+                    std::fs::copy(
+                        entry.path(),
+                        out_dir.join(entry.file_name()).with_extension("jar"),
+                    )?;
+                }
+
                 Ok(())
             }
         }
