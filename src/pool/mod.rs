@@ -311,10 +311,8 @@ impl Pool {
     }
 
     pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
-        let searcher = SEARCHER.try_lock().unwrap();
-
         for slug in jar.dependencies().keys() {
-            let the_mod = searcher.search_mod_by_slug(slug)?;
+            let the_mod = SEARCHER.try_lock().unwrap().search_mod_by_slug(slug)?;
             self.add_to_remotes(&the_mod, true)?;
         }
 
