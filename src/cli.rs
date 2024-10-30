@@ -229,21 +229,16 @@ impl Cli {
                     }
                 }?;
 
-                let file = match config {
-                    Some(config) => {
-                        Some(searcher.get_specific_mod_file(&remote_mod, config, *timestamp)?)
-                    }
-                    None => None,
-                };
-
                 writeln!(
                     writer,
                     "{}",
                     remote_mod.display_with_options(*display_options)
                 )?;
 
-                if let Some(file) = file {
-                    let relations = file.relations;
+                if let Some(config) = config {
+                    let relations = searcher
+                        .get_specific_mod_file(&remote_mod, config, *timestamp)?
+                        .relations;
 
                     if !relations.is_empty() {
                         writeln!(writer, "Relations:")?;
