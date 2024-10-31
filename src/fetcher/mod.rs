@@ -372,7 +372,7 @@ mod tests {
 
     #[test]
     fn mod_by_id() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
 
         let alexs_mobs = searcher.search_mod_by_id(426558)?;
         assert_eq!(alexs_mobs.slug, "alexs-mobs");
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn minecraft_id() -> anyhow::Result<()> {
-        Searcher::new(true).minecraft_id()?;
+        Searcher::new().minecraft_id()?;
 
         Ok(())
     }
@@ -393,7 +393,7 @@ mod tests {
     #[test]
     #[ignore = "might be very long (~15 secs)"]
     fn minecraft_versions() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
         let versions = searcher.minecraft_versions()?;
         assert!(!versions.is_empty());
 
@@ -402,7 +402,7 @@ mod tests {
 
     #[test]
     fn fabric_versions() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
         let versions = searcher.fabric_versions()?;
         assert!(!versions.is_empty());
 
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn curseforge_categories() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
         let categories = searcher.curseforge_categories()?;
 
         assert!(!categories.is_empty());
@@ -422,7 +422,7 @@ mod tests {
 
     #[test]
     fn mod_by_slug() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
 
         let alexs_mobs = searcher.search_mod_by_slug("alexs-mobs")?;
         assert_eq!(alexs_mobs.id, 426558);
@@ -437,7 +437,7 @@ mod tests {
 
     #[test]
     fn mod_files() -> anyhow::Result<()> {
-        let searcher = Searcher::new(true);
+        let searcher = Searcher::new();
         let config = Config::new(Loaders::Forge, String::from("1.20.1"));
         let alexs_mobs = searcher.search_mod_by_id(426558)?;
 
