@@ -145,7 +145,7 @@ impl Pool {
         })
     }
 
-    fn create_dir(&self) -> anyhow::Result<()> {
+    fn create_pool_dir(&self) -> anyhow::Result<()> {
         fs::DirBuilder::new()
             .recursive(true)
             .create(&self.path)
@@ -208,7 +208,7 @@ impl Pool {
     }
 
     pub fn save(&self) -> anyhow::Result<()> {
-        self.create_dir()
+        self.create_pool_dir()
             .and_then(|_| Self::write_config(self))
             .and_then(|_| Self::write_remotes(self))
             .and_then(|_| Self::write_locals(self))
