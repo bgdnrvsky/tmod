@@ -216,10 +216,7 @@ impl Pool {
     }
 
     pub fn is_compatible(&self, the_mod: &SearchedMod) -> anyhow::Result<bool> {
-        let file = SEARCHER
-            .try_lock()
-            .unwrap()
-            .get_specific_mod_file(the_mod, &self.config, None);
+        let file = SEARCHER.get_specific_mod_file(the_mod, &self.config, None);
 
         if file.is_err() {
             return Ok(false);
@@ -234,8 +231,6 @@ impl Pool {
         {
             // Get all incompatibilities for the file, and check if it is present in the pool
             let inc = SEARCHER
-                .try_lock()
-                .unwrap()
                 .search_mod_by_id(inc_id)
                 .with_context(|| format!("Couldn't find the incompatibility id ({inc_id})"))?;
 
@@ -271,13 +266,12 @@ impl Pool {
             );
         }
 
-        let searcher = SEARCHER.try_lock().unwrap();
-        let file = searcher.get_specific_mod_file(the_mod, &self.config, None)?;
+        let file = SEARCHER.get_specific_mod_file(the_mod, &self.config, None)?;
         let relations = file
             .relations
             .into_iter()
             .map(|relation| {
-                searcher.search_mod_by_id(relation.id).with_context(|| {
+                SEARCHER.search_mod_by_id(relation.id).with_context(|| {
                     format!(
                         "Searching a relation id={} while adding mod '{}'",
                         relation.id, the_mod.slug
@@ -286,8 +280,6 @@ impl Pool {
             })
             .collect::<anyhow::Result<Vec<_>>>()
             .with_context(|| format!("Searching relations of the mod '{}'", the_mod.slug))?;
-
-        drop(searcher);
 
         let dep_info = DepInfo {
             timestamp: file.date,
@@ -312,7 +304,7 @@ impl Pool {
 
     pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
         for slug in jar.dependencies().keys() {
-            let the_mod = SEARCHER.try_lock().unwrap().search_mod_by_slug(slug)?;
+            let the_mod = SEARCHER.search_mod_by_slug(slug)?;
             self.add_to_remotes(&the_mod, true)?;
         }
 

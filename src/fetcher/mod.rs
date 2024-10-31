@@ -1,9 +1,9 @@
 #![allow(clippy::borrow_interior_mutable_const)]
 pub mod mod_search;
 
-use std::cell::{LazyCell, OnceCell};
+use std::cell::LazyCell;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::OnceLock;
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
@@ -23,30 +23,34 @@ pub const TOKEN: &str = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJ
 #[allow(clippy::declare_interior_mutable_const)]
 const API_URL: LazyCell<Url> =
     LazyCell::new(|| Url::parse("https://api.curseforge.com/v1").unwrap());
-pub static SEARCHER: Mutex<Searcher> = Mutex::new(Searcher::new(false));
+pub static SEARCHER: Searcher = Searcher::new();
 
 #[derive(Debug, Default)]
 pub struct Searcher {
-    pub silent: bool,
-    minecraft_id: OnceCell<usize>,
-    minecraft_versions: OnceCell<Vec<String>>,
-    fabric_versions: OnceCell<Vec<String>>,
-    curseforge_categories: OnceCell<HashMap<String, usize>>,
+    silent: OnceLock<bool>,
+    minecraft_id: OnceLock<usize>,
+    minecraft_versions: OnceLock<Vec<String>>,
+    fabric_versions: OnceLock<Vec<String>>,
+    curseforge_categories: OnceLock<HashMap<String, usize>>,
 }
 
 impl Searcher {
-    pub const fn new(silent: bool) -> Self {
+    pub const fn new() -> Self {
         Self {
-            silent,
-            minecraft_id: OnceCell::new(),
-            minecraft_versions: OnceCell::new(),
-            fabric_versions: OnceCell::new(),
-            curseforge_categories: OnceCell::new(),
+            silent: OnceLock::new(),
+            minecraft_id: OnceLock::new(),
+            minecraft_versions: OnceLock::new(),
+            fabric_versions: OnceLock::new(),
+            curseforge_categories: OnceLock::new(),
         }
     }
 
-    pub fn set_silent(&mut self, silent: bool) {
-        self.silent = silent
+    pub fn is_silent(&self) -> bool {
+        *self.silent.get_or_init(Default::default)
+    }
+
+    pub fn set_silent(&self, silent: bool) {
+        let _ = self.silent.set(silent);
     }
 
     pub fn minecraft_id(&self) -> anyhow::Result<usize> {
@@ -54,7 +58,7 @@ impl Searcher {
             let mut url = API_URL.clone();
             url.path_segments_mut().unwrap().push("games");
 
-            let response = FetchParameters::new(url, self.silent)
+            let response = FetchParameters::new(url, self.is_silent())
                 .with_info("Getting Minecraft id")
                 .fetch()
                 .context("Fetching Minecraft id")?;
@@ -91,7 +95,7 @@ impl Searcher {
     pub fn minecraft_versions(&self) -> anyhow::Result<&[String]> {
         if self.minecraft_versions.get().is_none() {
             let url = Url::parse("https://mc-versions-api.net/api/java").unwrap();
-            let response = FetchParameters::new(url, self.silent)
+            let response = FetchParameters::new(url, self.is_silent())
                 .with_info("Getting Minecraft versions")
                 .fetch()
                 .context("Fetching Minecraft versions")?;
@@ -117,7 +121,7 @@ impl Searcher {
     pub fn fabric_versions(&self) -> anyhow::Result<&[String]> {
         if self.fabric_versions.get().is_none() {
             let url = Url::parse("https://meta.fabricmc.net/v2/versions/loader").unwrap();
-            let response = FetchParameters::new(url, self.silent)
+            let response = FetchParameters::new(url, self.is_silent())
                 .with_info("Getting Fabric versions")
                 .fetch()
                 .context("Fetching Fabric versions")?;
@@ -148,7 +152,7 @@ impl Searcher {
                 .append_pair("gameId", &self.minecraft_id()?.to_string())
                 .append_pair("classesOnly", "true");
 
-            let response = FetchParameters::new(url, self.silent)
+            let response = FetchParameters::new(url, self.is_silent())
                 .with_info("Getting game categories")
                 .fetch()
                 .context("Fetching game categories")?;
@@ -185,7 +189,7 @@ impl Searcher {
             .push("mods")
             .push(id.to_string().as_str());
 
-        let response = FetchParameters::new(url, self.silent)
+        let response = FetchParameters::new(url, self.is_silent())
             .with_info(format!("Getting Minecraft mod by id ({id})"))
             .fetch()
             .with_context(|| format!("Fetching mod {id}"))?;
@@ -214,7 +218,7 @@ impl Searcher {
             .append_pair("classId", mods_category.to_string().as_str())
             .append_pair("slug", slug.as_ref());
 
-        let response = FetchParameters::new(url, self.silent)
+        let response = FetchParameters::new(url, self.is_silent())
             .with_info(format!("Searching for the mod '{}'", slug.as_ref()))
             .fetch()
             .with_context(|| format!("Fetching the mod '{}'", slug.as_ref()))?;
@@ -273,7 +277,7 @@ impl Searcher {
             .append_pair("gameVersion", config.game_version.to_string().as_str())
             .append_pair("modLoaderType", (config.loader as u8).to_string().as_str());
 
-        let mut files = FetchParameters::new(url, self.silent)
+        let mut files = FetchParameters::new(url, self.is_silent())
             .with_info(format!("Getting mod files for '{}'", the_mod.slug).as_str())
             .fetch()
             .with_context(|| format!("Fetching mod files for '{}'", the_mod.slug))?
@@ -297,7 +301,7 @@ impl Searcher {
 
     pub fn download_file(&self, mod_file: &ModFile) -> anyhow::Result<Response> {
         let info = format!("Downloading the mod from {}", mod_file.url);
-        FetchParameters::new(mod_file.url.clone(), self.silent)
+        FetchParameters::new(mod_file.url.clone(), self.is_silent())
             .with_info(info.clone())
             .fetch()
             .with_context(|| info)

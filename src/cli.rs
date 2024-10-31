@@ -1,7 +1,6 @@
 use std::{
     fs::{DirBuilder, File},
     io::Write,
-    ops::{Deref, DerefMut},
     path::PathBuf,
 };
 
@@ -133,10 +132,8 @@ impl Cli {
                         pool.add_to_locals(jar).context("Adding jar to the pool")?;
                         return pool.save().context("Saving the pool");
                     }
-                    ModTargets::Id { mod_id } => Self::get_searcher().search_mod_by_id(*mod_id)?,
-                    ModTargets::Slug { mod_slug } => {
-                        Self::get_searcher().search_mod_by_slug(mod_slug)?
-                    }
+                    ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id)?,
+                    ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug)?,
                 };
 
                 pool.add_to_remotes(&remote_mod, true)?;
@@ -168,11 +165,9 @@ impl Cli {
                 timestamp,
                 config,
             } => {
-                let searcher = Self::get_searcher();
-
                 let remote_mod = match target {
-                    ModTargets::Id { mod_id } => searcher.search_mod_by_id(*mod_id),
-                    ModTargets::Slug { mod_slug } => searcher.search_mod_by_slug(mod_slug),
+                    ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id),
+                    ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug),
                     ModTargets::Jar { path } => {
                         let jar = JarMod::open(path)?;
 
@@ -230,7 +225,7 @@ impl Cli {
                 )?;
 
                 if let Some(config) = config {
-                    let relations = searcher
+                    let relations = SEARCHER
                         .get_specific_mod_file(&remote_mod, config, *timestamp)?
                         .relations;
 
@@ -251,33 +246,26 @@ impl Cli {
                 Ok(())
             }
             Commands::Tree => {
-                let mut searcher = Self::get_searcher_mut();
-                searcher.set_silent(true); // Make it silent
+                SEARCHER.set_silent(true); // Make it silent
 
                 let pool = self.new_pool()?;
 
                 let mut tree = TreeBuilder::new(String::from("Tmod"));
 
                 fn add_remote_to_tree(
-                    searcher: &Searcher,
                     tree: &mut TreeBuilder,
                     the_mod: &SearchedMod,
                     config: &Config,
                 ) -> anyhow::Result<()> {
                     tree.begin_child(the_mod.slug.to_string());
 
-                    let files = searcher.get_mod_files(the_mod, config)?;
+                    let files = SEARCHER.get_mod_files(the_mod, config)?;
                     let file = files.iter().max_by_key(|file| file.date).with_context(|| {
                         format!("No files fetched for the mod '{}'", the_mod.slug)
                     })?;
 
                     for dep in file.relations.iter() {
-                        add_remote_to_tree(
-                            searcher,
-                            tree,
-                            &searcher.search_mod_by_id(dep.id)?,
-                            config,
-                        )?;
+                        add_remote_to_tree(tree, &SEARCHER.search_mod_by_id(dep.id)?, config)?;
                     }
 
                     tree.end_child();
@@ -286,7 +274,6 @@ impl Cli {
                 }
 
                 fn add_local_to_tree(
-                    searcher: &Searcher,
                     tree: &mut TreeBuilder,
                     the_mod: &JarMod,
                     config: &Config,
@@ -294,8 +281,8 @@ impl Cli {
                     tree.begin_child(the_mod.name().to_string());
 
                     for dep in the_mod.dependencies().keys() {
-                        if let Ok(remote) = searcher.search_mod_by_slug(dep) {
-                            add_remote_to_tree(searcher, tree, &remote, config)?;
+                        if let Ok(remote) = SEARCHER.search_mod_by_slug(dep) {
+                            add_remote_to_tree(tree, &remote, config)?;
                         } else {
                             tree.add_empty_child(dep.to_string());
                         }
@@ -309,18 +296,18 @@ impl Cli {
                 tree.begin_child(String::from("Remotes"));
 
                 for slug in pool.manually_added.iter() {
-                    let the_mod = searcher
+                    let the_mod = SEARCHER
                         .search_mod_by_slug(slug)
                         .expect("If remote mod is in the pool, it exists");
 
-                    add_remote_to_tree(&searcher, &mut tree, &the_mod, &pool.config)?;
+                    add_remote_to_tree(&mut tree, &the_mod, &pool.config)?;
                 }
 
                 tree.end_child();
                 tree.begin_child(String::from("Locals"));
 
                 for local in pool.locals.iter() {
-                    add_local_to_tree(&searcher, &mut tree, local, &pool.config)?;
+                    add_local_to_tree(&mut tree, local, &pool.config)?;
                 }
 
                 tree.end_child();
@@ -334,8 +321,6 @@ impl Cli {
                 DirBuilder::new().create(out_dir).with_context(|| {
                     format!("Creating output directory '{}'", out_dir.display())
                 })?;
-
-                let searcher = Self::get_searcher();
 
                 fn install_mod(
                     out_dir: &std::path::Path,
@@ -371,7 +356,7 @@ impl Cli {
                 }
 
                 for slug in pool.manually_added.iter() {
-                    install_mod(out_dir, &searcher, &pool, slug)?;
+                    install_mod(out_dir, &SEARCHER, &pool, slug)?;
                 }
 
                 // Install local mods
@@ -389,18 +374,6 @@ impl Cli {
                 Ok(())
             }
         }
-    }
-
-    pub fn get_searcher() -> impl Deref<Target = Searcher> {
-        SEARCHER
-            .try_lock()
-            .expect("Should only be one single searcher user at a time")
-    }
-
-    pub fn get_searcher_mut() -> impl DerefMut<Target = Searcher> {
-        SEARCHER
-            .try_lock()
-            .expect("Should only be one single searcher user at a time")
     }
 
     fn new_pool(&self) -> anyhow::Result<Pool> {
