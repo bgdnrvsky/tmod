@@ -37,8 +37,6 @@ enum Commands {
     List,
     /// Add minecraft mod to the `pool`
     Add {
-        #[clap(flatten)]
-        display_options: ModOptions,
         #[command(subcommand)]
         add_target: ModTargets,
         /// When adding a Jar, move the file instead of copying
@@ -110,11 +108,7 @@ impl Cli {
 
                 Ok(())
             }
-            Commands::Add {
-                display_options,
-                add_target,
-                r#move,
-            } => {
+            Commands::Add { add_target, r#move } => {
                 let mut pool = self.new_pool()?;
 
                 let remote_mod = match add_target {
@@ -151,7 +145,7 @@ impl Cli {
                     write!(
                         writer,
                         "{}",
-                        remote_mod.display_with_options(*display_options)
+                        remote_mod.display_with_options(ModOptions::default())
                     )?;
                 }
 
