@@ -301,14 +301,14 @@ impl Pool {
 
     pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
         fn add_to_locks(the_mod: &SearchedMod, pool: &mut Pool) -> anyhow::Result<()> {
-            if !pool.is_compatible(&the_mod)? {
+            if !pool.is_compatible(the_mod)? {
                 anyhow::bail!(
                     "The mod {slug} is not compatible with the pool!",
                     slug = the_mod.slug
                 );
             }
 
-            let file = SEARCHER.get_specific_mod_file(&the_mod, &pool.config, None)?;
+            let file = SEARCHER.get_specific_mod_file(the_mod, &pool.config, None)?;
             let relations = file
                 .relations
                 .into_iter()
