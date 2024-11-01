@@ -118,15 +118,19 @@ impl Cli {
                         let to = pool.locals_path().join(jar.name()).with_extension("jar");
 
                         if *r#move {
-                            std::fs::rename(path, to).context("Moving jar")?;
+                            let moving_context = || format!("Moving {}", path.display());
+                            std::fs::rename(path, to).with_context(moving_context)?;
 
                             if !self.quiet {
-                                writeln!(writer, "Moving {}", path.display())?;
+                                writeln!(writer, "{}", moving_context())?;
                             }
-                        } else if !self.quiet {
-                            std::fs::copy(path, to).context("Copying jar")?;
+                        } else {
+                            let copying_context = || format!("Copying {}", path.display());
+                            std::fs::copy(path, to).with_context(copying_context)?;
 
-                            writeln!(writer, "Copying {}", path.display())?;
+                            if !self.quiet {
+                                writeln!(writer, "{}", copying_context())?;
+                            }
                         }
 
                         pool.add_to_locals(jar).context("Adding jar to the pool")?;
