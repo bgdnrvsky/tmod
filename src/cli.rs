@@ -82,7 +82,7 @@ impl Cli {
         match &self.command {
             Commands::Init => Pool::init(&self.pool_dir).map(|_| ()),
             Commands::List => {
-                let pool = self.new_pool()?;
+                let pool = self.read_pool()?;
 
                 let remotes = pool.manually_added;
                 let locals = pool.locals;
@@ -108,7 +108,7 @@ impl Cli {
                 Ok(())
             }
             Commands::Add { add_target, r#move } => {
-                let mut pool = self.new_pool()?;
+                let mut pool = self.read_pool()?;
 
                 let remote_mod = match add_target {
                     ModTargets::Jar { path } => {
@@ -153,7 +153,7 @@ impl Cli {
                 pool.save().context("Saving the pool")
             }
             Commands::Remove { names } => {
-                let mut pool = self.new_pool()?;
+                let mut pool = self.read_pool()?;
 
                 for name in names {
                     if !pool.remove_mod(name)? && !self.quiet {
@@ -252,7 +252,7 @@ impl Cli {
             Commands::Tree => {
                 SEARCHER.set_silent(true); // Make it silent
 
-                let pool = self.new_pool()?;
+                let pool = self.read_pool()?;
 
                 let mut tree = TreeBuilder::new(String::from("Tmod"));
 
@@ -319,7 +319,7 @@ impl Cli {
                 ptree::print_tree(&tree.build()).context("Error displaying the tree")
             }
             Commands::Install { out_dir } => {
-                let pool = self.new_pool()?;
+                let pool = self.read_pool()?;
 
                 // Create output directory
                 DirBuilder::new().create(out_dir).with_context(|| {
@@ -380,7 +380,7 @@ impl Cli {
         }
     }
 
-    fn new_pool(&self) -> anyhow::Result<Pool> {
+    fn read_pool(&self) -> anyhow::Result<Pool> {
         Pool::read(&self.pool_dir).with_context(|| {
             format!(
                 "Error initializing the pool from {}",
