@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Context;
 use jars::{jar, Jar, JarOption};
@@ -13,6 +16,7 @@ enum JarModType {
 }
 
 pub struct JarMod {
+    path: PathBuf,
     r#type: JarModType,
     zip: Jar,
 }
@@ -28,10 +32,16 @@ impl JarMod {
             );
         }
 
-        jar(path, JarOption::default())
-            .with_context(|| format!("Opening jar '{}'", path.display()))
-            .and_then(Self::try_from)
-            .with_context(|| format!("Reading jar '{}'", path.display()))
+        let jar = jar(path, JarOption::default())
+            .with_context(|| format!("Opening jar '{}'", path.display()))?;
+        let r#type = JarModType::try_from(&jar)
+            .with_context(|| format!("Reading jar '{}'", path.display()))?;
+
+        Ok(Self {
+            path: path.file_name().unwrap().into(),
+            r#type,
+            zip: jar,
+        })
     }
 
     pub fn name(&self) -> &str {
@@ -61,6 +71,10 @@ impl JarMod {
 
     pub fn zip(&self) -> &Jar {
         &self.zip
+    }
+
+    pub fn path(&self) -> &PathBuf {
+        &self.path
     }
 }
 
@@ -143,16 +157,5 @@ impl TryFrom<Jar> for JarModType {
 
     fn try_from(jar: Jar) -> Result<Self, Self::Error> {
         Self::try_from(&jar)
-    }
-}
-
-impl TryFrom<Jar> for JarMod {
-    type Error = anyhow::Error;
-
-    fn try_from(jar: Jar) -> Result<Self, Self::Error> {
-        Ok(Self {
-            r#type: JarModType::try_from(&jar)?,
-            zip: jar,
-        })
     }
 }

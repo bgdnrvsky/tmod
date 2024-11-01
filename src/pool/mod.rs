@@ -10,7 +10,6 @@ use std::{
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use jars::{jar, JarOptionBuilder};
 use serde::{Deserialize, Serialize};
 use zip::ZipWriter;
 
@@ -124,11 +123,9 @@ impl Pool {
                 fs::read_dir(dir.path())
                     .context("Reading `locals` directory")?
                     .map(|entry| {
-                        entry.context("Reading entry").and_then(|entry| {
-                            jar(entry.path(), JarOptionBuilder::default())
-                                .context("Reading jar file")
-                                .and_then(JarMod::try_from)
-                        })
+                        entry
+                            .context("Reading entry")
+                            .and_then(|entry| JarMod::open(entry.path()))
                     })
                     .collect::<Result<Vec<_>, _>>()?
             } else {
