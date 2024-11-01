@@ -11,7 +11,7 @@ use ptree::TreeBuilder;
 use tmod::{
     fetcher::{
         mod_search::search_mod::{display::ModOptions, SearchedMod},
-        Searcher, SEARCHER,
+        SEARCHER,
     },
     jar::JarMod,
     pool::{config::Config, Pool},
@@ -328,20 +328,19 @@ impl Cli {
 
                 fn install_mod(
                     out_dir: &std::path::Path,
-                    searcher: &Searcher,
                     pool: &Pool,
                     slug: impl AsRef<str>,
                 ) -> anyhow::Result<()> {
                     let dep_info = pool.locks.get(slug.as_ref()).context("Invalid lock file")?;
-                    let the_mod = searcher.search_mod_by_slug(slug)?;
-                    let file = searcher.get_specific_mod_file(
+                    let the_mod = SEARCHER.search_mod_by_slug(slug)?;
+                    let file = SEARCHER.get_specific_mod_file(
                         &the_mod,
                         &pool.config,
                         Some(dep_info.timestamp),
                     )?;
 
                     // Download the file
-                    let response = searcher.download_file(&file)?;
+                    let response = SEARCHER.download_file(&file)?;
 
                     // Create the file
                     let path = &out_dir.join(file.file_name);
@@ -353,14 +352,14 @@ impl Cli {
                     })?;
 
                     for slug in dep_info.dependencies.iter() {
-                        install_mod(out_dir, searcher, pool, slug)?;
+                        install_mod(out_dir, pool, slug)?;
                     }
 
                     Ok(())
                 }
 
                 for slug in pool.manually_added.iter() {
-                    install_mod(out_dir, &SEARCHER, &pool, slug)?;
+                    install_mod(out_dir, &pool, slug)?;
                 }
 
                 // Install local mods
