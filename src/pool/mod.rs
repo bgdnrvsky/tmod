@@ -300,9 +300,54 @@ impl Pool {
     }
 
     pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
+        fn add_to_locks(the_mod: &SearchedMod, pool: &mut Pool) -> anyhow::Result<()> {
+            if !pool.is_compatible(&the_mod)? {
+                anyhow::bail!(
+                    "The mod {slug} is not compatible with the pool!",
+                    slug = the_mod.slug
+                );
+            }
+
+            let file = SEARCHER.get_specific_mod_file(&the_mod, &pool.config, None)?;
+            let relations = file
+                .relations
+                .into_iter()
+                .map(|relation| {
+                    SEARCHER.search_mod_by_id(relation.id).with_context(|| {
+                        format!(
+                            "Searching a relation id={} while adding mod '{}'",
+                            relation.id, the_mod.slug
+                        )
+                    })
+                })
+                .collect::<anyhow::Result<Vec<_>>>()
+                .with_context(|| format!("Searching relations of the mod '{}'", the_mod.slug))?;
+
+            let dep_info = DepInfo {
+                timestamp: file.date,
+                dependencies: relations
+                    .iter()
+                    .map(|the_mod| the_mod.slug.clone())
+                    .collect(),
+            };
+
+            for relation in relations {
+                add_to_locks(&relation, pool)?;
+            }
+
+            pool.locks.insert(the_mod.slug.to_string(), dep_info);
+
+            Ok(())
+        }
+
         for slug in jar.dependencies().keys() {
+            if self.locks.contains_key(*slug) {
+                continue;
+            }
+
             let the_mod = SEARCHER.search_mod_by_slug(slug)?;
-            self.add_to_remotes(&the_mod, true)?;
+
+            add_to_locks(&the_mod, self)?;
         }
 
         self.locals.push(jar);

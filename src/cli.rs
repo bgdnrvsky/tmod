@@ -363,15 +363,13 @@ impl Cli {
                 }
 
                 // Install local mods
-                let locals = std::fs::read_dir(pool.locals_path())?;
+                for local in pool.locals.iter() {
+                    let file_name = local.path();
+                    std::fs::copy(pool.locals_path().join(file_name), out_dir.join(file_name))?;
 
-                for entry in locals {
-                    let entry = entry?;
-
-                    std::fs::copy(
-                        entry.path(),
-                        out_dir.join(entry.file_name()).with_extension("jar"),
-                    )?;
+                    for dep in local.dependencies().keys() {
+                        install_mod(out_dir, &pool, dep)?;
+                    }
                 }
 
                 Ok(())
