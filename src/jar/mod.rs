@@ -107,6 +107,7 @@ impl JarModType {
         }
     }
 
+    /// Returns a map of dependencies with their versions
     pub fn dependencies(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
@@ -122,6 +123,7 @@ impl JarModType {
         }
     }
 
+    /// Returns a map of incompatibilities with their versions
     pub fn incompatibilities(&self) -> HashMap<&str, &str> {
         match self {
             Self::Fabric(the_mod) => the_mod
