@@ -9,10 +9,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use ptree::TreeBuilder;
 use tmod::{
-    fetcher::{
-        mod_search::search_mod::display::ModOptions,
-        SEARCHER,
-    },
+    fetcher::{mod_search::search_mod::display::ModOptions, SEARCHER},
     jar::JarMod,
     pool::{config::Config, Pool},
 };
@@ -301,9 +298,12 @@ impl Cli {
                 let pool = self.read_pool()?;
 
                 // Create output directory
-                DirBuilder::new().create(out_dir).with_context(|| {
-                    format!("Creating output directory '{}'", out_dir.display())
-                })?;
+                DirBuilder::new()
+                    .recursive(true)
+                    .create(out_dir)
+                    .with_context(|| {
+                        format!("Creating output directory '{}'", out_dir.display())
+                    })?;
 
                 fn install_mod(
                     out_dir: &std::path::Path,
