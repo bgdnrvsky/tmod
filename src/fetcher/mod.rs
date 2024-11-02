@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
-use loading::{Loading, Spinner};
+use loading::Loading;
 use rq::Response;
 use serde::Deserialize;
 use ureq as rq;
@@ -334,7 +334,7 @@ impl FetchParameters {
         let loading = if self.silent {
             None
         } else {
-            let loading = Loading::new(Spinner::default());
+            let loading = Loading::default();
             loading.info(&loading_info);
             loading.text("Fetching");
 
