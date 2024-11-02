@@ -277,26 +277,6 @@ impl Cli {
                     Ok(())
                 }
 
-                fn add_local_to_tree(
-                    tree: &mut TreeBuilder,
-                    the_mod: &JarMod,
-                    config: &Config,
-                ) -> anyhow::Result<()> {
-                    tree.begin_child(the_mod.name().to_string());
-
-                    for dep in the_mod.dependencies().keys() {
-                        if let Ok(remote) = SEARCHER.search_mod_by_slug(dep) {
-                            add_remote_to_tree(tree, &remote, config)?;
-                        } else {
-                            tree.add_empty_child(dep.to_string());
-                        }
-                    }
-
-                    tree.end_child();
-
-                    Ok(())
-                }
-
                 tree.begin_child(String::from("Remotes"));
 
                 for slug in pool.manually_added.iter() {
@@ -311,7 +291,17 @@ impl Cli {
                 tree.begin_child(String::from("Locals"));
 
                 for local in pool.locals.iter() {
-                    add_local_to_tree(&mut tree, local, &pool.config)?;
+                    tree.begin_child(local.name().to_string());
+
+                    for dep in local.dependencies().keys() {
+                        if let Ok(remote) = SEARCHER.search_mod_by_slug(dep) {
+                            add_remote_to_tree(&mut tree, &remote, &pool.config)?;
+                        } else {
+                            tree.add_empty_child(dep.to_string());
+                        }
+                    }
+
+                    tree.end_child();
                 }
 
                 tree.end_child();
