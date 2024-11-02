@@ -10,7 +10,7 @@ use colored::Colorize;
 use ptree::TreeBuilder;
 use tmod::{
     fetcher::{
-        mod_search::search_mod::{display::ModOptions, SearchedMod},
+        mod_search::search_mod::display::ModOptions,
         SEARCHER,
     },
     jar::JarMod,
@@ -250,41 +250,34 @@ impl Cli {
                 Ok(())
             }
             Commands::Tree => {
-                SEARCHER.set_silent(true); // Make it silent
-
                 let pool = self.read_pool()?;
 
                 let mut tree = TreeBuilder::new(String::from("Tmod"));
 
-                fn add_remote_to_tree(
+                tree.begin_child(String::from("Remotes"));
+
+                fn add_recursive_to_tree(
+                    slug: impl AsRef<str>,
                     tree: &mut TreeBuilder,
-                    the_mod: &SearchedMod,
-                    config: &Config,
-                ) -> anyhow::Result<()> {
-                    tree.begin_child(the_mod.slug.to_string());
+                    pool: &Pool,
+                ) {
+                    tree.begin_child(slug.as_ref().to_string());
 
-                    let files = SEARCHER.get_mod_files(the_mod, config)?;
-                    let file = files.iter().max_by_key(|file| file.date).with_context(|| {
-                        format!("No files fetched for the mod '{}'", the_mod.slug)
-                    })?;
-
-                    for dep in file.relations.iter() {
-                        add_remote_to_tree(tree, &SEARCHER.search_mod_by_id(dep.id)?, config)?;
+                    for dep in pool
+                        .locks
+                        .get(slug.as_ref())
+                        .expect("If this fails, the lock file is invalid")
+                        .dependencies
+                        .iter()
+                    {
+                        add_recursive_to_tree(dep, tree, pool);
                     }
 
                     tree.end_child();
-
-                    Ok(())
                 }
 
-                tree.begin_child(String::from("Remotes"));
-
                 for slug in pool.manually_added.iter() {
-                    let the_mod = SEARCHER
-                        .search_mod_by_slug(slug)
-                        .expect("If remote mod is in the pool, it exists");
-
-                    add_remote_to_tree(&mut tree, &the_mod, &pool.config)?;
+                    add_recursive_to_tree(slug, &mut tree, &pool);
                 }
 
                 tree.end_child();
@@ -294,11 +287,7 @@ impl Cli {
                     tree.begin_child(local.name().to_string());
 
                     for dep in local.dependencies().keys() {
-                        if let Ok(remote) = SEARCHER.search_mod_by_slug(dep) {
-                            add_remote_to_tree(&mut tree, &remote, &pool.config)?;
-                        } else {
-                            tree.add_empty_child(dep.to_string());
-                        }
+                        add_recursive_to_tree(dep, &mut tree, &pool);
                     }
 
                     tree.end_child();
