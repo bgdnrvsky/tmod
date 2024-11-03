@@ -318,17 +318,23 @@ impl Cli {
                         Some(dep_info.timestamp),
                     )?;
 
-                    // Download the file
-                    let response = SEARCHER.download_file(&file)?;
+                    if !out_dir
+                        .join(&file.file_name)
+                        .try_exists()
+                        .is_ok_and(|exists| exists)
+                    {
+                        // Download the file
+                        let response = SEARCHER.download_file(&file)?;
 
-                    // Create the file
-                    let path = &out_dir.join(file.file_name);
-                    let mut file = File::create(path)
-                        .with_context(|| format!("Creating file '{}'", path.display()))?;
+                        // Create the file
+                        let path = &out_dir.join(file.file_name);
+                        let mut file = File::create(path)
+                            .with_context(|| format!("Creating file '{}'", path.display()))?;
 
-                    std::io::copy(&mut response.into_reader(), &mut file).with_context(|| {
-                        format!("Writing content to the file '{}'", path.display())
-                    })?;
+                        std::io::copy(&mut response.into_reader(), &mut file).with_context(
+                            || format!("Writing content to the file '{}'", path.display()),
+                        )?;
+                    }
 
                     for slug in dep_info.dependencies.iter() {
                         install_mod(out_dir, pool, slug)?;
@@ -344,7 +350,14 @@ impl Cli {
                 // Install local mods
                 for local in pool.locals.iter() {
                     let file_name = local.path();
-                    std::fs::copy(pool.locals_path().join(file_name), out_dir.join(file_name))?;
+
+                    if !out_dir
+                        .join(file_name)
+                        .try_exists()
+                        .is_ok_and(|exists| exists)
+                    {
+                        std::fs::copy(pool.locals_path().join(file_name), out_dir.join(file_name))?;
+                    }
 
                     for dep in local.dependencies().keys() {
                         install_mod(out_dir, &pool, dep)?;
