@@ -10,7 +10,6 @@ use colored::Colorize;
 use ptree::TreeBuilder;
 use tmod::{
     fetcher::{mod_search::search_mod::display::ModOptions, SEARCHER},
-    jar::JarMod,
     pool::{config::Config, Pool},
 };
 
@@ -35,9 +34,6 @@ enum Commands {
     Add {
         #[command(subcommand)]
         add_target: ModTargets,
-        /// When adding a Jar, move the file instead of copying
-        #[arg(short, long, default_value_t = false)]
-        r#move: bool,
     },
     /// Remove a mod from the `pool`
     Remove {
@@ -70,8 +66,6 @@ enum ModTargets {
     Id { mod_id: usize },
     /// Using mod's 'slug' (slug is not always the same as the mod name)
     Slug { mod_slug: String },
-    /// Using your local Jar file
-    Jar { path: PathBuf },
 }
 
 impl Cli {
@@ -82,9 +76,8 @@ impl Cli {
                 let pool = self.read_pool()?;
 
                 let remotes = pool.manually_added;
-                let locals = pool.locals;
 
-                if remotes.is_empty() && locals.is_empty() {
+                if remotes.is_empty() {
                     return writeln!(writer, "Empty!").context("IO");
                 }
 
@@ -95,44 +88,12 @@ impl Cli {
                     }
                 }
 
-                if !locals.is_empty() {
-                    writeln!(writer, "Locals:")?;
-                    for l in locals {
-                        writeln!(writer, "\t- {}", l.name().italic().blue())?;
-                    }
-                }
-
                 Ok(())
             }
-            Commands::Add { add_target, r#move } => {
+            Commands::Add { add_target } => {
                 let mut pool = self.read_pool()?;
 
                 let remote_mod = match add_target {
-                    ModTargets::Jar { path } => {
-                        let jar = JarMod::open(path)
-                            .with_context(|| format!("Opening jar '{}'", path.display()))?;
-
-                        let to = pool.locals_path().join(jar.name()).with_extension("jar");
-
-                        if *r#move {
-                            let moving_context = || format!("Moving {}", path.display());
-                            std::fs::rename(path, to).with_context(moving_context)?;
-
-                            if !self.quiet {
-                                writeln!(writer, "{}", moving_context())?;
-                            }
-                        } else {
-                            let copying_context = || format!("Copying {}", path.display());
-                            std::fs::copy(path, to).with_context(copying_context)?;
-
-                            if !self.quiet {
-                                writeln!(writer, "{}", copying_context())?;
-                            }
-                        }
-
-                        pool.add_to_locals(jar).context("Adding jar to the pool")?;
-                        return pool.save().context("Saving the pool");
-                    }
                     ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id)?,
                     ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug)?,
                 };
@@ -153,7 +114,7 @@ impl Cli {
                 let mut pool = self.read_pool()?;
 
                 for name in names {
-                    if !pool.remove_mod(name)? && !self.quiet {
+                    if !pool.remove_mod(name) && !self.quiet {
                         writeln!(writer, "No mod {} was removed", name.italic().blue())?;
                     }
                 }
@@ -169,54 +130,6 @@ impl Cli {
                 let remote_mod = match target {
                     ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id),
                     ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug),
-                    ModTargets::Jar { path } => {
-                        let jar = JarMod::open(path)?;
-
-                        writeln!(writer, "Name: {}", jar.name().blue().italic())?;
-                        writeln!(writer, "Version: {}", jar.version())?;
-                        writeln!(
-                            writer,
-                            "Minecraft version required: {}",
-                            jar.minecraft_version().unwrap_or("Any")
-                        )?;
-                        writeln!(
-                            writer,
-                            "Loader version required: {}",
-                            jar.loader_version().unwrap_or("Any")
-                        )?;
-
-                        let dependencies = jar.dependencies();
-
-                        if !dependencies.is_empty() {
-                            writeln!(writer)?;
-                            writeln!(writer, "Dependencies:")?;
-
-                            for (name, version) in dependencies {
-                                writeln!(
-                                    writer,
-                                    "\t- {name}({version})",
-                                    name = name.green().italic()
-                                )?;
-                            }
-                        }
-
-                        let incompatibilities = jar.incompatibilities();
-
-                        if !incompatibilities.is_empty() {
-                            writeln!(writer)?;
-                            writeln!(writer, "Incompatibilities:")?;
-
-                            for (name, version) in incompatibilities {
-                                writeln!(
-                                    writer,
-                                    "\t- {name}({version})",
-                                    name = name.red().bold()
-                                )?;
-                            }
-                        }
-
-                        return Ok(());
-                    }
                 }?;
 
                 writeln!(
@@ -251,8 +164,6 @@ impl Cli {
 
                 let mut tree = TreeBuilder::new(String::from("Tmod"));
 
-                tree.begin_child(String::from("Remotes"));
-
                 fn add_recursive_to_tree(
                     slug: impl AsRef<str>,
                     tree: &mut TreeBuilder,
@@ -276,21 +187,6 @@ impl Cli {
                 for slug in pool.manually_added.iter() {
                     add_recursive_to_tree(slug, &mut tree, &pool);
                 }
-
-                tree.end_child();
-                tree.begin_child(String::from("Locals"));
-
-                for local in pool.locals.iter() {
-                    tree.begin_child(local.name().to_string());
-
-                    for dep in local.dependencies().keys() {
-                        add_recursive_to_tree(dep, &mut tree, &pool);
-                    }
-
-                    tree.end_child();
-                }
-
-                tree.end_child();
 
                 ptree::print_tree(&tree.build()).context("Error displaying the tree")
             }
@@ -345,23 +241,6 @@ impl Cli {
 
                 for slug in pool.manually_added.iter() {
                     install_mod(out_dir, &pool, slug)?;
-                }
-
-                // Install local mods
-                for local in pool.locals.iter() {
-                    let file_name = local.path();
-
-                    if !out_dir
-                        .join(file_name)
-                        .try_exists()
-                        .is_ok_and(|exists| exists)
-                    {
-                        std::fs::copy(pool.locals_path().join(file_name), out_dir.join(file_name))?;
-                    }
-
-                    for dep in local.dependencies().keys() {
-                        install_mod(out_dir, &pool, dep)?;
-                    }
                 }
 
                 Ok(())

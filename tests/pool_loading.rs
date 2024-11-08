@@ -9,11 +9,5 @@ fn read_pool() -> anyhow::Result<()> {
     assert!(remotes.contains("foo"));
     assert!(remotes.contains("bar"));
 
-    let locals = pool.locals;
-    assert!(locals.iter().any(|r#mod| r#mod.name() == "sodium"));
-    assert!(locals
-        .iter()
-        .any(|r#mod| r#mod.name() == "betterthirdperson"));
-
     Ok(())
 }

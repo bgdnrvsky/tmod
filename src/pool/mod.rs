@@ -11,12 +11,8 @@ use std::{
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use zip::ZipWriter;
 
-use crate::{
-    fetcher::{mod_search::search_mod::SearchedMod, SEARCHER},
-    jar::JarMod,
-};
+use crate::fetcher::{mod_search::search_mod::SearchedMod, SEARCHER};
 
 use config::Config;
 
@@ -25,7 +21,6 @@ pub struct Pool {
     pub config: Config,
     pub manually_added: HashSet<String>,
     pub locks: HashMap<String, DepInfo>,
-    pub locals: Vec<JarMod>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -45,7 +40,6 @@ impl Pool {
             config,
             locks: Default::default(),
             manually_added: Default::default(),
-            locals: Default::default(),
         };
 
         pool.save().map(|_| pool)
@@ -112,32 +106,10 @@ impl Pool {
             toml::from_str(&content).context("Deserializing `Tmod.lock`")?
         };
 
-        // Check if `locals` directory exists
-        let locals = {
-            if let Ok(dir) = find_entry("locals") {
-                anyhow::ensure!(
-                    dir.metadata()?.is_dir(),
-                    "`locals` is expected to be a directory"
-                );
-
-                fs::read_dir(dir.path())
-                    .context("Reading `locals` directory")?
-                    .map(|entry| {
-                        entry
-                            .context("Reading entry")
-                            .and_then(|entry| JarMod::open(entry.path()))
-                    })
-                    .collect::<Result<Vec<_>, _>>()?
-            } else {
-                Vec::with_capacity(0)
-            }
-        };
-
         Ok(Self {
             config,
             manually_added,
             locks,
-            locals,
             path: dir_path.as_ref().to_owned(),
         })
     }
@@ -168,47 +140,10 @@ impl Pool {
         file.write_all(content.as_bytes()).context("Writing locks")
     }
 
-    fn write_locals(&self) -> anyhow::Result<()> {
-        let locals_path = self.locals_path();
-
-        fs::DirBuilder::new()
-            .recursive(true)
-            .create(&locals_path)
-            .context("Creating locals dir")?;
-
-        for jar_mod in self.locals.iter() {
-            let path = locals_path.join(jar_mod.name()).with_extension("jar");
-            let file = File::create(&path)
-                .with_context(|| format!("Creating `{}` in locals", path.display()))?;
-
-            let mut writer = ZipWriter::new(file);
-            let options = zip::write::FileOptions::default();
-
-            for (zip_filename, zip_file_content) in jar_mod.zip().files.iter() {
-                // Mark the file where we are writing
-                writer
-                    .start_file(zip_filename, options)
-                    .with_context(|| format!("Starting {} file in the jar", zip_filename))?;
-
-                // Write the content
-                writer
-                    .write(zip_file_content)
-                    .with_context(|| format!("Writing to {} in the jar", zip_filename))?;
-            }
-
-            writer
-                .finish()
-                .with_context(|| format!("Finishing writing to {} jar", path.display()))?;
-        }
-
-        Ok(())
-    }
-
     pub fn save(&self) -> anyhow::Result<()> {
         self.create_pool_dir()
             .and_then(|_| Self::write_config(self))
             .and_then(|_| Self::write_remotes(self))
-            .and_then(|_| Self::write_locals(self))
             .context("Saving pool")
     }
 
@@ -233,20 +168,6 @@ impl Pool {
 
             for remote_slug in self.manually_added.iter() {
                 if inc.slug == *remote_slug {
-                    return Ok(false);
-                }
-            }
-
-            for local_slug in self.locals.iter().map(|jar| jar.name()) {
-                if inc.slug == local_slug {
-                    return Ok(false);
-                }
-            }
-        }
-
-        for local in self.locals.iter() {
-            for incomp_slug in local.incompatibilities().keys() {
-                if *incomp_slug == the_mod.slug {
                     return Ok(false);
                 }
             }
@@ -299,75 +220,8 @@ impl Pool {
         Ok(())
     }
 
-    pub fn add_to_locals(&mut self, jar: JarMod) -> anyhow::Result<()> {
-        fn add_to_locks(the_mod: &SearchedMod, pool: &mut Pool) -> anyhow::Result<()> {
-            if !pool.is_compatible(the_mod)? {
-                anyhow::bail!(
-                    "The mod {slug} is not compatible with the pool!",
-                    slug = the_mod.slug
-                );
-            }
-
-            let file = SEARCHER.get_specific_mod_file(the_mod, &pool.config, None)?;
-            let relations = file
-                .relations
-                .into_iter()
-                .map(|relation| {
-                    SEARCHER.search_mod_by_id(relation.id).with_context(|| {
-                        format!(
-                            "Searching a relation id={} while adding mod '{}'",
-                            relation.id, the_mod.slug
-                        )
-                    })
-                })
-                .collect::<anyhow::Result<Vec<_>>>()
-                .with_context(|| format!("Searching relations of the mod '{}'", the_mod.slug))?;
-
-            let dep_info = DepInfo {
-                timestamp: file.date,
-                dependencies: relations
-                    .iter()
-                    .map(|the_mod| the_mod.slug.clone())
-                    .collect(),
-            };
-
-            for relation in relations {
-                add_to_locks(&relation, pool)?;
-            }
-
-            pool.locks.insert(the_mod.slug.to_string(), dep_info);
-
-            Ok(())
-        }
-
-        for slug in jar.dependencies().keys() {
-            if self.locks.contains_key(*slug) {
-                continue;
-            }
-
-            let the_mod = SEARCHER.search_mod_by_slug(slug)?;
-
-            add_to_locks(&the_mod, self)?;
-        }
-
-        self.locals.push(jar);
-
-        Ok(())
-    }
-
-    pub fn remove_mod(&mut self, name: &str) -> anyhow::Result<bool> {
-        Ok(self.remove_from_locals(name)? || self.remove_from_remotes(name))
-    }
-
-    pub fn remove_from_locals(&mut self, name: &str) -> anyhow::Result<bool> {
-        if let Some(idx) = self.locals.iter().position(|jar| jar.name() == name) {
-            fs::remove_file(self.locals_path().join(name).with_extension("jar"))
-                .with_context(|| format!("Deleting local JAR '{}.jar'", name))?;
-            self.locals.swap_remove(idx);
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+    pub fn remove_mod(&mut self, name: &str) -> bool {
+        self.remove_from_remotes(name)
     }
 
     /// Returns whether the remote mod was already present
@@ -385,9 +239,5 @@ impl Pool {
 
     pub fn locks_path(&self) -> PathBuf {
         self.root_path().join("Tmod.lock")
-    }
-
-    pub fn locals_path(&self) -> PathBuf {
-        self.root_path().join("locals/")
     }
 }
