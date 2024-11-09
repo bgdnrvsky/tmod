@@ -67,14 +67,6 @@ Id is another way that CurseForge uses to identify the mod. You can find it on t
 
 For example, the id of [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) is _238222_.
 
-### Local mods
-
-You can also add the mod if you have its jar!
-
-```sh
-$ tmod add jar /path/to/the/mod.jar
-```
-
 ***
 
 Let's start by adding some of the basic, and most popular mods: [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) and [JourneyMap](https://www.curseforge.com/minecraft/mc-mods/journeymap).
@@ -92,23 +84,9 @@ Let's now see the representation of our pool!
 $ tmod tree
 
 Tmod
-├─ Remotes
-│  ├─ jei
-│  └─ journeymap
-└─ Locals
+├─ journeymap
+└─ jei
 ```
-
-#### Tree representation
-
-The most basic tree, is the tree of the empty pool.
-
-```
-Tmod
-├─ Remotes
-└─ Locals
-```
-
-The tree has two parts: remote and local, each contains the mods you have added, as well as their dependencies.
 
 ***
 
@@ -123,17 +101,14 @@ Now, let's check our tree again.
 
 ```
 Tmod
-├─ Remotes
-│  ├─ waystones
-│  │  └─ balm
-│  ├─ ram-compat
-│  │  ├─ curios
-│  │  ├─ alexs-mobs
-│  │  └─ octo-lib
-│  │     └─ architectury-api
-│  ├─ journeymap
-│  └─ jei
-└─ Locals
+├─ waystones
+│  └─ balm
+├─ jei
+└─ ram-compat
+   ├─ curios
+   ├─ alexs-mobs
+   └─ octo-lib
+      └─ architectury-api
 ```
 
 Well, well... As we can see, Tmod is aware about dependencies.
