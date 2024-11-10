@@ -335,8 +335,7 @@ impl FetchParameters {
             None
         } else {
             let loading = Loading::default();
-            loading.info(&loading_info);
-            loading.text("Fetching");
+            loading.text(&loading_info);
 
             Some(loading)
         };
