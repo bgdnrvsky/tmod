@@ -2,7 +2,7 @@ pub mod config;
 pub mod loader;
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, BTreeSet},
     fs::{self, File},
     io::{BufReader, Write},
     path::{Path, PathBuf},
@@ -19,16 +19,16 @@ use config::Config;
 pub struct Pool {
     pub path: PathBuf,
     pub config: Config,
-    pub manually_added: HashSet<String>,
-    pub locks: HashMap<String, DepInfo>,
+    pub manually_added: BTreeSet<String>,
+    pub locks: BTreeMap<String, DepInfo>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DepInfo {
     pub timestamp: DateTime<Utc>,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "BTreeSet::is_empty")]
     #[serde(default)]
-    pub dependencies: Vec<String>,
+    pub dependencies: BTreeSet<String>,
 }
 
 impl Pool {
