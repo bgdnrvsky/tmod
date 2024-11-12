@@ -32,6 +32,9 @@ enum Commands {
     List,
     /// Add minecraft mod to the `pool`
     Add {
+        /// Mark mod as client only, it (and dependencies) will be ignored when installing with `--server`
+        #[arg(short, long, default_value_t = false)]
+        client_only: bool,
         #[command(subcommand)]
         add_target: ModTargets,
     },
@@ -54,6 +57,9 @@ enum Commands {
     },
     /// Download all the mods to the folder
     Install {
+        /// Do not install client only mods (and dependencies)
+        #[arg(short, long, default_value_t = false)]
+        server: bool,
         #[arg(short, long, default_value = "mods", value_name = "PATH")]
         out_dir: PathBuf,
     },
@@ -90,7 +96,10 @@ impl Cli {
 
                 Ok(())
             }
-            Commands::Add { add_target } => {
+            Commands::Add {
+                add_target,
+                client_only,
+            } => {
                 let mut pool = self.read_pool()?;
 
                 let remote_mod = match add_target {
@@ -98,7 +107,7 @@ impl Cli {
                     ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug)?,
                 };
 
-                pool.add_to_remotes(&remote_mod, true)?;
+                pool.add_to_remotes(&remote_mod, *client_only, true)?;
 
                 if !self.quiet {
                     write!(
@@ -190,7 +199,7 @@ impl Cli {
 
                 ptree::print_tree(&tree.build()).context("Error displaying the tree")
             }
-            Commands::Install { out_dir } => {
+            Commands::Install { out_dir, server } => {
                 let pool = self.read_pool()?;
 
                 // Create output directory
@@ -202,11 +211,18 @@ impl Cli {
                     })?;
 
                 fn install_mod(
+                    is_server: bool,
                     out_dir: &std::path::Path,
                     pool: &Pool,
                     slug: impl AsRef<str>,
                 ) -> anyhow::Result<()> {
                     let dep_info = pool.locks.get(slug.as_ref()).context("Invalid lock file")?;
+
+                    if dep_info.client_only && is_server {
+                        // Ignore the mod
+                        return Ok(());
+                    }
+
                     let the_mod = SEARCHER.search_mod_by_slug(slug)?;
                     let file = SEARCHER.get_specific_mod_file(
                         &the_mod,
@@ -233,14 +249,14 @@ impl Cli {
                     }
 
                     for slug in dep_info.dependencies.iter() {
-                        install_mod(out_dir, pool, slug)?;
+                        install_mod(is_server, out_dir, pool, slug)?;
                     }
 
                     Ok(())
                 }
 
                 for slug in pool.manually_added.iter() {
-                    install_mod(out_dir, &pool, slug)?;
+                    install_mod(*server, out_dir, &pool, slug)?;
                 }
 
                 Ok(())

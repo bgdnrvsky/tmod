@@ -26,6 +26,9 @@ pub struct Pool {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct DepInfo {
     pub timestamp: DateTime<Utc>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")] // Don't serialize if false
+    #[serde(default)]
+    pub client_only: bool,
     #[serde(skip_serializing_if = "BTreeSet::is_empty")]
     #[serde(default)]
     pub dependencies: BTreeSet<String>,
@@ -176,7 +179,12 @@ impl Pool {
         Ok(true)
     }
 
-    pub fn add_to_remotes(&mut self, the_mod: &SearchedMod, manual: bool) -> anyhow::Result<()> {
+    pub fn add_to_remotes(
+        &mut self,
+        the_mod: &SearchedMod,
+        client_only: bool,
+        manual: bool,
+    ) -> anyhow::Result<()> {
         if !self.is_compatible(the_mod)? {
             anyhow::bail!(
                 "The mod {slug} is not compatible with the pool!",
@@ -201,6 +209,7 @@ impl Pool {
 
         let dep_info = DepInfo {
             timestamp: file.date,
+            client_only,
             dependencies: relations
                 .iter()
                 .map(|the_mod| the_mod.slug.clone())
@@ -212,7 +221,7 @@ impl Pool {
         }
 
         for relation in relations {
-            self.add_to_remotes(&relation, false)?;
+            self.add_to_remotes(&relation, client_only, false)?;
         }
 
         self.locks.insert(the_mod.slug.to_string(), dep_info);
