@@ -1,10 +1,9 @@
 pub mod config;
+mod io;
 pub mod loader;
 
 use std::{
     collections::{BTreeMap, BTreeSet},
-    fs::{self, File},
-    io::{BufReader, Write},
     path::{Path, PathBuf},
 };
 
@@ -46,108 +45,6 @@ impl Pool {
         };
 
         pool.save().map(|_| pool)
-    }
-
-    pub fn read(dir_path: impl AsRef<Path>) -> anyhow::Result<Self> {
-        if !dir_path.as_ref().try_exists().is_ok_and(|exists| exists) {
-            anyhow::bail!("The pool '{}' doesnt exist!", dir_path.as_ref().display());
-        }
-
-        anyhow::ensure!(
-            fs::metadata(&dir_path)?.is_dir(),
-            "The provided path should point to a directory"
-        );
-
-        let mut entries = fs::read_dir(&dir_path)
-            .context("Failed to read directory")?
-            .collect::<Result<Vec<_>, _>>()?;
-
-        let mut find_entry = |filename: &'static str| {
-            entries
-                .iter()
-                .position(|f| f.file_name() == filename)
-                .with_context(|| format!("No `{filename}` present in the pool"))
-                .map(|idx| entries.swap_remove(idx))
-        };
-
-        // Check if `config.toml` file exists
-        let config = {
-            let file = find_entry("config.toml")?;
-
-            anyhow::ensure!(
-                file.metadata()?.is_file(),
-                "`config.toml` is expected to be a file"
-            );
-
-            Config::from_toml(file.path()).context("Deserializing `config.toml`")?
-        };
-
-        // Check if `Tmod.json` file exists
-        let manually_added = {
-            let file = find_entry("Tmod.json")?;
-
-            anyhow::ensure!(
-                file.metadata()?.is_file(),
-                "`Tmod.json` is expected to be a file"
-            );
-
-            let file = File::open(file.path()).context("Reading `Tmod.json`")?;
-            let reader = BufReader::new(file);
-
-            serde_json::from_reader(reader).context("Deserializing `Tmod.json`")?
-        };
-
-        let locks = {
-            let file = find_entry("Tmod.lock")?;
-
-            anyhow::ensure!(
-                file.metadata()?.is_file(),
-                "`Tmod.lock` is expected to be a file"
-            );
-
-            let content = fs::read_to_string(file.path()).context("Reading `Tmod.lock`")?;
-            toml::from_str(&content).context("Deserializing `Tmod.lock`")?
-        };
-
-        Ok(Self {
-            config,
-            manually_added,
-            locks,
-            path: dir_path.as_ref().to_owned(),
-        })
-    }
-
-    fn create_pool_dir(&self) -> anyhow::Result<()> {
-        fs::DirBuilder::new()
-            .recursive(true)
-            .create(&self.path)
-            .context("Creating dir")
-    }
-
-    fn write_config(&self) -> anyhow::Result<()> {
-        let mut file = File::create(self.path.join("config.toml"))?;
-
-        file.write_all(toml::to_string_pretty(&self.config)?.as_bytes())
-            .context("Writing config")
-    }
-
-    fn write_remotes(&self) -> anyhow::Result<()> {
-        // Writing tmod file
-        let file = File::create(self.remotes_path())?;
-        serde_json::to_writer_pretty(file, &self.manually_added).context("Writing remotes")?;
-
-        // Writing lock file
-        let mut file = File::create(self.locks_path())?;
-        let content = toml::to_string_pretty(&self.locks).context("Serializing locks")?;
-
-        file.write_all(content.as_bytes()).context("Writing locks")
-    }
-
-    pub fn save(&self) -> anyhow::Result<()> {
-        self.create_pool_dir()
-            .and_then(|_| Self::write_config(self))
-            .and_then(|_| Self::write_remotes(self))
-            .context("Saving pool")
     }
 
     pub fn is_compatible(&self, the_mod: &SearchedMod) -> anyhow::Result<bool> {
@@ -229,24 +126,8 @@ impl Pool {
         Ok(())
     }
 
+    // Returns whether the remote mod was already present
     pub fn remove_mod(&mut self, name: &str) -> bool {
-        self.remove_from_remotes(name)
-    }
-
-    /// Returns whether the remote mod was already present
-    pub fn remove_from_remotes(&mut self, name: &str) -> bool {
         self.manually_added.remove(name) && self.locks.remove(name).is_some()
-    }
-
-    pub fn root_path(&self) -> &Path {
-        &self.path
-    }
-
-    pub fn remotes_path(&self) -> PathBuf {
-        self.root_path().join("Tmod.json")
-    }
-
-    pub fn locks_path(&self) -> PathBuf {
-        self.root_path().join("Tmod.lock")
     }
 }
