@@ -41,19 +41,19 @@ enum Commands {
     /// Remove a mod from the `pool`
     Remove {
         #[arg(required = true)]
-        names: Vec<String>,
+        slugs: Vec<String>,
     },
     /// Search a remote mod and print its info
     Info {
         #[command(subcommand)]
-        target: ModTargets,
+        search_target: ModTargets,
         /// If not specified, fetches the latest available version of the mod
         #[arg(short, long)]
         timestamp: Option<chrono::DateTime<chrono::Utc>>,
         #[clap(flatten)]
         config: Option<Config>,
         #[clap(flatten)]
-        display_options: ModOptions,
+        mod_display_options: ModOptions,
     },
     /// Download all the mods to the folder
     Install {
@@ -83,15 +83,13 @@ impl Cli {
 
                 let remotes = pool.manually_added;
 
-                if remotes.is_empty() {
-                    return writeln!(writer, "Empty!").context("IO");
-                }
-
                 if !remotes.is_empty() {
                     writeln!(writer, "Remotes:")?;
                     for r in remotes.iter() {
                         writeln!(writer, "\t- {}", r.italic().blue())?;
                     }
+                } else {
+                    return writeln!(writer, "Empty!").context("IO");
                 }
 
                 Ok(())
@@ -117,9 +115,9 @@ impl Cli {
                     )?;
                 }
 
-                pool.save().context("Saving the pool")
+                self.save_pool(pool)
             }
-            Commands::Remove { names } => {
+            Commands::Remove { slugs: names } => {
                 let mut pool = self.read_pool()?;
 
                 for name in names {
@@ -128,15 +126,15 @@ impl Cli {
                     }
                 }
 
-                pool.save().context("Saving the pool")
+                self.save_pool(pool)
             }
             Commands::Info {
-                display_options,
-                target,
+                mod_display_options,
+                search_target,
                 timestamp,
                 config,
             } => {
-                let remote_mod = match target {
+                let remote_mod = match search_target {
                     ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id),
                     ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug),
                 }?;
@@ -144,7 +142,7 @@ impl Cli {
                 writeln!(
                     writer,
                     "{}",
-                    remote_mod.display_with_options(*display_options)
+                    remote_mod.display_with_options(*mod_display_options)
                 )?;
 
                 if let Some(config) = config {
@@ -197,7 +195,7 @@ impl Cli {
                     add_recursive_to_tree(slug, &mut tree, &pool);
                 }
 
-                ptree::print_tree(&tree.build()).context("Error displaying the tree")
+                ptree::write_tree(&tree.build(), writer).context("Displaying tree")
             }
             Commands::Install { out_dir, server } => {
                 let pool = self.read_pool()?;
@@ -267,9 +265,14 @@ impl Cli {
     fn read_pool(&self) -> anyhow::Result<Pool> {
         Pool::read(&self.pool_dir).with_context(|| {
             format!(
-                "Error initializing the pool from {}",
+                "Error initializing the pool from `{}`",
                 self.pool_dir.display()
             )
         })
+    }
+
+    fn save_pool(&self, pool: Pool) -> anyhow::Result<()> {
+        pool.save()
+            .with_context(|| format!("Saving the pool to `{}`", self.pool_dir.display()))
     }
 }
