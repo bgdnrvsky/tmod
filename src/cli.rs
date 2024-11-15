@@ -35,8 +35,8 @@ enum Commands {
         /// Mark mod as client only, it (and dependencies) will be ignored when installing with `--server`
         #[arg(short, long, default_value_t = false)]
         client_only: bool,
-        #[command(subcommand)]
-        add_target: ModTargets,
+        /// Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)
+        add_target: String,
     },
     /// Remove a mod from the `pool`
     Remove {
@@ -45,8 +45,8 @@ enum Commands {
     },
     /// Search a remote mod and print its info
     Info {
-        #[command(subcommand)]
-        search_target: ModTargets,
+        /// Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)
+        search_target: String,
         /// If not specified, fetches the latest available version of the mod
         #[arg(short, long)]
         timestamp: Option<chrono::DateTime<chrono::Utc>>,
@@ -64,14 +64,6 @@ enum Commands {
         out_dir: PathBuf,
     },
     Tree,
-}
-
-#[derive(Debug, Subcommand)]
-enum ModTargets {
-    /// Using CurseForge mod id
-    Id { mod_id: usize },
-    /// Using mod's 'slug' (slug is not always the same as the mod name)
-    Slug { mod_slug: String },
 }
 
 impl Cli {
@@ -100,9 +92,9 @@ impl Cli {
             } => {
                 let mut pool = self.read_pool()?;
 
-                let remote_mod = match add_target {
-                    ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id)?,
-                    ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug)?,
+                let remote_mod = match add_target.parse::<usize>() {
+                    Ok(id) => SEARCHER.search_mod_by_id(id)?,
+                    Err(_) => SEARCHER.search_mod_by_slug(add_target)?,
                 };
 
                 pool.add_to_remotes(&remote_mod, *client_only, true)?;
@@ -134,10 +126,10 @@ impl Cli {
                 timestamp,
                 config,
             } => {
-                let remote_mod = match search_target {
-                    ModTargets::Id { mod_id } => SEARCHER.search_mod_by_id(*mod_id),
-                    ModTargets::Slug { mod_slug } => SEARCHER.search_mod_by_slug(mod_slug),
-                }?;
+                let remote_mod = match search_target.parse::<usize>() {
+                    Ok(id) => SEARCHER.search_mod_by_id(id)?,
+                    Err(_) => SEARCHER.search_mod_by_slug(search_target)?,
+                };
 
                 writeln!(
                     writer,

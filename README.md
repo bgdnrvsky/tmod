@@ -72,8 +72,8 @@ For example, the id of [Just Enough Items (JEI)](https://www.curseforge.com/mine
 Let's start by adding some of the basic, and most popular mods: [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) and [JourneyMap](https://www.curseforge.com/minecraft/mc-mods/journeymap).
 
 ```sh
-$ tmod add slug jei
-$ tmod add slug journeymap
+$ tmod add jei
+$ tmod add journeymap
 ```
 
 If everything went well, you should see some searching info and short information about each of the mods you have added.
@@ -93,8 +93,8 @@ Tmod
 Let's add more mods !
 
 ```sh
-$ tmod add slug waystones
-$ tmod add slug ram-compat
+$ tmod add waystones
+$ tmod add ram-compat
 ```
 
 Now, let's check our tree again.
