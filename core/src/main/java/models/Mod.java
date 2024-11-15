@@ -1,5 +1,7 @@
 package models;
 
+import java.net.URL;
+import java.util.Date;
 import java.util.List;
 
 public record Mod(
@@ -22,9 +24,9 @@ public record Mod(
         List<File> latestFiles,
         List<LatestFileIndex> latestFilesIndexes,
         List<LatestFileIndex> latestEarlyAccessFilesIndexes,
-        String dateCreated,
-        String dateModified,
-        String dateReleased,
+        Date dateCreated,
+        Date dateModified,
+        Date dateReleased,
         boolean allowModDistribution,
         int gamePopularityRank,
         boolean isAvailable,
@@ -33,13 +35,10 @@ public record Mod(
 ) {
 }
 
-
-// Nested records outside the main `SearchedMod` record:
-
-record Links(String websiteUrl, String wikiUrl, String issuesUrl, String sourceUrl) {
+record Links(URL websiteUrl, URL wikiUrl, URL issuesUrl, URL sourceUrl) {
 }
 
-record Author(int id, String name, String url) {
+record Author(int id, String name, URL url) {
 }
 
 record Logo(
@@ -47,8 +46,8 @@ record Logo(
         int modId,
         String title,
         String description,
-        String thumbnailUrl,
-        String url
+        URL thumbnailUrl,
+        URL url
 ) {
 }
 
@@ -57,8 +56,8 @@ record Screenshot(
         int modId,
         String title,
         String description,
-        String thumbnailUrl,
-        String url
+        URL thumbnailUrl,
+        URL url
 ) {
 }
 

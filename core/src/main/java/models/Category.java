@@ -1,13 +1,16 @@
 package models;
 
+import java.net.URL;
+import java.util.Date;
+
 public record Category(
         int id,
         int gameId,
         String name,
         String slug,
-        String url,
-        String iconUrl,
-        String dateModified,
+        URL url,
+        URL iconUrl,
+        Date dateModified,
         boolean isClass,
         int classId,
         int parentCategoryId,
