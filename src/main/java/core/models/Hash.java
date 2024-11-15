@@ -1,4 +1,4 @@
-package models;
+package core.models;
 
 public record Hash(
         String value,

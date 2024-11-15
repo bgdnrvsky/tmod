@@ -1,4 +1,4 @@
-package models;
+package core.models;
 
 import java.net.URL;
 import java.util.Date;
