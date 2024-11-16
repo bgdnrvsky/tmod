@@ -1,18 +1,12 @@
-package core.models;
+package com.tmod.core.models;
 
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
-record SortableVersion(
-        String gameVersionName,
-        String gameVersionPadded,
-        String gameVersion,
-        Date gameVersionReleaseDate,
-        int gameVersionTypeId
-) {
-}
-
+/**
+ * See the <a href="https://docs.curseforge.com/rest-api/#get-mod-file">"Get mod file"</a> endpoint
+ */
 public record File(
         int id,
         int gameId,
@@ -42,3 +36,18 @@ public record File(
         List<Module> modules
 ) {
 }
+
+record SortableVersion(
+        String gameVersionName,
+        String gameVersionPadded,
+        String gameVersion,
+        Date gameVersionReleaseDate,
+        int gameVersionTypeId
+) {
+}
+
+record Dependency(int modId, int relationType) {}
+
+record Hash(String value, int algo) {}
+
+record Module(String name, int fingerprint) {}

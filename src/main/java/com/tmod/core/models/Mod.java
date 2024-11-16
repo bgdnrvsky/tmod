@@ -1,9 +1,12 @@
-package core.models;
+package com.tmod.core.models;
 
 import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * See the <a href="https://docs.curseforge.com/rest-api/#search-mods">"Search mods"</a> endpoint
+ */
 public record Mod(
         int id,
         int gameId,
@@ -35,11 +38,8 @@ public record Mod(
 ) {
 }
 
-record Links(URL websiteUrl, URL wikiUrl, URL issuesUrl, URL sourceUrl) {
-}
-
-record Author(int id, String name, URL url) {
-}
+record Links(URL websiteUrl, URL wikiUrl, URL issuesUrl, URL sourceUrl) {}
+record Author(int id, String name, URL url) {}
 
 record Logo(
         int id,
@@ -58,15 +58,6 @@ record Screenshot(
         String description,
         URL thumbnailUrl,
         URL url
-) {
-}
-
-record SortableGameVersion(
-        String gameVersionName,
-        String gameVersionPadded,
-        String gameVersion,
-        String gameVersionReleaseDate,
-        int gameVersionTypeId
 ) {
 }
 
