@@ -22,7 +22,7 @@ package com.tmod.core.models;
  *     </tr>
  * </table>
  */
-enum ReleaseType {
+public enum ReleaseType {
     __SKIP,
     Release,
     Beta,
