@@ -2,6 +2,8 @@ package com.tmod.cli.commands;
 
 import com.beust.jcommander.Parameter;
 
+import java.nio.file.Path;
+
 
 public class Options {
 
@@ -14,8 +16,8 @@ public class Options {
     @Parameter(names={"-h", "--help"}, description="Print help", help=true)
     private boolean help;
 
-    public String getRepository() {
-        return repository;
+    public Path getRepositoryPath() {
+        return Path.of(repository);
     }
 
     public boolean isQuiet() {

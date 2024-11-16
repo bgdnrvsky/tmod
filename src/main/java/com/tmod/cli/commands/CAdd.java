@@ -2,6 +2,10 @@ package com.tmod.cli.commands;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.tmod.core.repo.Mapper;
+import com.tmod.core.repo.Repository;
+
+import java.io.IOException;
 
 @Parameters(commandNames="add", commandDescription="Add minecraft mod to the repo")
 public class CAdd implements ICommand {
@@ -14,8 +18,13 @@ public class CAdd implements ICommand {
 
     @Override
     public void onExecute(Options options) {
-        System.out.println("Adding to repository");
-        System.out.println(target);
-        System.out.println(clientOnly);
+
+        try {
+            Repository repo = Mapper.read(options.getRepositoryPath());
+            System.out.println(repo.getConfig().gameVersion());
+            System.out.println(repo.getConfig().loader());
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
     }
 }
