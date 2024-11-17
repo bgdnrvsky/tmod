@@ -14,7 +14,7 @@ public record Mod(
         String slug,
         Links links,
         String summary,
-        int status,
+        ModStatus status,
         int downloadCount,
         boolean isFeatured,
         int primaryCategoryId,
@@ -42,6 +42,70 @@ public record Mod(
 record Links(String websiteUrl, String wikiUrl, String issuesUrl, String sourceUrl) {}
 record Author(int id, String name, String url, String avatarUrl) {}
 
+/**
+ * Sent as an integer by the server
+ * <p>
+ * <table>
+ *     <tr>
+ *         <td>Status</td>
+ *         <td>Value</td>
+ *     </tr>
+ *     <tr>
+ *         <td>New</td>
+ *         <td>1</td>
+ *     </tr>
+ *     <tr>
+ *         <td>ChangesRequired</td>
+ *         <td>2</td>
+ *     </tr>
+ *     <tr>
+ *         <td>UnderSoftReview</td>
+ *         <td>3</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Approved</td>
+ *         <td>4</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Rejected</td>
+ *         <td>5</td>
+ *     </tr>
+ *     <tr>
+ *         <td>ChangesMade</td>
+ *         <td>6</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Inactive</td>
+ *         <td>7</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Abandoned</td>
+ *         <td>8</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Deleted</td>
+ *         <td>9</td>
+ *     </tr>
+ *     <tr>
+ *         <td>UnderReview</td>
+ *         <td>10</td>
+ *     </tr>
+ * </table>
+ */
+enum ModStatus {
+    __SKIP,
+    New,
+    ChangesRequired,
+    UnderSoftReview,
+    Approved,
+    Rejected,
+    ChangesMade,
+    Inactive,
+    Abandoned,
+    Deleted,
+    UnderReview,
+}
+
 record Logo(
         int id,
         int modId,
@@ -66,8 +130,8 @@ record LatestFileIndex(
         String gameVersion,
         int fileId,
         String filename,
-        int releaseType,
+        ReleaseType releaseType,
         int gameVersionTypeId,
-        int modLoader
+        ModLoader modLoader
 ) {
 }
