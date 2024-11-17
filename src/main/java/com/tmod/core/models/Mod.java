@@ -27,27 +27,28 @@ public record Mod(
         List<File> latestFiles,
         List<LatestFileIndex> latestFilesIndexes,
         List<LatestFileIndex> latestEarlyAccessFilesIndexes,
-        Date dateCreated,
-        Date dateModified,
-        Date dateReleased,
+        String dateCreated,
+        String dateModified,
+        String dateReleased,
         boolean allowModDistribution,
         int gamePopularityRank,
         boolean isAvailable,
+        boolean hasCommentsEnabled,
         int thumbsUpCount,
         int rating
 ) {
 }
 
-record Links(URL websiteUrl, URL wikiUrl, URL issuesUrl, URL sourceUrl) {}
-record Author(int id, String name, URL url) {}
+record Links(String websiteUrl, String wikiUrl, String issuesUrl, String sourceUrl) {}
+record Author(int id, String name, String url, String avatarUrl) {}
 
 record Logo(
         int id,
         int modId,
         String title,
         String description,
-        URL thumbnailUrl,
-        URL url
+        String thumbnailUrl,
+        String url
 ) {
 }
 
@@ -56,8 +57,8 @@ record Screenshot(
         int modId,
         String title,
         String description,
-        URL thumbnailUrl,
-        URL url
+        String thumbnailUrl,
+        String url
 ) {
 }
 

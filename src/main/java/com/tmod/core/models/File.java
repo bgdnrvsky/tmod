@@ -17,22 +17,22 @@ public record File(
         int releaseType,
         int fileStatus,
         List<Hash> hashes,
-        Date fileDate,
+        String fileDate,
         int fileLength,
         int downloadCount,
         int fileSizeOnDisk,
-        URL downloadUrl,
+        String downloadUrl,
         List<String> gameVersions,
         List<SortableVersion> sortableGameVersions,
         List<Dependency> dependencies,
         boolean exposeAsAlternative,
         int parentProjectFileId,
-        int alternativeFileId,
+        int alternateFileId,
         boolean isServerPack,
         int serverPackFileId,
         boolean isEarlyAccessContent,
-        Date earlyAccessEndDate,
-        int fileFingerprint,
+        String earlyAccessEndDate,
+        String fileFingerprint,
         List<Module> modules
 ) {
 }
@@ -41,7 +41,7 @@ record SortableVersion(
         String gameVersionName,
         String gameVersionPadded,
         String gameVersion,
-        Date gameVersionReleaseDate,
+        String gameVersionReleaseDate,
         int gameVersionTypeId
 ) {
 }
@@ -50,4 +50,4 @@ record Dependency(int modId, int relationType) {}
 
 record Hash(String value, int algo) {}
 
-record Module(String name, int fingerprint) {}
+record Module(String name, String fingerprint) {}

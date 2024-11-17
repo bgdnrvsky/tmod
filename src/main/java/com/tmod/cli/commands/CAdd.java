@@ -2,10 +2,14 @@ package com.tmod.cli.commands;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.tmod.core.models.Mod;
+import com.tmod.core.net.CurseForgeClient;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.function.Consumer;
 
 @Parameters(commandNames="add", commandDescription="Add minecraft mod to the repo")
 public class CAdd implements ICommand {
@@ -18,12 +22,13 @@ public class CAdd implements ICommand {
 
     @Override
     public void onExecute(Options options) {
-
         try {
-            Repository repo = Mapper.read(options.getRepositoryPath());
-            System.out.println(repo.getConfig().gameVersion());
-            System.out.println(repo.getConfig().loader());
-        } catch (IOException e) {
+            // Repository repo = Mapper.read(options.getRepositoryPath());
+
+            Mod mod = CurseForgeClient.searchModById(target);
+            System.out.println(mod);
+
+        } catch (Exception e) {
             System.err.println(e.getMessage());
         }
     }
