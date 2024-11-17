@@ -1,10 +1,10 @@
 package core.models.deserialize;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tmod.core.models.ReleaseType;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestReleaseType {
     @Test
-    public void de() throws IOException {
+    public void de() throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         String json;
 
