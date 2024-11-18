@@ -3,7 +3,7 @@ package com.tmod.core.net;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tmod.core.models.JsonResponse;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.tmod.core.models.Mod;
 
 import java.io.IOException;
@@ -35,6 +35,7 @@ public class TmodClient {
      */
     private static final String API_KEY = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 
+    private static final HttpClient client = HttpClient.newHttpClient();
 
     /**
      * Searches for a mod by its ID using the CurseForge API.
@@ -49,8 +50,8 @@ public class TmodClient {
      * @throws IOException           if an I/O error occurs during the request
      * @throws InterruptedException  if the operation is interrupted
      */
-    public static Mod searchModById(String id) throws URISyntaxException, IOException, InterruptedException {
-        return httpGet(new URI(API_BASE_URL + "mods/" + id), Mod.class);
+    public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
+        return CurseForgeGet(new URI(API_BASE_URL + "mods/" + Integer.toString(id)), Mod.class);
     }
 
     /**
@@ -68,9 +69,7 @@ public class TmodClient {
      * @throws IOException          if an I/O error occurs during the request
      * @throws InterruptedException if the operation is interrupted
      */
-    private static <T> T httpGet(URI endpoint, Class<T> clazz) throws IOException, InterruptedException {
-        HttpClient client = HttpClient.newHttpClient();
-
+    private static <T> T CurseForgeGet(URI endpoint, Class<T> clazz) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(endpoint)
                 .header("Accept", "application/json")
@@ -78,16 +77,54 @@ public class TmodClient {
                 .GET()
                 .build();
 
+        JavaType type = TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, clazz);
+        CurseForgeResponse<T> model = HTTPGet(request, type);
+        return model != null ? model.getData() : null;
+    }
+
+    /**
+     * Sends an HTTP GET request to the specified endpoint and parses the JSON response into a specified model type.
+     * <p>
+     * This method is a generic utility. It sends a request to the given URI,
+     * handles response parsing, and maps the JSON response body to an object of the specified type.
+     * </p>
+     *
+     * @param request  the {@link HttpRequest} instance
+     * @param type     the type to deserialize the JSON response to
+     * @param <T>      the generic type of the response data
+     * @return an object of type {@code T}, or {@code null} if the response status code is not 200
+     * @throws IOException          if an I/O error occurs during the request
+     * @throws InterruptedException if the operation is interrupted
+     */
+    private static <T> T HTTPGet(HttpRequest request, JavaType type) throws IOException, InterruptedException {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        ObjectMapper mapper = new ObjectMapper();
-
-        if (response.statusCode() == 200) {
-            JavaType type = mapper.getTypeFactory().constructParametricType(JsonResponse.class, clazz);
-            JsonResponse<T> model = mapper.readValue(response.body(), type);
-            return model.getData();
+        if (response.statusCode() != 200) {
+            return null;
         }
 
-        return null;
+        // Deserialize the response
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(response.body(), type);
+    }
+
+    /**
+     * This class is just a model to easily unwrap inner model from CurseForge API responses,
+     * because JSON object returned by the API always contains a "data" key.
+     * <p>
+     * {@code
+     *     {
+     *         data: ...
+     *     }
+     * }
+     *
+     * @param <T> Inner model contained by the response
+     */
+    private static class CurseForgeResponse<T> {
+        private T data;
+
+        public T getData() {
+            return data;
+        }
     }
 }

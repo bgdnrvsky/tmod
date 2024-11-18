@@ -19,7 +19,7 @@ public class CAdd implements ICommand {
         try {
             // Repository repo = Mapper.read(options.getRepositoryPath());
 
-            Mod mod = TmodClient.searchModById(target);
+            Mod mod = TmodClient.searchModById(Integer.parseInt(target));
             System.out.println(mod);
 
         } catch (Exception e) {
