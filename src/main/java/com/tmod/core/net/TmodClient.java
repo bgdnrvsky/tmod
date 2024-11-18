@@ -22,7 +22,7 @@ import java.net.http.HttpResponse;
  * It uses Java's {@link HttpClient} to send HTTP requests and Jackson for JSON parsing.
  * </p>
  */
-public class CurseForgeClient {
+public class TmodClient {
 
     /**
      * CurseForge's REST API
