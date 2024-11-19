@@ -49,13 +49,26 @@ public class TmodClient {
      * </p>
      *
      * @param id the unique numeric identifier of the mod to search for
-     * @return a {@link Mod} object containing mod details, or {@code null} if the mod is not found
+     * @return a {@link Mod} object containing mod details, or {@code null} if the mod is not found, or if the searched
+     * id is not a Minecraft mod (e.g. a mod for Sims 4)
      * @throws URISyntaxException    if the constructed URI is invalid
      * @throws IOException           if an I/O error occurs during the request
      * @throws InterruptedException  if the operation is interrupted
      */
     public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
-        return CurseForgeGet(new URI(API_BASE_URL + "mods/" + Integer.toString(id)), TypeFactory.defaultInstance().constructType(Mod.class));
+        Mod mod = CurseForgeGet(new URI(API_BASE_URL + "mods/" + id), TypeFactory.defaultInstance().constructType(Mod.class));
+
+        if (mod == null) {
+            // The mod doesn't exist
+            return null;
+        }
+
+        if (mod.gameId() != TmodClient.getCurseForgeMinecraftId()) {
+            // The mod is not for Minecraft
+            return null;
+        }
+
+        return mod;
     }
 
     /**
