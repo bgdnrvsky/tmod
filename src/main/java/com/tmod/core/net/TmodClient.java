@@ -16,6 +16,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -70,6 +71,29 @@ public class TmodClient {
      */
     public static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
         return CurseForgeGet(new URI(API_BASE_URL + "games/"), TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Game.class));
+    }
+
+    /**
+     * Obtains the inner id of Minecraft on CurseForge platform
+     * <p>
+     *     Firstly fetches all the games via {@link TmodClient#getCurseForgeGames()},
+     *     and then searches for the Minecraft and maps the value to get the id
+     * </p>
+     *
+     * @return the inner id of Minecraft on the CurseForge platform, or {@code null} if status code is not 200,
+     * or if Minecraft wasn't present on the game list
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
+    public static int getCurseForgeMinecraftId() throws URISyntaxException, IOException, InterruptedException {
+        List<Game> games = TmodClient.getCurseForgeGames();
+
+        return games.stream()
+                    .filter((game) -> Objects.equals(game.slug(), "minecraft") || Objects.equals(game.name(), "Minecraft"))
+                    .findFirst()
+                    .map(Game::id)
+                    .orElse(null);
     }
 
     /**
