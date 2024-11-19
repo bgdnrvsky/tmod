@@ -37,7 +37,6 @@ public class App {
             commander.parse(argv);
         } catch (ParameterException e) {
             System.err.println(e.getMessage());
-            commander.usage();
             return;
         }
 
