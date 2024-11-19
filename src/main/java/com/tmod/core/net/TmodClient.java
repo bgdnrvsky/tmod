@@ -132,7 +132,7 @@ public class TmodClient {
                 .GET()
                 .build();
 
-        CurseForgeResponse<T> model = HTTPGet(request, TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, type));
+        CurseForgeResponse<T> model = HttpGet(request, TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, type));
         return model != null ? model.getData() : null;
     }
 
@@ -150,7 +150,7 @@ public class TmodClient {
      * @throws IOException          if an I/O error occurs during the request
      * @throws InterruptedException if the operation is interrupted
      */
-    private static <T> T HTTPGet(HttpRequest request, JavaType type) throws IOException, InterruptedException {
+    private static <T> T HttpGet(HttpRequest request, JavaType type) throws IOException, InterruptedException {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
         if (response.statusCode() != 200) {
