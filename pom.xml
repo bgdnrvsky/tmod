@@ -19,40 +19,20 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.2</version>
+                <artifactId>maven-shade-plugin</artifactId>
                 <executions>
-                    <!-- Configuration for CLI App -->
                     <execution>
-                        <id>cli-app</id>
-                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <archive>
-                                <manifest>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <transformers>
+                                <transformer implementation=
+                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>com.tmod.cli.App</mainClass>
-                                </manifest>
-                            </archive>
-                            <classifier>cli</classifier>
-                        </configuration>
-                    </execution>
-
-                    <!-- Configuration for GUI App -->
-                    <execution>
-                        <id>gui-app</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>com.tmod.gui.App</mainClass>
-                                </manifest>
-                            </archive>
-                            <classifier>cli</classifier>
+                                </transformer>
+                            </transformers>
                         </configuration>
                     </execution>
                 </executions>
