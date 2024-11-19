@@ -1,8 +1,11 @@
 package com.tmod.core.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * See <a href="https://docs.curseforge.com/rest-api/#tocS_Game">Schemas > Game</a>
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Game(
     int id,
     String name,
