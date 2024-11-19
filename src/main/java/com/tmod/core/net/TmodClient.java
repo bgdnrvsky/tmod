@@ -1,9 +1,11 @@
 package com.tmod.core.net;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.tmod.core.models.Game;
 import com.tmod.core.models.Mod;
 
 import java.io.IOException;
@@ -12,6 +14,8 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -40,8 +44,7 @@ public class TmodClient {
     /**
      * Searches for a mod by its ID using the CurseForge API.
      * <p>
-     * This method sends a GET request to the `/mods/{id}` endpoint of the CurseForge API
-     * and retrieves the mod details if available.
+     *     This method sends a GET request to the `/mods/{id}` endpoint of the CurseForge API
      * </p>
      *
      * @param id the unique numeric identifier of the mod to search for
@@ -51,7 +54,22 @@ public class TmodClient {
      * @throws InterruptedException  if the operation is interrupted
      */
     public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
-        return CurseForgeGet(new URI(API_BASE_URL + "mods/" + Integer.toString(id)), Mod.class);
+        return CurseForgeGet(new URI(API_BASE_URL + "mods/" + Integer.toString(id)), TypeFactory.defaultInstance().constructType(Mod.class));
+    }
+
+    /**
+     * Obtains all the games available on the CurseForge platform
+     * <p>
+     *     Sends a GET request to the `/games` endpoint of the CurseForge API
+     * </p>
+     *
+     * @return the list of all the {@link Game}s available on the CurseForge platform, or {@code null} if status code is not 200
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
+    public static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
+        return CurseForgeGet(new URI(API_BASE_URL + "games/"), TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Game.class));
     }
 
     /**
@@ -63,13 +81,13 @@ public class TmodClient {
      * </p>
      *
      * @param endpoint the URI of the API endpoint to send the request to
-     * @param clazz    the class type to map the JSON response to
+     * @param type     the class type to deserialize the JSON response to
      * @param <T>      the generic type of the response data
      * @return an object of type {@code T}, or {@code null} if the response status code is not 200
      * @throws IOException          if an I/O error occurs during the request
      * @throws InterruptedException if the operation is interrupted
      */
-    private static <T> T CurseForgeGet(URI endpoint, Class<T> clazz) throws IOException, InterruptedException {
+    private static <T> T CurseForgeGet(URI endpoint, JavaType type) throws IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(endpoint)
                 .header("Accept", "application/json")
@@ -77,8 +95,7 @@ public class TmodClient {
                 .GET()
                 .build();
 
-        JavaType type = TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, clazz);
-        CurseForgeResponse<T> model = HTTPGet(request, type);
+        CurseForgeResponse<T> model = HTTPGet(request, TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, type));
         return model != null ? model.getData() : null;
     }
 
@@ -120,6 +137,7 @@ public class TmodClient {
      *
      * @param <T> Inner model contained by the response
      */
+    @JsonIgnoreProperties(ignoreUnknown = true)
     private static class CurseForgeResponse<T> {
         private T data;
 
