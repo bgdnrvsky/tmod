@@ -63,9 +63,14 @@ public class TmodClient {
             return null;
         }
 
-        if (mod.gameId() != TmodClient.getCurseForgeMinecraftId()) {
-            // The mod is not for Minecraft
-            return null;
+        int minecraftId = TmodClient.getCurseForgeMinecraftId();
+
+        if (minecraftId != -1) {
+            // Only check if we actually got the id
+            if (mod.gameId() != minecraftId) {
+                // The mod is not for Minecraft
+                return null;
+            }
         }
 
         return mod;
@@ -93,7 +98,7 @@ public class TmodClient {
      *     and then searches for the Minecraft and maps the value to get the id
      * </p>
      *
-     * @return the inner id of Minecraft on the CurseForge platform, or {@code null} if status code is not 200,
+     * @return the inner id of Minecraft on the CurseForge platform, or -1 if status code is not 200,
      * or if Minecraft wasn't present on the game list
      * @throws URISyntaxException    if the constructed URI is invalid
      * @throws IOException           if an I/O error occurs during the request
@@ -102,11 +107,15 @@ public class TmodClient {
     private static int getCurseForgeMinecraftId() throws URISyntaxException, IOException, InterruptedException {
         List<Game> games = TmodClient.getCurseForgeGames();
 
+        if (games == null) {
+            return -1;
+        }
+
         return games.stream()
                     .filter((game) -> Objects.equals(game.slug(), "minecraft") || Objects.equals(game.name(), "Minecraft"))
                     .findFirst()
                     .map(Game::id)
-                    .orElse(null);
+                    .orElse(-1);
     }
 
     /**
