@@ -82,7 +82,7 @@ public class TmodClient {
      * @throws IOException           if an I/O error occurs during the request
      * @throws InterruptedException  if the operation is interrupted
      */
-    public static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
+    private static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
         return CurseForgeGet(new URI(API_BASE_URL + "games/"), TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Game.class));
     }
 
@@ -99,7 +99,7 @@ public class TmodClient {
      * @throws IOException           if an I/O error occurs during the request
      * @throws InterruptedException  if the operation is interrupted
      */
-    public static int getCurseForgeMinecraftId() throws URISyntaxException, IOException, InterruptedException {
+    private static int getCurseForgeMinecraftId() throws URISyntaxException, IOException, InterruptedException {
         List<Game> games = TmodClient.getCurseForgeGames();
 
         return games.stream()
