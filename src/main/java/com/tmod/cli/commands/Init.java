@@ -1,32 +1,38 @@
 package com.tmod.cli.commands;
 
-import com.beust.jcommander.Parameters;
-import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.Mapper;
+import com.tmod.core.repo.Repository;
+import picocli.CommandLine;
+
 import com.tmod.core.repo.models.ModLoader;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Scanner;
 
-@Parameters(commandNames="init", commandDescription="Initialize a new repo")
-public class CInit implements ICommand {
-
+@CommandLine.Command(
+        name = "init",
+        description = "Initialize a new empty repo"
+)
+public class Init implements Runnable {
     @Override
-    public void onExecute(Options options) {
+    public void run() {
         Repository repo = new Repository(
                 promptVersion(),
                 promptLoader()
         );
 
         try {
-            Mapper.write(repo, options.getRepositoryPath());
-            System.out.println("Initialized empty tmod repository at " + options.getRepositoryPath());
+            Path tmodPath = Path.of(".tmod");
+            Mapper.write(repo, tmodPath);
+            System.out.println("Initialized an empty tmod repository at " + tmodPath);
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
     }
 
     /**
+     * Prompts the user to choose a {@link ModLoader}
      * @return The selected {@link ModLoader}
      */
     private ModLoader promptLoader() {
@@ -52,10 +58,11 @@ public class CInit implements ICommand {
     }
 
     /**
-     * TODO: Choose among a predefined list of versions ?
+     * Prompts the user to choose a game version
      *
      * @return {@link String} representing the game's version
      */
+    // TODO: Choose among a predefined list of versions ?
     private String promptVersion() {
         System.out.print("Choose the game version: ");
 
