@@ -1,5 +1,6 @@
 package com.tmod.cli.commands;
 
+import com.tmod.cli.App;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -7,6 +8,9 @@ import picocli.CommandLine;
         description = "Download all the mods to a target folder"
 )
 public class Install implements Runnable {
+    @CommandLine.ParentCommand
+    private App parent;
+
     @CommandLine.Option(
             names = { "-s", "--server" },
             description = "Do not install client only mods",

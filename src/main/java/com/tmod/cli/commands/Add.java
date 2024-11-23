@@ -1,5 +1,6 @@
 package com.tmod.cli.commands;
 
+import com.tmod.cli.App;
 import com.tmod.core.models.Mod;
 import com.tmod.core.net.TmodClient;
 import picocli.CommandLine;
@@ -9,6 +10,9 @@ import picocli.CommandLine;
         description = "Add minecraft mod to the repo"
 )
 public class Add implements Runnable {
+    @CommandLine.ParentCommand
+    private App parent;
+
     @CommandLine.Parameters(
             paramLabel="<mod id/slug>",
             description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"

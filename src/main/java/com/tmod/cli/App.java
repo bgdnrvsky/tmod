@@ -18,8 +18,33 @@ import picocli.CommandLine;
         }
 )
 public class App {
+    @CommandLine.Option(
+            names = { "-r", "--repo" },
+            paramLabel = "<Path>",
+            description = "Change the default repository path",
+            defaultValue = ".tmod",
+            showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
+    )
+    private String repoPath = ".tmod";
+
+    @CommandLine.Option(
+            names = { "-q", "--quiet" },
+            description = "Silence tmod",
+            defaultValue = "false",
+            showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
+    )
+    private boolean quiet = false;
+
     public static void main(String[] args) {
         int exitCode = new CommandLine(new App()).execute(args);
         System.exit(exitCode);
+    }
+
+    public String getRepoPath() {
+        return repoPath;
+    }
+
+    public boolean isQuiet() {
+        return quiet;
     }
 }

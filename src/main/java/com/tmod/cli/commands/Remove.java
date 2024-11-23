@@ -1,5 +1,6 @@
 package com.tmod.cli.commands;
 
+import com.tmod.cli.App;
 import picocli.CommandLine;
 
 import java.util.Set;
@@ -9,6 +10,9 @@ import java.util.Set;
         description = "Remove one or multiple mods from the repo"
 )
 public class Remove implements Runnable {
+    @CommandLine.ParentCommand
+    private App parent;
+
     @CommandLine.Parameters(
         arity = "1..*",
         paramLabel = "slugs"

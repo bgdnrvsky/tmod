@@ -1,5 +1,6 @@
 package com.tmod.cli.commands;
 
+import com.tmod.cli.App;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import picocli.CommandLine;
@@ -15,6 +16,9 @@ import java.util.Scanner;
         description = "Initialize a new empty repo"
 )
 public class Init implements Runnable {
+    @CommandLine.ParentCommand
+    private App parent;
+
     @Override
     public void run() {
         Repository repo = new Repository(
@@ -23,9 +27,11 @@ public class Init implements Runnable {
         );
 
         try {
-            Path tmodPath = Path.of(".tmod");
+            Path tmodPath = Path.of(parent.getRepoPath());
             Mapper.write(repo, tmodPath);
-            System.out.println("Initialized an empty tmod repository at " + tmodPath);
+            if (!parent.isQuiet()) {
+                System.out.println("Initialized an empty tmod repository at " + tmodPath);
+            }
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
