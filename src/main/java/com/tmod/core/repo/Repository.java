@@ -2,7 +2,7 @@ package com.tmod.core.repo;
 
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
-import com.tmod.core.repo.models.ModLoader;
+import com.tmod.core.models.ModLoader;
 
 import java.util.Map;
 import java.util.Set;

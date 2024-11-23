@@ -4,7 +4,7 @@ import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import picocli.CommandLine;
 
-import com.tmod.core.repo.models.ModLoader;
+import com.tmod.core.models.ModLoader;
 
 import java.io.IOException;
 import java.nio.file.Path;

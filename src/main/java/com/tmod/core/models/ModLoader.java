@@ -2,6 +2,8 @@ package com.tmod.core.models;
 
 // NOTE: Its own file, because will be used by the pool
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 /**
  * Sent as an integer by the server
  * <p>
@@ -11,20 +13,8 @@ package com.tmod.core.models;
  *         <td>Value</td>
  *     </tr>
  *     <tr>
- *         <td>Any</td>
- *         <td>0</td>
- *     </tr>
- *     <tr>
  *         <td>Forge</td>
  *         <td>1</td>
- *     </tr>
- *     <tr>
- *         <td>Cauldron</td>
- *         <td>2</td>
- *     </tr>
- *     <tr>
- *         <td>LiteLoader</td>
- *         <td>3</td>
  *     </tr>
  *     <tr>
  *         <td>Fabric</td>
@@ -41,11 +31,19 @@ package com.tmod.core.models;
  * </table>
  */
 public enum ModLoader {
-    Any,
-    Forge,
-    Cauldron,
-    LiteLoader,
-    Fabric,
-    Quilt,
-    NeoForge
+    Forge(1),
+    Fabric(4),
+    Quilt(5),
+    NeoForge(6);
+
+    private final int id;
+
+    ModLoader(int id) {
+        this.id = id;
+    }
+
+    @JsonValue
+    public int getId() {
+        return id;
+    }
 }

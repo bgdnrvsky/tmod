@@ -14,7 +14,7 @@ public class TestModLoader {
         String json;
 
         for (ModLoader loader : ModLoader.values()) {
-            json = Integer.toString(loader.ordinal());
+            json = Integer.toString(loader.getId());
             assertEquals(loader, mapper.readValue(json, ModLoader.class));
         }
     }
