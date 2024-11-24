@@ -17,6 +17,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 
@@ -58,6 +59,42 @@ public class TmodClient {
      */
     public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
         Mod mod = CurseForgeGet(new URI(API_BASE_URL + "mods/" + id), TypeFactory.defaultInstance().constructType(Mod.class));
+
+        return modForMinecraft(mod);
+    }
+
+    public static Mod searchModBySlug(String slug) throws URISyntaxException, IOException, InterruptedException {
+        int minecraftId = TmodClient.getCurseForgeMinecraftId();
+        int modsClassId = TmodClient.getCurseForgeCategories()
+                .stream()
+                .filter(Category::isClass)
+                .filter(category -> Objects.equals(category.name(), "Mods"))
+                .findFirst()
+                .map(Category::classId)
+                .orElse(-1);
+
+        URI uri = URIBuilder.newBuilder()
+                .endpoint(API_BASE_URL + "mods/search/")
+                .appendPair("gameId", String.valueOf(minecraftId))
+                .appendPair("classId", String.valueOf(modsClassId))
+                .appendPair("slug", slug)
+                .appendPair("pageSize", "1") // slug coupled with classId will result in a unique result
+                .build();
+
+        List<Mod> mods = CurseForgeGet(uri, TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Mod.class));
+
+        if (mods == null || mods.isEmpty()) {
+            return null;
+        }
+
+        Mod mod;
+
+        try {
+            mod = mods.getFirst();
+        } catch (NoSuchElementException e) {
+            // The mod with such slug doesn't exist
+            return null;
+        }
 
         return modForMinecraft(mod);
     }
