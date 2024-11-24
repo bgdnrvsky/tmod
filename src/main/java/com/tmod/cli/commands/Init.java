@@ -26,9 +26,11 @@ public class Init implements Runnable {
                 promptLoader()
         );
 
+        Path tmodPath = Path.of(parent.getRepoPath());
+        Mapper mapper = new Mapper(tmodPath);
+
         try {
-            Path tmodPath = Path.of(parent.getRepoPath());
-            Mapper.write(repo, tmodPath);
+            mapper.write(repo);
             if (!parent.isQuiet()) {
                 System.out.println("Initialized an empty tmod repository at " + tmodPath);
             }
