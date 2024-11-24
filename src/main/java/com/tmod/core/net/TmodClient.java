@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.tmod.core.models.Category;
 import com.tmod.core.models.Game;
 import com.tmod.core.models.Mod;
 
@@ -89,6 +90,27 @@ public class TmodClient {
      */
     private static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
         return CurseForgeGet(new URI(API_BASE_URL + "games/"), TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Game.class));
+    }
+
+    /**
+     * Obtains all the categories available on the CurseForge platform
+     * <p>
+     *     Sends a GET request to the `/categories` endpoint of the CurseForge API
+     * </p>
+     *
+     * @return the list of all {@link Category}s available on the CurseForge platform, or {@code null} if status code is not 200
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
+    private static List<Category> getCurseForgeCategories() throws URISyntaxException, IOException, InterruptedException {
+        int minecraftId = TmodClient.getCurseForgeMinecraftId();
+        URI uri = URIBuilder.newBuilder()
+                            .endpoint(API_BASE_URL + "categories")
+                            .appendPair("gameId", String.valueOf(minecraftId))
+                            .build();
+
+        return CurseForgeGet(uri, TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Category.class));
     }
 
     /**
