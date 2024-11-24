@@ -59,6 +59,19 @@ public class TmodClient {
     public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
         Mod mod = CurseForgeGet(new URI(API_BASE_URL + "mods/" + id), TypeFactory.defaultInstance().constructType(Mod.class));
 
+        return modForMinecraft(mod);
+    }
+
+    /**
+     * Checks if the {@link Mod} is for Minecraft, and not any other game, by comparing its {@code gameId}
+     * <p>
+     * @param mod the mod that we are checking
+     * @return the same mod if it is for Minecraft or {@code null} if it is not
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
+    private static Mod modForMinecraft(Mod mod) throws URISyntaxException, IOException, InterruptedException {
         if (mod == null) {
             // The mod doesn't exist
             return null;
