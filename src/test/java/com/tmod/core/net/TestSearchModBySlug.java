@@ -12,9 +12,11 @@ public class TestSearchModBySlug {
     @Test
     void searchExistingMinecraftMod() throws URISyntaxException, IOException, InterruptedException {
         Mod jei = TmodClient.searchModBySlug("jei");
+        assertNotNull(jei);
         assertEquals(238222, jei.id());
 
         Mod geckolib = TmodClient.searchModBySlug("geckolib");
+        assertNotNull(geckolib);
         assertEquals(388172, geckolib.id());
     }
 
