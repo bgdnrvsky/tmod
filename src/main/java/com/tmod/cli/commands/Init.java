@@ -1,30 +1,23 @@
 package com.tmod.cli.commands;
 
 import com.tmod.cli.App;
+import com.tmod.core.models.ModLoader;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
-import picocli.CommandLine;
-
-import com.tmod.core.models.ModLoader;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Scanner;
+import picocli.CommandLine;
 
-@CommandLine.Command(
-        name = "init",
-        description = "Initialize a new empty repo"
-)
+@CommandLine.Command(name = "init", description = "Initialize a new empty repo")
 public class Init implements Runnable {
+
     @CommandLine.ParentCommand
     private App parent;
 
     @Override
     public void run() {
-        Repository repo = new Repository(
-                promptVersion(),
-                promptLoader()
-        );
+        Repository repo = new Repository(promptVersion(), promptLoader());
 
         Path tmodPath = Path.of(parent.getRepoPath());
         Mapper mapper = new Mapper(tmodPath);
@@ -32,7 +25,9 @@ public class Init implements Runnable {
         try {
             mapper.write(repo);
             if (!parent.isQuiet()) {
-                System.out.println("Initialized an empty tmod repository at " + tmodPath);
+                System.out.println(
+                    "Initialized an empty tmod repository at " + tmodPath
+                );
             }
         } catch (IOException e) {
             System.err.println(e.getMessage());
@@ -62,6 +57,8 @@ public class Init implements Runnable {
             }
         } while (id <= 0 || id > ModLoader.values().length);
 
+        sc.close();
+
         return ModLoader.values()[id - 1];
     }
 
@@ -75,7 +72,9 @@ public class Init implements Runnable {
         System.out.print("Choose the game version: ");
 
         Scanner sc = new Scanner(System.in);
+        String versionChoice = sc.nextLine();
+        sc.close();
 
-        return sc.nextLine();
+        return versionChoice;
     }
 }
