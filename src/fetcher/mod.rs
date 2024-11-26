@@ -216,6 +216,7 @@ impl Searcher {
         url.query_pairs_mut()
             .append_pair("gameId", self.minecraft_id()?.to_string().as_str())
             .append_pair("classId", mods_category.to_string().as_str())
+            .append_pair("pageSize", "1") // 'slug' and 'classId' result in unique mod
             .append_pair("slug", slug.as_ref());
 
         let response = FetchParameters::new(url, self.is_silent())
