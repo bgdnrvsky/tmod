@@ -96,7 +96,7 @@ public class TmodClient {
             return null;
         }
 
-        return modForMinecraft(mod);
+        return modForMinecraft(mod, minecraftId);
     }
 
     /**
@@ -109,19 +109,28 @@ public class TmodClient {
      * @throws InterruptedException  if the operation is interrupted
      */
     private static Mod modForMinecraft(Mod mod) throws URISyntaxException, IOException, InterruptedException {
+        return TmodClient.modForMinecraft(mod, TmodClient.getCurseForgeMinecraftId());
+    }
+
+    /**
+     * Checks if the {@link Mod} is for Minecraft, and not any other game, by comparing its {@code gameId}
+     * <p>
+     * @param mod the mod that we are checking
+     * @param minecraftId precomputed minecraft id from CurseForge
+     * @return the same mod if it is for Minecraft or {@code null} if it is not
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
+    private static Mod modForMinecraft(Mod mod, int minecraftId) throws URISyntaxException, IOException, InterruptedException {
         if (mod == null) {
             // The mod doesn't exist
             return null;
         }
 
-        int minecraftId = TmodClient.getCurseForgeMinecraftId();
-
-        if (minecraftId != -1) {
-            // Only check if we actually got the id
-            if (mod.gameId() != minecraftId) {
-                // The mod is not for Minecraft
-                return null;
-            }
+        if (mod.gameId() != minecraftId) {
+            // The mod is not for Minecraft
+            return null;
         }
 
         return mod;
