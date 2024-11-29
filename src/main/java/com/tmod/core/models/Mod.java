@@ -34,7 +34,12 @@ public record Mod(
     boolean hasCommentsEnabled,
     int thumbsUpCount,
     int rating
-) {}
+) {
+    @Override
+    public String toString() {
+        return this.slug() + "(" + this.id() + ")";
+    }
+}
 
 record Links(
     String websiteUrl,
