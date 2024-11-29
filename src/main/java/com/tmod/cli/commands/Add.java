@@ -30,7 +30,13 @@ public class Add implements Runnable {
     public void run() {
         try {
             // Repository repo = Mapper.read(options.getRepositoryPath());
-            Mod mod = TmodClient.searchModById(Integer.parseInt(target));
+            Mod mod;
+
+            try {
+                mod = TmodClient.searchModById(Integer.parseInt(target));
+            } catch (NumberFormatException e) {
+                mod = TmodClient.searchModBySlug(target);
+            }
 
             System.out.println(mod);
         } catch (Exception e) {
