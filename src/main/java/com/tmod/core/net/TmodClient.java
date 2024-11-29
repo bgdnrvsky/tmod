@@ -74,7 +74,7 @@ public class TmodClient {
                 .orElse(-1);
 
         URI uri = URIBuilder.newBuilder()
-                .endpoint(API_BASE_URL + "mods/search/")
+                .endpoint(API_BASE_URL + "mods/search")
                 .appendPair("gameId", String.valueOf(minecraftId))
                 .appendPair("classId", String.valueOf(modsClassId))
                 .appendPair("slug", slug)
