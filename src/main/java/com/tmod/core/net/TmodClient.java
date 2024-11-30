@@ -131,11 +131,8 @@ public class TmodClient {
      * @param mod the mod that we are checking
      * @param minecraftId precomputed minecraft id from CurseForge
      * @return the same mod if it is for Minecraft or {@code null} if it is not
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
      */
-    private static Mod modForMinecraft(Mod mod, int minecraftId) throws URISyntaxException, IOException, InterruptedException {
+    private static Mod modForMinecraft(Mod mod, int minecraftId) {
         if (mod == null) {
             // The mod doesn't exist
             return null;
