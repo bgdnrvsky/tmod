@@ -1,6 +1,8 @@
 package com.tmod.cli.commands;
 
 import com.tmod.cli.App;
+import com.tmod.core.models.Mod;
+import com.tmod.core.net.TmodClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -19,7 +21,18 @@ public class Info implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Printing mod info");
-        System.out.println(target);
+        try {
+            Mod mod;
+
+            try {
+                mod = TmodClient.searchModById(Integer.parseInt(target));
+            } catch (NumberFormatException e) {
+                mod = TmodClient.searchModBySlug(target);
+            }
+
+            System.out.println(mod);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 }
