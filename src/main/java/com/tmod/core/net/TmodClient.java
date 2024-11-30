@@ -63,6 +63,19 @@ public class TmodClient {
         return modForMinecraft(mod);
     }
 
+    /**
+     * Searches for a mod by its SLUG using the CurseForge API.
+     * <p>
+     *     This method sends a GET request to the `/mods/search` endpoint of the CurseForge API
+     * </p>
+     *
+     * @param slug the unique identifier of the mod to search for
+     * @return a {@link Mod} object containing mod details, or {@code null} if the mod is not found, or if the searched
+     * id is not a Minecraft mod (e.g. a mod for Sims 4)
+     * @throws URISyntaxException    if the constructed URI is invalid
+     * @throws IOException           if an I/O error occurs during the request
+     * @throws InterruptedException  if the operation is interrupted
+     */
     public static Mod searchModBySlug(String slug) throws URISyntaxException, IOException, InterruptedException {
         int minecraftId = TmodClient.getCurseForgeMinecraftId();
         int modsClassId = TmodClient.getCurseForgeCategories()
