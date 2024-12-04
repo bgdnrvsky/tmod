@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TestSearchModById {
     @Test
-    void searchExistingMinecraftMod() throws URISyntaxException, IOException, InterruptedException {
+    void searchExistingMinecraftMod() throws CurseForgeModSearchException {
         Mod jei = TmodClient.searchModById(238222);
         assertEquals("jei", jei.slug());
 
@@ -19,8 +19,7 @@ class TestSearchModById {
     }
 
     @Test
-    void searchExistingNonMinecraftMod() throws URISyntaxException, IOException, InterruptedException {
-        Mod sims_mod = TmodClient.searchModById(694283);
-        assertNull(sims_mod);
+    void searchExistingNonMinecraftMod()  {
+        assertThrows(CurseForgeModSearchException.class, () -> TmodClient.searchModById(694283));
     }
 }

@@ -75,7 +75,7 @@ class URIBuilder {
      * @return the constructed {@link URI}
      * @throws URISyntaxException if the resulting URI is not syntactically valid
      */
-    public URI build() throws URISyntaxException {
+    public URI build() {
         StringBuilder builder = new StringBuilder(baseUrl);
 
         if (!queryParams.isEmpty()) {
@@ -84,6 +84,10 @@ class URIBuilder {
                 .append(queryParams);
         }
 
-        return new URI(builder.toString());
+        try {
+            return new URI(builder.toString());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

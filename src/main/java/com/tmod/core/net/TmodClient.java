@@ -1,25 +1,20 @@
 package com.tmod.core.net;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.tmod.core.models.Category;
 import com.tmod.core.models.Game;
 import com.tmod.core.models.Mod;
-
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
-
 
 /**
  * Utility class that expose method to interact with the CurseForge REST API.
@@ -40,7 +35,8 @@ public class TmodClient {
      * CurseForge API key
      * cf: <a href="https://github.com/fn2006/PollyMC/wiki/CurseForge-Workaround">CurseForge Workaround</a>
      */
-    private static final String API_KEY = "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
+    private static final String API_KEY =
+        "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 
     private static final HttpClient client = HttpClient.newHttpClient();
 
@@ -51,16 +47,27 @@ public class TmodClient {
      * </p>
      *
      * @param id the unique numeric identifier of the mod to search for
-     * @return a {@link Mod} object containing mod details, or {@code null} if the mod is not found, or if the searched
+     * @return a {@link Mod} object containing mod details
      * id is not a Minecraft mod (e.g. a mod for Sims 4)
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
+     * @throws CurseForgeModSearchException couldn't find the Minecraft mod
      */
-    public static Mod searchModById(int id) throws URISyntaxException, IOException, InterruptedException {
-        Mod mod = CurseForgeGet(new URI(API_BASE_URL + "mods/" + id), TypeFactory.defaultInstance().constructType(Mod.class));
+    public static Mod searchModById(int id)
+        throws CurseForgeModSearchException {
+        try {
+            URI uri = URIBuilder.newBuilder().endpoint(API_BASE_URL + "mods/" + id).build();
+            Mod mod = CurseForgeGet(
+                    uri,
+                    TypeFactory.defaultInstance().constructType(Mod.class)
+            );
 
-        return modForMinecraft(mod);
+            if (mod.gameId() == TmodClient.getCurseForgeMinecraftId()) {
+                return mod;
+            }
+        } catch (CurseForgeApiGetException e) {
+            throw new CurseForgeModSearchException(id, e);
+        }
+
+        throw new CurseForgeModSearchException(id);
     }
 
     /**
@@ -70,80 +77,53 @@ public class TmodClient {
      * </p>
      *
      * @param slug the unique identifier of the mod to search for
-     * @return a {@link Mod} object containing mod details, or {@code null} if the mod is not found, or if the searched
+     * @return a {@link Mod} object containing mod details
      * id is not a Minecraft mod (e.g. a mod for Sims 4)
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
+     * @throws CurseForgeModSearchException couldn't find the Minecraft mod
      */
-    public static Mod searchModBySlug(String slug) throws URISyntaxException, IOException, InterruptedException {
-        int minecraftId = TmodClient.getCurseForgeMinecraftId();
-        int modsClassId = TmodClient.getCurseForgeCategories()
-                .stream()
-                .filter(Category::isClass)
-                .filter(category -> Objects.equals(category.name(), "Mods"))
-                .findFirst()
-                .map(Category::classId)
-                .orElse(-1);
-
-        URI uri = URIBuilder.newBuilder()
-                .endpoint(API_BASE_URL + "mods/search")
-                .appendPair("gameId", String.valueOf(minecraftId))
-                .appendPair("classId", String.valueOf(modsClassId))
-                .appendPair("slug", slug)
-                .appendPair("pageSize", "1") // slug coupled with classId will result in a unique result
-                .build();
-
-        List<Mod> mods = CurseForgeGet(uri, TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Mod.class));
-
-        if (mods == null || mods.isEmpty()) {
-            return null;
-        }
-
-        Mod mod;
-
+    public static Mod searchModBySlug(String slug)
+        throws CurseForgeModSearchException {
         try {
-            mod = mods.getFirst();
-        } catch (NoSuchElementException e) {
-            // The mod with such slug doesn't exist
-            return null;
+            int minecraftId = TmodClient.getCurseForgeMinecraftId();
+
+            List<Category> categories = TmodClient.getCurseForgeCategories();
+
+            int modsClassId = categories
+                    .stream()
+                    .filter(Category::isClass)
+                    .filter(category -> Objects.equals(category.name(), "Mods"))
+                    .findFirst()
+                    .map(Category::classId)
+                    .orElse(-1);
+
+            URI uri = URIBuilder.newBuilder()
+                    .endpoint(API_BASE_URL + "mods/search")
+                    .appendPair("gameId", String.valueOf(minecraftId))
+                    .appendPair("classId", String.valueOf(modsClassId))
+                    .appendPair("slug", slug)
+                    .appendPair("pageSize", "1") // slug coupled with classId will result in a unique result
+                    .build();
+
+            List<Mod> mods = CurseForgeGet(
+                    uri,
+                    TypeFactory.defaultInstance()
+                            .constructCollectionType(ArrayList.class, Mod.class)
+            );
+
+            Mod mod;
+
+            if (!mods.isEmpty()) {
+                mod = mods.getFirst();
+
+                if (mod.gameId() == minecraftId) {
+                    return mod;
+                }
+            }
+        } catch (CurseForgeApiGetException e) {
+            throw new CurseForgeModSearchException(slug, e);
         }
 
-        return modForMinecraft(mod, minecraftId);
-    }
-
-    /**
-     * Checks if the {@link Mod} is for Minecraft, and not any other game, by comparing its {@code gameId}
-     * <p>
-     * @param mod the mod that we are checking
-     * @return the same mod if it is for Minecraft or {@code null} if it is not
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
-     */
-    private static Mod modForMinecraft(Mod mod) throws URISyntaxException, IOException, InterruptedException {
-        return TmodClient.modForMinecraft(mod, TmodClient.getCurseForgeMinecraftId());
-    }
-
-    /**
-     * Checks if the {@link Mod} is for Minecraft, and not any other game, by comparing its {@code gameId}
-     * <p>
-     * @param mod the mod that we are checking
-     * @param minecraftId precomputed minecraft id from CurseForge
-     * @return the same mod if it is for Minecraft or {@code null} if it is not
-     */
-    private static Mod modForMinecraft(Mod mod, int minecraftId) {
-        if (mod == null) {
-            // The mod doesn't exist
-            return null;
-        }
-
-        if (mod.gameId() != minecraftId) {
-            // The mod is not for Minecraft
-            return null;
-        }
-
-        return mod;
+        throw new CurseForgeModSearchException(slug);
     }
 
     /**
@@ -152,13 +132,18 @@ public class TmodClient {
      *     Sends a GET request to the `/games` endpoint of the CurseForge API
      * </p>
      *
-     * @return the list of all the {@link Game}s available on the CurseForge platform, or {@code null} if status code is not 200
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
+     * @return the list of all the {@link Game}s available on the CurseForge platform
+     * @throws CurseForgeApiGetException error while performing GET request
      */
-    private static List<Game> getCurseForgeGames() throws URISyntaxException, IOException, InterruptedException {
-        return CurseForgeGet(new URI(API_BASE_URL + "games/"), TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Game.class));
+    private static List<Game> getCurseForgeGames()
+        throws CurseForgeApiGetException {
+        URI uri = URIBuilder.newBuilder().endpoint(API_BASE_URL + "games").build();
+
+        return CurseForgeGet(
+            uri,
+            TypeFactory.defaultInstance()
+                .constructCollectionType(ArrayList.class, Game.class)
+        );
     }
 
     /**
@@ -167,19 +152,23 @@ public class TmodClient {
      *     Sends a GET request to the `/categories` endpoint of the CurseForge API
      * </p>
      *
-     * @return the list of all {@link Category}s available on the CurseForge platform, or {@code null} if status code is not 200
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
+     * @return the list of all {@link Category}s available on the CurseForge platform
+     * @throws CurseForgeApiGetException error while performing GET request
      */
-    private static List<Category> getCurseForgeCategories() throws URISyntaxException, IOException, InterruptedException {
+    private static List<Category> getCurseForgeCategories()
+        throws CurseForgeApiGetException {
         int minecraftId = TmodClient.getCurseForgeMinecraftId();
-        URI uri = URIBuilder.newBuilder()
-                            .endpoint(API_BASE_URL + "categories")
-                            .appendPair("gameId", String.valueOf(minecraftId))
-                            .build();
 
-        return CurseForgeGet(uri, TypeFactory.defaultInstance().constructCollectionType(ArrayList.class, Category.class));
+        URI uri = URIBuilder.newBuilder()
+                .endpoint(API_BASE_URL + "categories")
+                .appendPair("gameId", String.valueOf(minecraftId))
+                .build();
+
+        return CurseForgeGet(
+            uri,
+            TypeFactory.defaultInstance()
+                .constructCollectionType(ArrayList.class, Category.class)
+        );
     }
 
     /**
@@ -191,22 +180,22 @@ public class TmodClient {
      *
      * @return the inner id of Minecraft on the CurseForge platform, or -1 if status code is not 200,
      * or if Minecraft wasn't present on the game list
-     * @throws URISyntaxException    if the constructed URI is invalid
-     * @throws IOException           if an I/O error occurs during the request
-     * @throws InterruptedException  if the operation is interrupted
+     * @throws CurseForgeApiGetException error while performing GET request
      */
-    private static int getCurseForgeMinecraftId() throws URISyntaxException, IOException, InterruptedException {
+    private static int getCurseForgeMinecraftId()
+        throws CurseForgeApiGetException {
         List<Game> games = TmodClient.getCurseForgeGames();
 
-        if (games == null) {
-            return -1;
-        }
-
-        return games.stream()
-                    .filter((game) -> Objects.equals(game.slug(), "minecraft") || Objects.equals(game.name(), "Minecraft"))
-                    .findFirst()
-                    .map(Game::id)
-                    .orElse(-1);
+        return games
+            .stream()
+            .filter(
+                game ->
+                    Objects.equals(game.slug(), "minecraft") ||
+                    Objects.equals(game.name(), "Minecraft")
+            )
+            .findFirst()
+            .map(Game::id)
+            .orElse(-1);
     }
 
     /**
@@ -220,20 +209,31 @@ public class TmodClient {
      * @param endpoint the URI of the API endpoint to send the request to
      * @param type     the class type to deserialize the JSON response to
      * @param <T>      the generic type of the response data
-     * @return an object of type {@code T}, or {@code null} if the response status code is not 200
-     * @throws IOException          if an I/O error occurs during the request
-     * @throws InterruptedException if the operation is interrupted
+     * @return an object of type {@code T}
+     * @throws CurseForgeApiGetException error while performing GET request
      */
-    private static <T> T CurseForgeGet(URI endpoint, JavaType type) throws IOException, InterruptedException {
+    private static <T> T CurseForgeGet(URI endpoint, JavaType type)
+        throws CurseForgeApiGetException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(endpoint)
-                .header("Accept", "application/json")
-                .header("x-api-key", API_KEY)
-                .GET()
-                .build();
+            .uri(endpoint)
+            .header("Accept", "application/json")
+            .header("x-api-key", API_KEY)
+            .GET()
+            .build();
 
-        CurseForgeResponse<T> model = HttpGet(request, TypeFactory.defaultInstance().constructParametricType(CurseForgeResponse.class, type));
-        return model != null ? model.getData() : null;
+        CurseForgeResponse<T> model;
+
+        try {
+            model = HttpGet(
+                request,
+                TypeFactory.defaultInstance()
+                    .constructParametricType(CurseForgeResponse.class, type)
+            );
+
+            return model.getData();
+        } catch (Exception e) {
+            throw new CurseForgeApiGetException(e);
+        }
     }
 
     /**
@@ -246,20 +246,33 @@ public class TmodClient {
      * @param request  the {@link HttpRequest} instance
      * @param type     the type to deserialize the JSON response to
      * @param <T>      the generic type of the response data
-     * @return an object of type {@code T}, or {@code null} if the response status code is not 200
-     * @throws IOException          if an I/O error occurs during the request
-     * @throws InterruptedException if the operation is interrupted
+     * @return an object of type {@code T}
+     * @throws HttpGetException error while sending request or status code is not 200
+     * @throws DeserializationException error deserializing response
      */
-    private static <T> T HttpGet(HttpRequest request, JavaType type) throws IOException, InterruptedException {
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+    private static <T> T HttpGet(HttpRequest request, JavaType type)
+        throws HttpGetException, DeserializationException {
+        HttpResponse<String> response;
+        try {
+            response = client.send(
+                request,
+                HttpResponse.BodyHandlers.ofString()
+            );
+        } catch (Exception e) {
+            throw new HttpGetException(request.uri(), e);
+        }
 
         if (response.statusCode() != 200) {
-            return null;
+            throw new HttpGetException(request.uri(), response.statusCode());
         }
 
         // Deserialize the response
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(response.body(), type);
+        try {
+            return mapper.readValue(response.body(), type);
+        } catch (JsonProcessingException e) {
+            throw new DeserializationException(type, e);
+        }
     }
 
     /**
@@ -276,6 +289,7 @@ public class TmodClient {
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     private static class CurseForgeResponse<T> {
+
         private T data;
 
         public T getData() {
