@@ -3,14 +3,20 @@ package com.tmod.core.repo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.tmod.core.models.Mod;
+import com.tmod.core.net.CurseForgeModSearchException;
+import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Mapper {
     private final Path repoPath;
@@ -49,14 +55,27 @@ public class Mapper {
      *
      * @return {@link Repository}
      */
-    public Repository read() throws IOException {
+    public Repository read() throws IOException, CurseForgeModSearchException {
         ObjectMapper mapper = new ObjectMapper();
 
         Configuration config = mapper.readValue(repoPath.resolve(PATH_CONF).toFile(), Configuration.class);
-        Set<String> manuallyAdded = mapper.readValue(repoPath.resolve(PATH_MODS).toFile(), new TypeReference<>() {
-        });
-        Map<String, DependencyInfo> locks = mapper.readValue(repoPath.resolve(PATH_LOCK).toFile(), new TypeReference<>() {
-        });
+        Set<Mod> manuallyAdded = mapper.readValue(
+                repoPath.resolve(PATH_MODS).toFile(),
+                new TypeReference<Set<String>>() {}
+        )
+                .stream()
+                .map(TmodClient::searchModBySlug)
+                .collect(Collectors.toSet());
+        Map<Mod, DependencyInfo> locks = mapper.readValue(
+                repoPath.resolve(PATH_LOCK).toFile(),
+                new TypeReference<Map<String, DependencyInfo>>() {}
+        )
+                .entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        entry -> TmodClient.searchModBySlug(entry.getKey()),
+                        Map.Entry::getValue)
+                );
 
         return new Repository(config, manuallyAdded, locks);
     }
