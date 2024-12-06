@@ -1,5 +1,7 @@
 package com.tmod.core.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 /**
@@ -22,7 +24,8 @@ public record File(
     String downloadUrl,
     List<String> gameVersions,
     List<SortableVersion> sortableGameVersions,
-    List<Dependency> dependencies,
+    @JsonProperty("dependencies")
+    List<Relation> relations,
     boolean exposeAsAlternative,
     int parentProjectFileId,
     int alternateFileId,
@@ -86,7 +89,7 @@ enum RelationType {
     Include,
 }
 
-record Dependency(int modId, RelationType relationType) {}
+record Relation(int modId, RelationType relationType) {}
 
 record Hash(String value, int algo) {}
 
