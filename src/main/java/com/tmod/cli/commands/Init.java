@@ -17,7 +17,9 @@ public class Init implements Runnable {
 
     @Override
     public void run() {
-        Repository repo = new Repository(promptVersion(), promptLoader());
+        Scanner scanner = new Scanner(System.in);
+        Repository repo = new Repository(promptVersion(scanner), promptLoader(scanner));
+        scanner.close();
 
         Path tmodPath = Path.of(parent.getRepoPath());
         Mapper mapper = new Mapper(tmodPath);
@@ -38,12 +40,10 @@ public class Init implements Runnable {
      * Prompts the user to choose a {@link ModLoader}
      * @return The selected {@link ModLoader}
      */
-    private ModLoader promptLoader() {
+    private ModLoader promptLoader(Scanner sc) {
         for (int i = 0; i < ModLoader.values().length; ++i) {
             System.out.printf("%d. %s\n", i + 1, ModLoader.values()[i]);
         }
-
-        Scanner sc = new Scanner(System.in);
 
         int id = 0;
 
@@ -57,8 +57,6 @@ public class Init implements Runnable {
             }
         } while (id <= 0 || id > ModLoader.values().length);
 
-        sc.close();
-
         return ModLoader.values()[id - 1];
     }
 
@@ -68,13 +66,9 @@ public class Init implements Runnable {
      * @return {@link String} representing the game's version
      */
     // TODO: Choose among a predefined list of versions ?
-    private String promptVersion() {
+    private String promptVersion(Scanner sc) {
         System.out.print("Choose the game version: ");
-
-        Scanner sc = new Scanner(System.in);
         String versionChoice = sc.nextLine();
-        sc.close();
-
         return versionChoice;
     }
 }
