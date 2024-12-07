@@ -3,9 +3,6 @@ package com.tmod.core.net;
 import com.tmod.core.models.Mod;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class TestSearchModById {
