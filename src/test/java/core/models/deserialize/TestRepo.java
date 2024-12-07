@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestRepo {
     @Test
     void de() throws IOException, CurseForgeModSearchException {
-        Mapper mapper = new Mapper(Path.of("src/test/java/core/models/deserialize/.tmod"));
+        Mapper mapper = new Mapper(Path.of("src/test/java/core/models/deserialize/test-repo"));
         Repository repository = mapper.read();
 
         assertEquals(new Configuration("1.20.1", ModLoader.Forge), repository.getConfig());
