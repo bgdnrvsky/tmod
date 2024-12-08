@@ -1,6 +1,5 @@
 package com.tmod.core.repo;
 
-import com.tmod.core.models.Mod;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
 import com.tmod.core.models.ModLoader;
@@ -23,12 +22,12 @@ public class Repository {
     /**
      * Collections of manually added mod
      */
-    private final Set<Mod> manuallyAdded;
+    private final Set<String> manuallyAdded;
 
     /**
      *
      */
-    private final Map<Mod, DependencyInfo> locks;
+    private final Map<String, DependencyInfo> locks;
 
     /**
      * Default constructor
@@ -39,7 +38,7 @@ public class Repository {
         this.locks = new HashMap<>();
     }
 
-    public Repository(Configuration config, Set<Mod> manuallyAdded, Map<Mod, DependencyInfo> locks) {
+    public Repository(Configuration config, Set<String> manuallyAdded, Map<String, DependencyInfo> locks) {
         this.config = config;
         this.manuallyAdded = manuallyAdded;
         this.locks = locks;
@@ -49,11 +48,11 @@ public class Repository {
         return config;
     }
 
-    public Set<Mod> getManuallyAdded() {
+    public Set<String> getManuallyAdded() {
         return manuallyAdded;
     }
 
-    public Map<Mod, DependencyInfo> getLocks() {
+    public Map<String, DependencyInfo> getLocks() {
         return locks;
     }
 }

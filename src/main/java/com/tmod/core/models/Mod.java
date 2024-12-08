@@ -1,19 +1,14 @@
 package com.tmod.core.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.List;
 
 /**
  * See the <a href="https://docs.curseforge.com/rest-api/#search-mods">"Search mods"</a> endpoint
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record Mod(
     int id,
     int gameId,
     String name,
-    @JsonValue
     String slug,
     Links links,
     String summary,
