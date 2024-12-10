@@ -1,4 +1,4 @@
-package core.models.deserialize;
+package com.tmod.core.deserialize;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +15,7 @@ public class TestRepo {
     @Test
     void de() throws IOException {
         Mapper mapper = new Mapper(
-            Path.of("src/test/java/core/models/deserialize/test-repo")
+            Path.of("src/test/java/com/tmod/core/deserialize/test-repo")
         );
         Repository repository = mapper.read();
 
