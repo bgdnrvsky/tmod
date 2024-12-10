@@ -1,4 +1,4 @@
-package core.models.deserialize;
+package com.tmod.core.deserialize;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
