@@ -6,16 +6,17 @@ import com.tmod.core.net.TmodClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "info",
-        description = "Search a remote mod and print its info"
+    name = "info",
+    description = "Search a remote mod and print its info"
 )
 public class Info implements Runnable {
+
     @CommandLine.ParentCommand
     private App parent;
 
     @CommandLine.Parameters(
-            paramLabel="<mod id/slug>",
-            description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
+        paramLabel = "<mod id/slug>",
+        description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
     )
     private String target;
 
@@ -30,7 +31,14 @@ public class Info implements Runnable {
                 mod = TmodClient.searchModBySlug(target);
             }
 
-            System.out.println(mod);
+            System.out.println(
+                String.format(
+                    "%s(%d) - %s",
+                    mod.name(),
+                    mod.id(),
+                    mod.summary()
+                )
+            );
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
