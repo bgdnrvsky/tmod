@@ -1,31 +1,33 @@
 package com.tmod.cli.commands;
 
 import com.tmod.cli.App;
+import java.nio.file.Path;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "install",
-        description = "Download all the mods to a target folder"
+    name = "install",
+    description = "Download all the mods to a target folder"
 )
 public class Install implements Runnable {
+
     @CommandLine.ParentCommand
     private App parent;
 
     @CommandLine.Option(
-            names = { "-s", "--server" },
-            description = "Do not install client only mods",
-            defaultValue = "false"
+        names = { "-s", "--server" },
+        description = "Do not install client only mods",
+        defaultValue = "false"
     )
     private boolean server = false;
 
     @CommandLine.Option(
-            names = { "-o", "--out-dir" },
-            paramLabel = "<Path>",
-            description = "The target folder",
-            defaultValue = "mods/",
-            showDefaultValue = CommandLine.Help.Visibility.ALWAYS
+        names = { "-o", "--out-dir" },
+        paramLabel = "<Path>",
+        description = "The target folder",
+        defaultValue = "mods/",
+        showDefaultValue = CommandLine.Help.Visibility.ALWAYS
     )
-    private String targetDirectoryPath = "mods/";
+    private Path targetDirectoryPath = Path.of("mods/");
 
     @Override
     public void run() {

@@ -6,22 +6,23 @@ import com.tmod.core.net.TmodClient;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "add",
-        description = "Add minecraft mod to the repo"
+    name = "add",
+    description = "Add minecraft mod to the repo"
 )
 public class Add implements Runnable {
+
     @CommandLine.ParentCommand
     private App parent;
 
     @CommandLine.Parameters(
-            paramLabel="<mod id/slug>",
-            description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
+        paramLabel = "<mod id/slug>",
+        description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
     )
     private String target;
 
     @CommandLine.Option(
-        names = {"-c", "--client-only"},
-        description="Mark mod as client only, it (and it's dependencies) will be ignored when installing with '--server'",
+        names = { "-c", "--client-only" },
+        description = "Mark mod as client only, it (and it's dependencies) will be ignored when installing with '--server'",
         defaultValue = "false"
     )
     private boolean clientOnly = false;

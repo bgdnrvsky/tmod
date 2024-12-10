@@ -18,10 +18,13 @@ public class Init implements Runnable {
     @Override
     public void run() {
         Scanner scanner = new Scanner(System.in);
-        Repository repo = new Repository(promptVersion(scanner), promptLoader(scanner));
+        Repository repo = new Repository(
+            promptVersion(scanner),
+            promptLoader(scanner)
+        );
         scanner.close();
 
-        Path tmodPath = Path.of(parent.getRepoPath());
+        Path tmodPath = parent.getRepoPath();
         Mapper mapper = new Mapper(tmodPath);
 
         try {

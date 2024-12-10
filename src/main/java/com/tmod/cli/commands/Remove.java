@@ -3,7 +3,6 @@ package com.tmod.cli.commands;
 import com.tmod.cli.App;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
-import java.nio.file.Path;
 import java.util.Set;
 import picocli.CommandLine;
 
@@ -22,7 +21,7 @@ public class Remove implements Runnable {
     @Override
     public void run() {
         try {
-            Mapper mapper = new Mapper(Path.of(parent.getRepoPath()));
+            Mapper mapper = new Mapper(parent.getRepoPath());
             Repository repository = mapper.read();
 
             for (String slug : removalTargetMods) {

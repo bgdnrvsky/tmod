@@ -5,7 +5,6 @@ import com.tmod.core.models.Mod;
 import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
-import java.nio.file.Path;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "list", description = "List the mods in the repo")
@@ -17,7 +16,7 @@ public class List implements Runnable {
     @Override
     public void run() {
         try {
-            Mapper mapper = new Mapper(Path.of(parent.getRepoPath()));
+            Mapper mapper = new Mapper(parent.getRepoPath());
             Repository repository = mapper.read();
 
             int i = 1;
