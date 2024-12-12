@@ -4,6 +4,8 @@ import com.tmod.cli.App;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import java.util.Set;
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -34,12 +36,16 @@ public class Remove implements Runnable {
                     removedFromManuallyAdded || removedFromLocks;
 
                 if (!removedFromRepo) {
-                    System.out.println(
-                        String.format(
-                            "The mod '%s' wasn't present in the repo",
-                            slug
-                        )
-                    );
+                    Ansi msg = new Ansi();
+
+                    msg
+                        .a("The mod ")
+                        .fgRed()
+                        .a(slug)
+                        .fgDefault()
+                        .a(" wasn't present in the repo");
+
+                    AnsiConsole.out().println(msg);
                 }
             }
 

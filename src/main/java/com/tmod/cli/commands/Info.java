@@ -3,6 +3,9 @@ package com.tmod.cli.commands;
 import com.tmod.cli.App;
 import com.tmod.core.models.Mod;
 import com.tmod.core.net.TmodClient;
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Attribute;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -31,14 +34,18 @@ public class Info implements Runnable {
                 mod = TmodClient.searchModBySlug(target);
             }
 
-            System.out.println(
-                String.format(
-                    "%s(%d) - %s",
-                    mod.name(),
-                    mod.id(),
-                    mod.summary()
-                )
-            );
+            Ansi msg = new Ansi();
+
+            msg
+                .fgBlue()
+                .a(mod.name())
+                .fgDefault()
+                .format("(%d) - ", mod.id())
+                .a(Attribute.ITALIC)
+                .a(mod.summary())
+                .a(Attribute.ITALIC_OFF);
+
+            AnsiConsole.out().println(msg);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

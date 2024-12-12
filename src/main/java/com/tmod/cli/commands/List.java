@@ -5,6 +5,8 @@ import com.tmod.core.models.Mod;
 import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "list", description = "List the mods in the repo")
@@ -22,17 +24,14 @@ public class List implements Runnable {
             int i = 1;
 
             for (String slug : repository.getManuallyAdded()) {
+                // TODO: Add option not to search the mod and print the slugs directly
                 Mod mod = TmodClient.searchModBySlug(slug);
 
-                System.out.println(
-                    String.format(
-                        "%d. %s(%d): %s",
-                        i,
-                        mod.name(),
-                        mod.id(),
-                        mod.summary()
-                    )
-                );
+                Ansi msg = new Ansi();
+
+                msg.format("%d. ", i).fgBlue().a(mod.name()).fgDefault();
+
+                AnsiConsole.out().println(msg);
 
                 i += 1;
             }

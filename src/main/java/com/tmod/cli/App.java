@@ -2,6 +2,9 @@ package com.tmod.cli;
 
 import com.tmod.cli.commands.*;
 import java.nio.file.Path;
+
+import org.fusesource.jansi.AnsiConsole;
+
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -38,7 +41,9 @@ public class App {
     private boolean quiet = false;
 
     public static void main(String[] args) {
+        AnsiConsole.systemInstall();
         int exitCode = new CommandLine(new App()).execute(args);
+        AnsiConsole.systemUninstall();
         System.exit(exitCode);
     }
 
