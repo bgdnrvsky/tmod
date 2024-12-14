@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.tmod.core.models.Category;
+import com.tmod.core.models.File;
 import com.tmod.core.models.Game;
 import com.tmod.core.models.Mod;
 import java.net.URI;
@@ -54,10 +55,12 @@ public class TmodClient {
     public static Mod searchModById(int id)
         throws CurseForgeModSearchException {
         try {
-            URI uri = URIBuilder.newBuilder().endpoint(API_BASE_URL + "mods/" + id).build();
+            URI uri = URIBuilder.newBuilder()
+                .endpoint(API_BASE_URL + "mods/" + id)
+                .build();
             Mod mod = CurseForgeGet(
-                    uri,
-                    TypeFactory.defaultInstance().constructType(Mod.class)
+                uri,
+                TypeFactory.defaultInstance().constructType(Mod.class)
             );
 
             if (mod.gameId() == TmodClient.getCurseForgeMinecraftId()) {
@@ -89,25 +92,25 @@ public class TmodClient {
             List<Category> categories = TmodClient.getCurseForgeCategories();
 
             int modsClassId = categories
-                    .stream()
-                    .filter(Category::isClass)
-                    .filter(category -> Objects.equals(category.name(), "Mods"))
-                    .findFirst()
-                    .map(Category::classId)
-                    .orElse(-1);
+                .stream()
+                .filter(Category::isClass)
+                .filter(category -> Objects.equals(category.name(), "Mods"))
+                .findFirst()
+                .map(Category::classId)
+                .orElse(-1);
 
             URI uri = URIBuilder.newBuilder()
-                    .endpoint(API_BASE_URL + "mods/search")
-                    .appendPair("gameId", String.valueOf(minecraftId))
-                    .appendPair("classId", String.valueOf(modsClassId))
-                    .appendPair("slug", slug)
-                    .appendPair("pageSize", "1") // slug coupled with classId will result in a unique result
-                    .build();
+                .endpoint(API_BASE_URL + "mods/search")
+                .appendPair("gameId", String.valueOf(minecraftId))
+                .appendPair("classId", String.valueOf(modsClassId))
+                .appendPair("slug", slug)
+                .appendPair("pageSize", "1") // slug coupled with classId will result in a unique result
+                .build();
 
             List<Mod> mods = CurseForgeGet(
-                    uri,
-                    TypeFactory.defaultInstance()
-                            .constructCollectionType(ArrayList.class, Mod.class)
+                uri,
+                TypeFactory.defaultInstance()
+                    .constructCollectionType(ArrayList.class, Mod.class)
             );
 
             Mod mod;
@@ -126,6 +129,19 @@ public class TmodClient {
         throw new CurseForgeModSearchException(slug);
     }
 
+    public static List<File> getModFiles(int modId)
+        throws CurseForgeApiGetException {
+        URI uri = URIBuilder.newBuilder()
+            .endpoint(API_BASE_URL + "mods/" + modId + "/files")
+            .build();
+
+        return CurseForgeGet(
+            uri,
+            TypeFactory.defaultInstance()
+                .constructCollectionLikeType(List.class, File.class)
+        );
+    }
+
     /**
      * Obtains all the games available on the CurseForge platform
      * <p>
@@ -137,7 +153,9 @@ public class TmodClient {
      */
     private static List<Game> getCurseForgeGames()
         throws CurseForgeApiGetException {
-        URI uri = URIBuilder.newBuilder().endpoint(API_BASE_URL + "games").build();
+        URI uri = URIBuilder.newBuilder()
+            .endpoint(API_BASE_URL + "games")
+            .build();
 
         return CurseForgeGet(
             uri,
@@ -160,9 +178,9 @@ public class TmodClient {
         int minecraftId = TmodClient.getCurseForgeMinecraftId();
 
         URI uri = URIBuilder.newBuilder()
-                .endpoint(API_BASE_URL + "categories")
-                .appendPair("gameId", String.valueOf(minecraftId))
-                .build();
+            .endpoint(API_BASE_URL + "categories")
+            .appendPair("gameId", String.valueOf(minecraftId))
+            .build();
 
         return CurseForgeGet(
             uri,
