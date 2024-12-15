@@ -129,6 +129,16 @@ public class TmodClient {
         throw new CurseForgeModSearchException(slug);
     }
 
+    /*
+     * Get 50 most recent mod files for a given mod id
+     *
+     * <p>
+     *     This method sends a GET request to the `/mods/{id}/files` endpoint of the CurseForge API
+     * </p>
+     *
+     * @return 50 most recent files
+     * @throws CurseForgeApiGetException error while performing GET request
+     */
     public static List<File> getModFiles(int modId)
         throws CurseForgeApiGetException {
         URI uri = URIBuilder.newBuilder()
