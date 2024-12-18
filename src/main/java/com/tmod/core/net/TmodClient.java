@@ -97,7 +97,7 @@ public class TmodClient {
                 .filter(category -> Objects.equals(category.name(), "Mods"))
                 .findFirst()
                 .map(Category::classId)
-                .orElse(-1);
+                .orElse(0);
 
             URI uri = URIBuilder.newBuilder()
                 .endpoint(API_BASE_URL + "mods/search")
@@ -206,7 +206,7 @@ public class TmodClient {
      *     and then searches for the Minecraft and maps the value to get the id
      * </p>
      *
-     * @return the inner id of Minecraft on the CurseForge platform, or -1 if status code is not 200,
+     * @return the inner id of Minecraft on the CurseForge platform, or 432 if failed,
      * or if Minecraft wasn't present on the game list
      * @throws CurseForgeApiGetException error while performing GET request
      */
@@ -223,7 +223,7 @@ public class TmodClient {
             )
             .findFirst()
             .map(Game::id)
-            .orElse(-1);
+            .orElse(432);
     }
 
     /**
