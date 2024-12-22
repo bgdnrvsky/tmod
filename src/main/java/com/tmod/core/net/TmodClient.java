@@ -9,13 +9,16 @@ import com.tmod.core.models.Category;
 import com.tmod.core.models.File;
 import com.tmod.core.models.Game;
 import com.tmod.core.models.Mod;
+import com.tmod.core.models.ModLoader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Utility class that expose method to interact with the CurseForge REST API.
@@ -129,29 +132,6 @@ public class TmodClient {
         throw new CurseForgeModSearchException(slug);
     }
 
-    /*
-     * Get 50 most recent mod files for a given mod id
-     *
-     * <p>
-     *     This method sends a GET request to the `/mods/{id}/files` endpoint of the CurseForge API
-     * </p>
-     *
-     * @return 50 most recent files
-     * @throws CurseForgeApiGetException error while performing GET request
-     */
-    public static List<File> getModFiles(int modId)
-        throws CurseForgeApiGetException {
-        URI uri = URIBuilder.newBuilder()
-            .endpoint(API_BASE_URL + "mods/" + modId + "/files")
-            .build();
-
-        return CurseForgeGet(
-            uri,
-            TypeFactory.defaultInstance()
-                .constructCollectionLikeType(List.class, File.class)
-        );
-    }
-
     /**
      * Obtains all the games available on the CurseForge platform
      * <p>
@@ -224,6 +204,10 @@ public class TmodClient {
             .findFirst()
             .map(Game::id)
             .orElse(432);
+    }
+
+    public static ModFileGetter newModFileGetter(Mod mod) {
+        return new ModFileGetter(mod);
     }
 
     /**
@@ -322,6 +306,105 @@ public class TmodClient {
 
         public T getData() {
             return data;
+        }
+    }
+
+    /**
+     * Helper class to parametrize file fetch for a mod
+     */
+    public static class ModFileGetter {
+
+        private Mod mod;
+        private Optional<String> gameVersion;
+        private Optional<ModLoader> modLoader;
+        private Optional<String> timestamp;
+
+        public ModFileGetter(Mod mod) {
+            this.mod = mod;
+            this.gameVersion = Optional.empty();
+            this.modLoader = Optional.empty();
+            this.timestamp = Optional.empty();
+        }
+
+        /**
+         * Search by Minecraft version
+         */
+        public ModFileGetter withGameVersion(String gameVersion) {
+            this.gameVersion = Optional.of(gameVersion);
+            return this;
+        }
+
+        /**
+         * Search by Minecraft mod loader
+         */
+        public ModFileGetter withModLoader(ModLoader modLoader) {
+            this.modLoader = Optional.of(modLoader);
+            return this;
+        }
+
+        /**
+         * Performs the GET request to https://api.curseforge.com/v1/mods/{modId}/files endpoint
+         *
+         * <p>
+         *      <a href="https://docs.curseforge.com/rest-api/#get-mod-files">Documentation</a>
+         * </p>
+         *
+         * @return the target file
+         * @throws CurseForgeApiGetException couldn't perform the GET request
+         * @throws NoSuchModFileException couldn't find the file with given timestamp
+         * @throws NoFilesFetchedException no files were fetched from the server
+         */
+        public File get()
+            throws CurseForgeApiGetException, NoSuchModFileException, NoFilesFetchedException {
+            URIBuilder builder = URIBuilder.newBuilder()
+                .endpoint(API_BASE_URL + "mods/" + mod.id() + "/files");
+
+            if (this.gameVersion.isPresent()) {
+                String gameVersion = this.gameVersion.get();
+                builder = builder.appendPair("gameVersion", gameVersion);
+            }
+
+            if (this.modLoader.isPresent()) {
+                ModLoader modLoader = this.modLoader.get();
+                builder = builder.appendPair(
+                    "modLoaderType",
+                    String.valueOf(modLoader.getId())
+                );
+            }
+
+            List<File> files = CurseForgeGet(
+                builder.build(),
+                TypeFactory.defaultInstance()
+                    .constructCollectionLikeType(List.class, File.class)
+            );
+
+            if (files.isEmpty()) {
+                throw new NoFilesFetchedException(this.mod);
+            }
+
+            // Sort files by timestamp in reverse order
+            files.sort(Comparator.comparing(File::fileDate).reversed());
+
+            if (this.timestamp.isPresent()) {
+                // We need to search for a file with the specific timestamp
+                String targetTimestamp = this.timestamp.get();
+
+                Optional<File> targetFile = files
+                    .stream()
+                    .filter(file ->
+                        Objects.equals(targetTimestamp, file.fileDate())
+                    )
+                    .findFirst();
+
+                if (targetFile.isEmpty()) {
+                    throw new NoSuchModFileException(mod, targetTimestamp);
+                } else {
+                    return targetFile.get();
+                }
+            } else {
+                // We need the latest file
+                return files.getFirst();
+            }
         }
     }
 }

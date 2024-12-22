@@ -8,4 +8,8 @@ import java.util.List;
  * @param clientOnly
  * @param dependencies
  */
-public record DependencyInfo(String timestamp, boolean clientOnly, List<String> dependencies) {}
+public record DependencyInfo(
+    String timestamp,
+    boolean clientOnly,
+    List<String> dependencies
+) {}
