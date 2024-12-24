@@ -11,6 +11,10 @@ import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import picocli.CommandLine;
 
@@ -38,12 +42,45 @@ public class Add implements Runnable {
 
     /**
      * Adds a mod to the locks registry, as well as all of its dependencies
-     *
-     * @throws NoFilesFetchedException if couldn't find any files for a mod
-     * @throws CurseForgeApiGetException if couldn't perform the GET request
      */
-    private void recursivelyAddToLocks(Mod mod, Repository repository)
-        throws NoFilesFetchedException, CurseForgeApiGetException {
+    private void addAllToLocks(
+        HashMap<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
+        Repository repository
+    ) {
+        for (HashMap.Entry<
+            Mod,
+            Entry<File, List<Mod>>
+        > entry : allModsToAddWithInfo.entrySet()) {
+            Mod mod = entry.getKey();
+            File file = entry.getValue().getKey();
+            List<Mod> dependencies = entry.getValue().getValue();
+
+            DependencyInfo dependencyInfo = new DependencyInfo(
+                file.fileDate(),
+                clientOnly,
+                dependencies
+                    .stream()
+                    .map(Mod::slug)
+                    .collect(Collectors.toList())
+            );
+            repository.getLocks().put(mod.slug(), dependencyInfo);
+        }
+    }
+
+    /**
+     * Constructs the tree of every other mod that needs to be added
+     * if the user wants to add his mod.
+     * <p>
+     *  HashMap<(the mod to add), Entry<(its file), (its dependencies)>>
+     * </p>
+     *
+     * @throws NoFilesFetchedException couldn't fetch any file for a mod
+     * @throws CurseForgeApiGetException error while GETting from CurseForge
+     */
+    private HashMap<Mod, Entry<File, List<Mod>>> getAllModsToAdd(
+        Mod mod,
+        Repository repository
+    ) throws NoFilesFetchedException, CurseForgeApiGetException {
         Configuration config = repository.getConfig();
 
         File modFile = TmodClient.newModFileGetter(mod)
@@ -51,7 +88,7 @@ public class Add implements Runnable {
             .withModLoader(config.loader())
             .get();
 
-        java.util.List<Mod> dependencies = modFile
+        List<Mod> dependencies = modFile
             .relations()
             .stream()
             .filter(
@@ -63,17 +100,15 @@ public class Add implements Runnable {
             .map(relation -> TmodClient.searchModById(relation.modId()))
             .collect(Collectors.toList());
 
-        DependencyInfo dependencyInfo = new DependencyInfo(
-            modFile.fileDate(),
-            clientOnly,
-            dependencies.stream().map(Mod::slug).collect(Collectors.toList())
-        );
+        HashMap<Mod, Entry<File, List<Mod>>> modsToAdd = new HashMap<>();
 
-        repository.getLocks().put(mod.slug(), dependencyInfo);
+        modsToAdd.put(mod, new SimpleEntry<>(modFile, dependencies));
 
         for (Mod dependency : dependencies) {
-            recursivelyAddToLocks(dependency, repository);
+            modsToAdd.putAll(getAllModsToAdd(dependency, repository));
         }
+
+        return modsToAdd;
     }
 
     @Override
@@ -89,8 +124,11 @@ public class Add implements Runnable {
                 mod = TmodClient.searchModBySlug(target);
             }
 
+            HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo =
+                getAllModsToAdd(mod, repository);
+
             repository.getManuallyAdded().add(mod.slug());
-            recursivelyAddToLocks(mod, repository);
+            addAllToLocks(modsToAddWithInfo, repository);
 
             mapper.write(repository);
 
