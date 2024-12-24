@@ -12,9 +12,11 @@ import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import picocli.CommandLine;
 
@@ -111,6 +113,50 @@ public class Add implements Runnable {
         return modsToAdd;
     }
 
+    /**
+     * Checks if any of the mods that need to be added to the repository (to locks)
+     * is incompatible with any of the mods already present in the repository (locks)
+     *
+     * @param allModsToAddWithInfo map of all the mods that need to be added
+     * @param repository current state of the repository
+     * @return `Optional.empty` if no confict, `Optional.of` that has the mod that has to be added but causes a conflict
+     */
+    private Optional<Mod> anyModIsIncompatibleWithRepo(
+        HashMap<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
+        Repository repository
+    ) {
+        for (HashMap.Entry<
+            Mod,
+            Entry<File, List<Mod>>
+        > entry : allModsToAddWithInfo.entrySet()) {
+            Mod mod = entry.getKey();
+            File file = entry.getValue().getKey();
+
+            List<String> incompatibilities = file
+                .relations()
+                .stream()
+                .filter(
+                    relation ->
+                        relation.relationType() == RelationType.Incompatible
+                )
+                .map(relation -> TmodClient.searchModById(relation.modId()))
+                .map(Mod::slug)
+                .collect(Collectors.toList());
+
+            // Check if any of incompatible mods are already present in the repo
+            boolean overlaps = !Collections.disjoint(
+                repository.getLocks().keySet(),
+                incompatibilities
+            );
+
+            if (overlaps) {
+                return Optional.of(mod);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     @Override
     public void run() {
         try {
@@ -126,6 +172,18 @@ public class Add implements Runnable {
 
             HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo =
                 getAllModsToAdd(mod, repository);
+
+            Optional<Mod> conflict = anyModIsIncompatibleWithRepo(
+                modsToAddWithInfo,
+                repository
+            );
+
+            if (conflict.isPresent()) {
+                System.err.println(
+                    "The mod " + conflict.get() + " conflicts with other mod"
+                );
+                return;
+            }
 
             repository.getManuallyAdded().add(mod.slug());
             addAllToLocks(modsToAddWithInfo, repository);
