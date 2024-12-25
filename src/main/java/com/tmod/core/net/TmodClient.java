@@ -343,6 +343,14 @@ public class TmodClient {
         }
 
         /**
+         * Search by file timestamp
+         */
+        public ModFileGetter withTimestamp(String timestamp) {
+            this.timestamp = Optional.of(timestamp);
+            return this;
+        }
+
+        /**
          * Performs the GET request to https://api.curseforge.com/v1/mods/{modId}/files endpoint
          *
          * <p>

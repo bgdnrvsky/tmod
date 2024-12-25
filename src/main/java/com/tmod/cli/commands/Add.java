@@ -120,11 +120,46 @@ public class Add implements Runnable {
      * @param allModsToAddWithInfo map of all the mods that need to be added
      * @param repository current state of the repository
      * @return `Optional.empty` if no confict, `Optional.of` that has the mod that has to be added but causes a conflict
+     * @throws CurseForgeApiGetException error performing GET request to CurseForge
      */
     private Optional<Mod> anyModIsIncompatibleWithRepo(
         HashMap<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
         Repository repository
-    ) {
+    ) throws CurseForgeApiGetException {
+        Configuration config = repository.getConfig();
+
+        // Check if any mod from repo is incompatible with any mod that has to be added
+        for (Entry<String, DependencyInfo> entry : repository
+            .getLocks()
+            .entrySet()) {
+            Mod mod = TmodClient.searchModBySlug(entry.getKey());
+            File file = TmodClient.newModFileGetter(mod)
+                .withModLoader(config.loader())
+                .withGameVersion(config.gameVersion())
+                .withTimestamp(entry.getValue().timestamp())
+                .get();
+
+            List<Mod> incompatibilities = file
+                .relations()
+                .stream()
+                .filter(
+                    relation ->
+                        relation.relationType() == RelationType.Incompatible
+                )
+                .map(relation -> TmodClient.searchModById(relation.modId()))
+                .collect(Collectors.toList());
+
+            boolean overlaps = !Collections.disjoint(
+                incompatibilities,
+                allModsToAddWithInfo.keySet()
+            );
+
+            if (overlaps) {
+                return Optional.of(mod);
+            }
+        }
+
+        // Check if any mod that needs to be added is incompatible with the repo
         for (HashMap.Entry<
             Mod,
             Entry<File, List<Mod>>
