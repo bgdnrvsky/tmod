@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.fusesource.jansi.Ansi;
+import org.fusesource.jansi.Ansi.Attribute;
+import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -225,7 +228,18 @@ public class Add implements Runnable {
 
             mapper.write(repository);
 
-            System.out.println(mod);
+            Ansi msg = new Ansi();
+
+            msg
+                .fgBlue()
+                .a(mod.name())
+                .fgDefault()
+                .format("(%d) - ", mod.id())
+                .a(Attribute.ITALIC)
+                .a(mod.summary())
+                .a(Attribute.ITALIC_OFF);
+
+            AnsiConsole.out().println(msg);
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
