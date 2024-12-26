@@ -1,7 +1,6 @@
 package com.tmod.core.net;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -233,11 +232,15 @@ public class TmodClient {
             .GET()
             .build();
 
-        CurseForgeResponse<T> model;
+        HttpResponse<String> response;
 
         try {
-            model = HttpGet(
-                request,
+            response = HttpGet(request);
+
+            // Deserialize the response
+            ObjectMapper mapper = new ObjectMapper();
+            CurseForgeResponse<T> model = mapper.readValue(
+                response.body(),
                 TypeFactory.defaultInstance()
                     .constructParametricType(CurseForgeResponse.class, type)
             );
@@ -249,22 +252,19 @@ public class TmodClient {
     }
 
     /**
-     * Sends an HTTP GET request to the specified endpoint and parses the JSON response into a specified model type.
+     * Sends an HTTP GET request to the specified endpoint
      * <p>
-     * This method is a generic utility. It sends a request to the given URI,
-     * handles response parsing, and maps the JSON response body to an object of the specified type.
+     * This method is a generic utility. It sends a GET request to the given URI
      * </p>
      *
      * @param request  the {@link HttpRequest} instance
-     * @param type     the type to deserialize the JSON response to
-     * @param <T>      the generic type of the response data
-     * @return an object of type {@code T}
+     * @return {@link HttpResponse} with the string of the response body
      * @throws HttpGetException error while sending request or status code is not 200
-     * @throws DeserializationException error deserializing response
      */
-    private static <T> T HttpGet(HttpRequest request, JavaType type)
-        throws HttpGetException, DeserializationException {
+    private static HttpResponse<String> HttpGet(HttpRequest request)
+        throws HttpGetException {
         HttpResponse<String> response;
+
         try {
             response = client.send(
                 request,
@@ -278,13 +278,7 @@ public class TmodClient {
             throw new HttpGetException(request.uri(), response.statusCode());
         }
 
-        // Deserialize the response
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.readValue(response.body(), type);
-        } catch (JsonProcessingException e) {
-            throw new DeserializationException(type, e);
-        }
+        return response;
     }
 
     /**
