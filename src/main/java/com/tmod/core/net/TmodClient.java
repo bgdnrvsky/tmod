@@ -41,7 +41,9 @@ public class TmodClient {
     private static final String API_KEY =
         "$2a$10$bL4bIL5pUWqfcO7KQtnMReakwtfHbNKh6v1uTpKlzhwoueEJQnPnm";
 
-    private static final HttpClient client = HttpClient.newHttpClient();
+    private static final HttpClient client = HttpClient.newBuilder()
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .build();
 
     /**
      * Searches for a mod by its ID using the CurseForge API.
@@ -223,7 +225,7 @@ public class TmodClient {
      * @return an object of type {@code T}
      * @throws CurseForgeApiGetException error while performing GET request
      */
-    private static <T> T CurseForgeGet(URI endpoint, JavaType type)
+    public static <T> T CurseForgeGet(URI endpoint, JavaType type)
         throws CurseForgeApiGetException {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(endpoint)
@@ -261,7 +263,7 @@ public class TmodClient {
      * @return {@link HttpResponse} with the string of the response body
      * @throws HttpGetException error while sending request or status code is not 200
      */
-    private static HttpResponse<String> HttpGet(HttpRequest request)
+    public static HttpResponse<String> HttpGet(HttpRequest request)
         throws HttpGetException {
         HttpResponse<String> response;
 
@@ -274,7 +276,7 @@ public class TmodClient {
             throw new HttpGetException(request.uri(), e);
         }
 
-        if (response.statusCode() != 200) {
+        if (response.statusCode() != 200 && response.statusCode() != 302) {
             throw new HttpGetException(request.uri(), response.statusCode());
         }
 
