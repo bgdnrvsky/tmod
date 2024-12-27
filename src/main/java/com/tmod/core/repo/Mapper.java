@@ -59,6 +59,10 @@ public class Mapper {
      * @return {@link Repository}
      */
     public Repository read() throws IOException {
+        if (!Files.exists(repoPath)) throw new IOException(
+            String.format("Repository at '%s' doesn't exist", repoPath)
+        );
+
         ObjectMapper mapper = new ObjectMapper();
 
         Configuration config = mapper.readValue(
