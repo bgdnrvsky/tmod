@@ -1,0 +1,14 @@
+{
+  "balm": {
+    "timestamp": "2024-08-19T19:53:51.597Z"
+  },
+  "jei": {
+    "timestamp": "2024-10-26T08:07:27.173Z"
+  },
+  "waystones": {
+    "dependencies": [
+      "balm"
+    ],
+    "timestamp": "2024-10-24T14:16:14.200Z"
+  }
+}
