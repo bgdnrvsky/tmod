@@ -30,12 +30,8 @@ public class Remove implements Runnable {
                 boolean removedFromManuallyAdded = repository
                     .getManuallyAdded()
                     .remove(slug);
-                boolean removedFromLocks =
-                    repository.getLocks().remove(slug) != null;
-                boolean removedFromRepo =
-                    removedFromManuallyAdded || removedFromLocks;
 
-                if (!removedFromRepo) {
+                if (!removedFromManuallyAdded) {
                     Ansi msg = new Ansi();
 
                     msg
@@ -46,7 +42,10 @@ public class Remove implements Runnable {
                         .a(" wasn't present in the repo");
 
                     AnsiConsole.out().println(msg);
+                    continue;
                 }
+
+                repository.getLocks().remove(slug);
             }
 
             mapper.write(repository);
