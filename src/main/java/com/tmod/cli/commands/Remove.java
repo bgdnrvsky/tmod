@@ -10,6 +10,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "remove",
+    aliases = { "rm" },
     description = "Remove one or multiple mods from the repo"
 )
 public class Remove implements Runnable {
