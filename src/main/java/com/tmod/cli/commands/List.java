@@ -19,9 +19,9 @@ public class List implements Runnable {
     @Option(
         names = { "-s", "--slugs" },
         description = "Use slug as mod name",
-        defaultValue = "false"
+        defaultValue = "true"
     )
-    private boolean useSlug = false;
+    private boolean useSlug = true;
 
     @Override
     public void run() {
