@@ -17,11 +17,11 @@ public class List implements Runnable {
     private App parent;
 
     @Option(
-        names = { "-s", "--slugs" },
-        description = "Use slug as mod name",
-        defaultValue = "true"
+        names = { "-n", "--names" },
+        description = "Use mod display name",
+        defaultValue = "false"
     )
-    private boolean useSlug = true;
+    private boolean useOnlineNames = false;
 
     @Override
     public void run() {
@@ -34,11 +34,11 @@ public class List implements Runnable {
             for (String slug : repository.getManuallyAdded()) {
                 String modName;
 
-                if (this.useSlug) {
-                    modName = slug;
-                } else {
+                if (this.useOnlineNames) {
                     Mod mod = TmodClient.searchModBySlug(slug);
                     modName = mod.name();
+                } else {
+                    modName = slug;
                 }
 
                 Ansi msg = new Ansi();
