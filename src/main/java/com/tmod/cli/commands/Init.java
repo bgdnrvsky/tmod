@@ -5,6 +5,7 @@ import com.tmod.core.models.ModLoader;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import java.io.IOException;
+import java.lang.Runtime.Version;
 import java.nio.file.Path;
 import java.util.Scanner;
 import picocli.CommandLine;
@@ -17,12 +18,16 @@ public class Init implements Runnable {
 
     @Override
     public void run() {
-        Scanner scanner = new Scanner(System.in);
-        Repository repo = new Repository(
-            promptVersion(scanner),
-            promptLoader(scanner)
-        );
-        scanner.close();
+        Repository repo;
+        try (Scanner scanner = new Scanner(System.in)) {
+            repo = new Repository(
+                promptVersion(scanner).toString(),
+                promptLoader(scanner)
+            );
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
 
         Path tmodPath = parent.getRepoPath();
         Mapper mapper = new Mapper(tmodPath);
@@ -66,12 +71,15 @@ public class Init implements Runnable {
     /**
      * Prompts the user to choose a game version
      *
-     * @return {@link String} representing the game's version
+     * @return {@link Version} representing the game's version
+     * @throws IllegalArgumentException If the given string cannot be interpreted as a valid version
+     * @throws NumberFormatException If an element of the version number or the build number cannot be represented as an Integer
      */
     // TODO: Choose among a predefined list of versions ?
-    private String promptVersion(Scanner sc) {
+    private Version promptVersion(Scanner sc)
+        throws IllegalArgumentException, NumberFormatException {
         System.out.print("Choose the game version: ");
-        String versionChoice = sc.nextLine();
+        Version versionChoice = Version.parse(sc.nextLine());
         return versionChoice;
     }
 }
