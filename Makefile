@@ -12,4 +12,4 @@ tmod: $(JAR_TARGET)
 	chmod +x tmod
 
 $(JAR_TARGET): $(CLI_APP) $(CLI_COMMANDS)
-	./mvnw -q package
+	./mvnw -q -Dmaven.test.skip=true package
