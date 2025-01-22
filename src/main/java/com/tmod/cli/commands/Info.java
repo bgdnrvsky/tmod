@@ -6,6 +6,7 @@ import com.tmod.core.net.TmodClient;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.Ansi.Attribute;
 import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiPrintStream;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -45,7 +46,9 @@ public class Info implements Runnable {
                 .a(mod.summary())
                 .a(Attribute.ITALIC_OFF);
 
-            AnsiConsole.out().println(msg);
+            try (AnsiPrintStream stream = AnsiConsole.out()) {
+                stream.println(msg);
+            }
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }

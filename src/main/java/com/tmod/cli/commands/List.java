@@ -7,6 +7,7 @@ import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiPrintStream;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -45,7 +46,9 @@ public class List implements Runnable {
 
                 msg.format("%d. ", i).fgBlue().a(modName).fgDefault();
 
-                AnsiConsole.out().println(msg);
+                try (AnsiPrintStream stream = AnsiConsole.out()) {
+                    stream.println(msg);
+                }
 
                 i += 1;
             }

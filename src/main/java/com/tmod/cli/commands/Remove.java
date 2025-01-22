@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Set;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiPrintStream;
 import picocli.CommandLine;
 
 @CommandLine.Command(
@@ -66,7 +67,9 @@ public class Remove implements Runnable {
                         .fgDefault()
                         .a(" wasn't present in the repo");
 
-                    AnsiConsole.out().println(msg);
+                    try (AnsiPrintStream stream = AnsiConsole.out()) {
+                        stream.println(msg);
+                    }
                     continue;
                 }
 
