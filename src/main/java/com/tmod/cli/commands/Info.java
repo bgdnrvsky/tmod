@@ -26,31 +26,27 @@ public class Info implements Runnable {
 
     @Override
     public void run() {
+        Mod mod;
+
         try {
-            Mod mod;
+            mod = TmodClient.searchModById(Integer.parseInt(target));
+        } catch (NumberFormatException e) {
+            mod = TmodClient.searchModBySlug(target);
+        }
 
-            try {
-                mod = TmodClient.searchModById(Integer.parseInt(target));
-            } catch (NumberFormatException e) {
-                mod = TmodClient.searchModBySlug(target);
-            }
+        Ansi msg = new Ansi();
 
-            Ansi msg = new Ansi();
+        msg
+            .fgBlue()
+            .a(mod.name())
+            .fgDefault()
+            .format("(%d) - ", mod.id())
+            .a(Attribute.ITALIC)
+            .a(mod.summary())
+            .a(Attribute.ITALIC_OFF);
 
-            msg
-                .fgBlue()
-                .a(mod.name())
-                .fgDefault()
-                .format("(%d) - ", mod.id())
-                .a(Attribute.ITALIC)
-                .a(mod.summary())
-                .a(Attribute.ITALIC_OFF);
-
-            try (AnsiPrintStream stream = AnsiConsole.out()) {
-                stream.println(msg);
-            }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
+        try (AnsiPrintStream stream = AnsiConsole.out()) {
+            stream.println(msg);
         }
     }
 }

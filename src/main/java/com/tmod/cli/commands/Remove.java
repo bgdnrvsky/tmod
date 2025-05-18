@@ -3,11 +3,13 @@ package com.tmod.cli.commands;
 import com.tmod.cli.App;
 import com.tmod.core.models.File;
 import com.tmod.core.models.Mod;
+import com.tmod.core.net.CurseForgeApiGetException;
 import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Set;
 import org.fusesource.jansi.Ansi;
@@ -47,63 +49,79 @@ public class Remove implements Runnable {
 
     @Override
     public void run() {
+        Mapper mapper = new Mapper(parent.getRepoPath());
+        Repository repository;
+
         try {
-            Mapper mapper = new Mapper(parent.getRepoPath());
-            Repository repository = mapper.read();
-            Configuration config = repository.getConfig();
+            repository = mapper.read();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
 
-            for (String slug : removalTargetMods) {
-                boolean removedFromManuallyAdded = repository
-                    .getManuallyAdded()
-                    .remove(slug);
+        Configuration config = repository.getConfig();
 
-                if (!removedFromManuallyAdded) {
-                    Ansi msg = new Ansi();
+        for (String slug : removalTargetMods) {
+            boolean removedFromManuallyAdded = repository
+                .getManuallyAdded()
+                .remove(slug);
 
-                    msg
-                        .a("The mod ")
-                        .fgRed()
-                        .a(slug)
-                        .fgDefault()
-                        .a(" wasn't present in the repo");
+            if (!removedFromManuallyAdded) {
+                Ansi msg = new Ansi();
 
-                    try (AnsiPrintStream stream = AnsiConsole.out()) {
-                        stream.println(msg);
-                    }
-                    continue;
+                msg
+                    .a("The mod ")
+                    .fgRed()
+                    .a(slug)
+                    .fgDefault()
+                    .a(" wasn't present in the repo");
+
+                try (AnsiPrintStream stream = AnsiConsole.out()) {
+                    stream.println(msg);
                 }
+                continue;
+            }
 
-                DependencyInfo dependencyInfo = repository
-                    .getLocks()
-                    .remove(slug);
+            DependencyInfo dependencyInfo = repository.getLocks().remove(slug);
 
-                if (removeFromFolder) {
-                    // Remove the file from the folder
-                    Mod mod = TmodClient.searchModBySlug(slug);
-                    File modFile = TmodClient.newModFileGetter(mod)
+            if (removeFromFolder) {
+                // Remove the file from the folder
+                Mod mod = TmodClient.searchModBySlug(slug);
+                File modFile;
+                try {
+                    modFile = TmodClient.newModFileGetter(mod)
                         .withGameVersion(config.gameVersion())
                         .withModLoader(config.loader())
                         .withTimestamp(dependencyInfo.timestamp())
                         .get();
+                } catch (CurseForgeApiGetException e) {
+                    System.err.println(e.getMessage());
+                    continue;
+                }
 
-                    java.io.File actualFile = new java.io.File(
-                        targetDirectoryPath.toString(),
-                        modFile.fileName()
-                    );
+                java.io.File actualFile = new java.io.File(
+                    targetDirectoryPath.toString(),
+                    modFile.fileName()
+                );
 
-                    if (!actualFile.delete()) {
+                if (!actualFile.delete()) {
+                    try {
                         System.err.println(
                             String.format(
                                 "Couldn't delete the file '%s'",
                                 actualFile.getCanonicalPath()
                             )
                         );
+                    } catch (IOException e) {
+                        System.err.println(e.getMessage());
                     }
                 }
             }
+        }
 
+        try {
             mapper.write(repository);
-        } catch (Exception e) {
+        } catch (IOException e) {
             System.err.println(e.getMessage());
         }
     }

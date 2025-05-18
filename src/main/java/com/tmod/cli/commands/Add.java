@@ -11,6 +11,7 @@ import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
+import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.HashMap;
@@ -198,53 +199,72 @@ public class Add implements Runnable {
 
     @Override
     public void run() {
+        Mapper mapper = new Mapper(parent.getRepoPath());
+        Repository repository;
+
         try {
-            Mapper mapper = new Mapper(parent.getRepoPath());
-            Repository repository = mapper.read();
-            Mod mod;
+            repository = mapper.read();
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
 
-            try {
-                mod = TmodClient.searchModById(Integer.parseInt(target));
-            } catch (NumberFormatException e) {
-                mod = TmodClient.searchModBySlug(target);
-            }
+        Mod mod;
 
-            HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo =
-                getAllModsToAdd(mod, repository);
+        try {
+            mod = TmodClient.searchModById(Integer.parseInt(target));
+        } catch (NumberFormatException e) {
+            mod = TmodClient.searchModBySlug(target);
+        }
 
-            Optional<Mod> conflict = anyModIsIncompatibleWithRepo(
+        HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo;
+        try {
+            modsToAddWithInfo = getAllModsToAdd(mod, repository);
+        } catch (CurseForgeApiGetException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
+
+        Optional<Mod> conflict;
+        try {
+            conflict = anyModIsIncompatibleWithRepo(
                 modsToAddWithInfo,
                 repository
             );
-
-            if (conflict.isPresent()) {
-                System.err.println(
-                    "The mod " + conflict.get() + " conflicts with other mod"
-                );
-                return;
-            }
-
-            repository.getManuallyAdded().add(mod.slug());
-            addAllToLocks(modsToAddWithInfo, repository);
-
-            mapper.write(repository);
-
-            Ansi msg = new Ansi();
-
-            msg
-                .fgBlue()
-                .a(mod.name())
-                .fgDefault()
-                .format("(%d) - ", mod.id())
-                .a(Attribute.ITALIC)
-                .a(mod.summary())
-                .a(Attribute.ITALIC_OFF);
-
-            try (AnsiPrintStream stream = AnsiConsole.out()) {
-                stream.println(msg);
-            }
-        } catch (Exception e) {
+        } catch (CurseForgeApiGetException e) {
             System.err.println(e.getMessage());
+            return;
+        }
+
+        if (conflict.isPresent()) {
+            System.err.println(
+                "The mod " + conflict.get() + " conflicts with other mod"
+            );
+            return;
+        }
+
+        repository.getManuallyAdded().add(mod.slug());
+        addAllToLocks(modsToAddWithInfo, repository);
+
+        try {
+            mapper.write(repository);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
+        Ansi msg = new Ansi();
+
+        msg
+            .fgBlue()
+            .a(mod.name())
+            .fgDefault()
+            .format("(%d) - ", mod.id())
+            .a(Attribute.ITALIC)
+            .a(mod.summary())
+            .a(Attribute.ITALIC_OFF);
+
+        try (AnsiPrintStream stream = AnsiConsole.out()) {
+            stream.println(msg);
         }
     }
 }

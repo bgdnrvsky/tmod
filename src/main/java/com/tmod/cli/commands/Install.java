@@ -94,27 +94,37 @@ public class Install implements Runnable {
 
     @Override
     public void run() {
+        Mapper mapper = new Mapper(parent.getRepoPath());
+        Repository repository;
+
         try {
-            Mapper mapper = new Mapper(parent.getRepoPath());
-            Repository repository = mapper.read();
-            Configuration config = repository.getConfig();
-
-            // Create the target repository
-            java.io.File targetDirectoryFile = new java.io.File(
-                targetDirectoryPath.toString()
-            );
-            targetDirectoryFile.mkdir();
-
-            for (String slug : repository.getManuallyAdded()) {
-                // Don't install the mod if it's client only and installing for server
-                if (server) if (
-                    repository.getLocks().get(slug).clientOnly()
-                ) continue;
-
-                installMod(slug, config, repository.getLocks());
-            }
-        } catch (Exception e) {
+            repository = mapper.read();
+        } catch (IOException e) {
             System.err.println(e.getMessage());
+            return;
+        }
+
+        Configuration config = repository.getConfig();
+
+        // Create the target repository
+        java.io.File targetDirectoryFile = new java.io.File(
+            targetDirectoryPath.toString()
+        );
+        targetDirectoryFile.mkdir();
+
+        for (String slug : repository.getManuallyAdded()) {
+            // Don't install the mod if it's client only and installing for server
+            if (server) if (
+                repository.getLocks().get(slug).clientOnly()
+            ) continue;
+
+            try {
+                installMod(slug, config, repository.getLocks());
+            } catch (
+                CurseForgeApiGetException | IOException | URISyntaxException e
+            ) {
+                System.err.println(e.getMessage());
+            }
         }
     }
 }

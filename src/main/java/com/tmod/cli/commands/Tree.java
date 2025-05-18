@@ -6,6 +6,7 @@ import com.tmod.core.repo.Repository;
 import com.tmod.core.repo.models.DependencyInfo;
 import hu.webarticum.treeprinter.SimpleTreeNode;
 import hu.webarticum.treeprinter.printer.listing.ListingTreePrinter;
+import java.io.IOException;
 import java.util.Map;
 import picocli.CommandLine;
 
@@ -33,19 +34,22 @@ public class Tree implements Runnable {
 
     @Override
     public void run() {
+        Mapper mapper = new Mapper(parent.getRepoPath());
+        Repository repository;
+
         try {
-            Mapper mapper = new Mapper(parent.getRepoPath());
-            Repository repository = mapper.read();
-
-            SimpleTreeNode root = new SimpleTreeNode("tmod");
-
-            for (String slug : repository.getManuallyAdded()) {
-                root.addChild(generateNode(slug, repository.getLocks()));
-            }
-
-            new ListingTreePrinter().print(root);
-        } catch (Exception e) {
+            repository = mapper.read();
+        } catch (IOException e) {
             System.err.println(e.getMessage());
+            return;
         }
+
+        SimpleTreeNode root = new SimpleTreeNode("tmod");
+
+        for (String slug : repository.getManuallyAdded()) {
+            root.addChild(generateNode(slug, repository.getLocks()));
+        }
+
+        new ListingTreePrinter().print(root);
     }
 }
