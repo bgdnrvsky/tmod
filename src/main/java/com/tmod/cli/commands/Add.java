@@ -17,6 +17,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,10 +53,10 @@ public class Add implements Runnable {
      * Adds a mod to the locks registry, as well as all of its dependencies
      */
     private void addAllToLocks(
-        HashMap<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
+        Map<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
         Repository repository
     ) {
-        for (HashMap.Entry<
+        for (Entry<
             Mod,
             Entry<File, List<Mod>>
         > entry : allModsToAddWithInfo.entrySet()) {
@@ -79,13 +80,13 @@ public class Add implements Runnable {
      * Constructs the tree of every other mod that needs to be added
      * if the user wants to add his mod.
      * <p>
-     *  HashMap<(the mod to add), Entry<(its file), (its dependencies)>>
+     *  Map<(the mod to add), Entry<(its file), (its dependencies)>>
      * </p>
      *
      * @throws NoFilesFetchedException couldn't fetch any file for a mod
      * @throws CurseForgeApiGetException error while GETting from CurseForge
      */
-    private HashMap<Mod, Entry<File, List<Mod>>> getAllModsToAdd(
+    private Map<Mod, Entry<File, List<Mod>>> getAllModsToAdd(
         Mod mod,
         Repository repository
     ) throws NoFilesFetchedException, CurseForgeApiGetException {
@@ -108,7 +109,7 @@ public class Add implements Runnable {
             .map(relation -> TmodClient.searchModById(relation.modId()))
             .collect(Collectors.toList());
 
-        HashMap<Mod, Entry<File, List<Mod>>> modsToAdd = new HashMap<>();
+        Map<Mod, Entry<File, List<Mod>>> modsToAdd = new HashMap<>();
 
         modsToAdd.put(mod, new SimpleEntry<>(modFile, dependencies));
 
@@ -129,7 +130,7 @@ public class Add implements Runnable {
      * @throws CurseForgeApiGetException error performing GET request to CurseForge
      */
     private Optional<Mod> anyModIsIncompatibleWithRepo(
-        HashMap<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
+        Map<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
         Repository repository
     ) throws CurseForgeApiGetException {
         Configuration config = repository.getConfig();
@@ -166,7 +167,7 @@ public class Add implements Runnable {
         }
 
         // Check if any mod that needs to be added is incompatible with the repo
-        for (HashMap.Entry<
+        for (Entry<
             Mod,
             Entry<File, List<Mod>>
         > entry : allModsToAddWithInfo.entrySet()) {
@@ -223,7 +224,7 @@ public class Add implements Runnable {
             return;
         }
 
-        HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo;
+        Map<Mod, Entry<File, List<Mod>>> modsToAddWithInfo;
         try {
             modsToAddWithInfo = getAllModsToAdd(mod, repository);
         } catch (CurseForgeApiGetException e) {
