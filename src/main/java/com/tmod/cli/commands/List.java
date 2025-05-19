@@ -6,9 +6,6 @@ import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.Mapper;
 import com.tmod.core.repo.Repository;
 import java.io.IOException;
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiConsole;
-import org.fusesource.jansi.AnsiPrintStream;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -49,13 +46,7 @@ public class List implements Runnable {
                 modName = slug;
             }
 
-            Ansi msg = new Ansi();
-
-            msg.format("%d. ", i).fgBlue().a(modName).fgDefault();
-
-            try (AnsiPrintStream stream = AnsiConsole.out()) {
-                stream.println(msg);
-            }
+            System.out.printf("%d. %s\n", i, modName);
 
             i += 1;
         }
