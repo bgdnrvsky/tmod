@@ -50,33 +50,6 @@ public class Add implements Runnable {
     private boolean clientOnly = false;
 
     /**
-     * Adds a mod to the locks registry, as well as all of its dependencies
-     */
-    private void addAllToLocks(
-        Map<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
-        Repository repository
-    ) {
-        for (Entry<
-            Mod,
-            Entry<File, List<Mod>>
-        > entry : allModsToAddWithInfo.entrySet()) {
-            Mod mod = entry.getKey();
-            File file = entry.getValue().getKey();
-            List<Mod> dependencies = entry.getValue().getValue();
-
-            DependencyInfo dependencyInfo = new DependencyInfo(
-                file.fileDate(),
-                clientOnly,
-                dependencies
-                    .stream()
-                    .map(Mod::slug)
-                    .collect(Collectors.toList())
-            );
-            repository.getLocks().put(mod.slug(), dependencyInfo);
-        }
-    }
-
-    /**
      * Constructs the tree of every other mod that needs to be added
      * if the user wants to add his mod.
      * <p>
@@ -251,7 +224,24 @@ public class Add implements Runnable {
         }
 
         repository.getManuallyAdded().add(mod.slug());
-        addAllToLocks(modsToAddWithInfo, repository);
+        for (Entry<
+            Mod,
+            Entry<File, List<Mod>>
+        > entry : modsToAddWithInfo.entrySet()) {
+            Mod modToAdd = entry.getKey();
+            File modToAddFile = entry.getValue().getKey();
+            List<Mod> modToAddDependencies = entry.getValue().getValue();
+
+            DependencyInfo dependencyInfo = new DependencyInfo(
+                modToAddFile.fileDate(),
+                clientOnly,
+                modToAddDependencies
+                    .stream()
+                    .map(Mod::slug)
+                    .collect(Collectors.toList())
+            );
+            repository.getLocks().put(modToAdd.slug(), dependencyInfo);
+        }
 
         try {
             mapper.write(repository);
