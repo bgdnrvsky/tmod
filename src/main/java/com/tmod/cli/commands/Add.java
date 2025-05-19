@@ -5,6 +5,7 @@ import com.tmod.core.models.File;
 import com.tmod.core.models.Mod;
 import com.tmod.core.models.RelationType;
 import com.tmod.core.net.CurseForgeApiGetException;
+import com.tmod.core.net.CurseForgeModSearchException;
 import com.tmod.core.net.NoFilesFetchedException;
 import com.tmod.core.net.TmodClient;
 import com.tmod.core.repo.Mapper;
@@ -212,9 +213,14 @@ public class Add implements Runnable {
         Mod mod;
 
         try {
-            mod = TmodClient.searchModById(Integer.parseInt(target));
-        } catch (NumberFormatException e) {
-            mod = TmodClient.searchModBySlug(target);
+            try {
+                mod = TmodClient.searchModById(Integer.parseInt(target));
+            } catch (NumberFormatException e) {
+                mod = TmodClient.searchModBySlug(target);
+            }
+        } catch (CurseForgeModSearchException e) {
+            System.err.println(e.getMessage());
+            return;
         }
 
         HashMap<Mod, Entry<File, List<Mod>>> modsToAddWithInfo;
