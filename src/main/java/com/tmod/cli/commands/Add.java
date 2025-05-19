@@ -14,6 +14,7 @@ import com.tmod.core.repo.models.Configuration;
 import com.tmod.core.repo.models.DependencyInfo;
 import java.io.IOException;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -60,17 +61,17 @@ public class Add implements Runnable {
      * @throws CurseForgeApiGetException error while GETting from CurseForge
      */
     private Map<Mod, Entry<File, List<Mod>>> getAllModsToAdd(
-        Mod mod,
-        Repository repository
+        final Mod mod,
+        final Repository repository
     ) throws NoFilesFetchedException, CurseForgeApiGetException {
-        Configuration config = repository.getConfig();
+        final Configuration config = repository.getConfig();
 
-        File modFile = TmodClient.newModFileGetter(mod)
+        final File modFile = TmodClient.newModFileGetter(mod)
             .withGameVersion(config.gameVersion())
             .withModLoader(config.loader())
             .get();
 
-        List<Mod> dependencies = modFile
+        final List<Mod> dependencies = modFile
             .relations()
             .stream()
             .filter(
@@ -82,15 +83,42 @@ public class Add implements Runnable {
             .map(relation -> TmodClient.searchModById(relation.modId()))
             .collect(Collectors.toList());
 
-        Map<Mod, Entry<File, List<Mod>>> modsToAdd = new HashMap<>();
+        final Map<Mod, Entry<File, List<Mod>>> modsToAdd = new HashMap<>();
 
         modsToAdd.put(mod, new SimpleEntry<>(modFile, dependencies));
 
-        for (Mod dependency : dependencies) {
+        for (final Mod dependency : dependencies) {
             modsToAdd.putAll(getAllModsToAdd(dependency, repository));
         }
 
         return modsToAdd;
+    }
+
+    /**
+     * Checks if a mod file is incompatible with any mods from the provided collection.
+     * <p>
+     * This method extracts all the incompatible relations from the mod file and checks
+     * if any of those incompatible mods are present in the provided collection.
+     *
+     * @param modFile the mod file to check incompatibilities for
+     * @param modsToCheckAgainst collection of mod slugs to check against
+     * @return true if the mod is incompatible with any of the mods in the collection, false otherwise
+     */
+    private boolean modIsIncompatibleWithAnyFrom(
+        final File modFile,
+        final Collection<String> modsToCheckAgainst
+    ) {
+        final List<String> incompatibilities = modFile
+            .relations()
+            .stream()
+            .filter(
+                relation -> relation.relationType() == RelationType.Incompatible
+            )
+            .map(relation -> TmodClient.searchModById(relation.modId()))
+            .map(Mod::slug)
+            .collect(Collectors.toList());
+
+        return !Collections.disjoint(modsToCheckAgainst, incompatibilities);
     }
 
     /**
@@ -103,68 +131,45 @@ public class Add implements Runnable {
      * @throws CurseForgeApiGetException error performing GET request to CurseForge
      */
     private Optional<Mod> anyModIsIncompatibleWithRepo(
-        Map<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
-        Repository repository
+        final Map<Mod, Entry<File, List<Mod>>> allModsToAddWithInfo,
+        final Repository repository
     ) throws CurseForgeApiGetException {
-        Configuration config = repository.getConfig();
+        final Configuration config = repository.getConfig();
 
         // Check if any mod from repo is incompatible with any mod that has to be added
-        for (Entry<String, DependencyInfo> entry : repository
-            .getLocks()
-            .entrySet()) {
-            Mod mod = TmodClient.searchModBySlug(entry.getKey());
-            File file = TmodClient.newModFileGetter(mod)
+        for (var entry : repository.getLocks().entrySet()) {
+            final Mod mod = TmodClient.searchModBySlug(entry.getKey());
+            final File file = TmodClient.newModFileGetter(mod)
                 .withModLoader(config.loader())
                 .withGameVersion(config.gameVersion())
                 .withTimestamp(entry.getValue().timestamp())
                 .get();
 
-            List<Mod> incompatibilities = file
-                .relations()
-                .stream()
-                .filter(
-                    relation ->
-                        relation.relationType() == RelationType.Incompatible
+            if (
+                modIsIncompatibleWithAnyFrom(
+                    file,
+                    allModsToAddWithInfo
+                        .keySet()
+                        .stream()
+                        .map(Mod::slug)
+                        .collect(Collectors.toList())
                 )
-                .map(relation -> TmodClient.searchModById(relation.modId()))
-                .collect(Collectors.toList());
-
-            boolean overlaps = !Collections.disjoint(
-                incompatibilities,
-                allModsToAddWithInfo.keySet()
-            );
-
-            if (overlaps) {
+            ) {
                 return Optional.of(mod);
             }
         }
 
         // Check if any mod that needs to be added is incompatible with the repo
-        for (Entry<
-            Mod,
-            Entry<File, List<Mod>>
-        > entry : allModsToAddWithInfo.entrySet()) {
-            Mod mod = entry.getKey();
-            File file = entry.getValue().getKey();
+        for (var entry : allModsToAddWithInfo.entrySet()) {
+            final Mod mod = entry.getKey();
+            final File file = entry.getValue().getKey();
 
-            List<String> incompatibilities = file
-                .relations()
-                .stream()
-                .filter(
-                    relation ->
-                        relation.relationType() == RelationType.Incompatible
+            if (
+                modIsIncompatibleWithAnyFrom(
+                    file,
+                    repository.getLocks().keySet()
                 )
-                .map(relation -> TmodClient.searchModById(relation.modId()))
-                .map(Mod::slug)
-                .collect(Collectors.toList());
-
-            // Check if any of incompatible mods are already present in the repo
-            boolean overlaps = !Collections.disjoint(
-                repository.getLocks().keySet(),
-                incompatibilities
-            );
-
-            if (overlaps) {
+            ) {
                 return Optional.of(mod);
             }
         }
@@ -174,12 +179,12 @@ public class Add implements Runnable {
 
     @Override
     public void run() {
-        Mapper mapper = new Mapper(parent.getRepoPath());
+        final Mapper mapper = new Mapper(parent.getRepoPath());
         Repository repository;
 
         try {
             repository = mapper.read();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -189,10 +194,10 @@ public class Add implements Runnable {
         try {
             try {
                 mod = TmodClient.searchModById(Integer.parseInt(target));
-            } catch (NumberFormatException e) {
+            } catch (final NumberFormatException e) {
                 mod = TmodClient.searchModBySlug(target);
             }
-        } catch (CurseForgeModSearchException e) {
+        } catch (final CurseForgeModSearchException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -200,7 +205,7 @@ public class Add implements Runnable {
         Map<Mod, Entry<File, List<Mod>>> modsToAddWithInfo;
         try {
             modsToAddWithInfo = getAllModsToAdd(mod, repository);
-        } catch (CurseForgeApiGetException e) {
+        } catch (final CurseForgeApiGetException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -211,7 +216,7 @@ public class Add implements Runnable {
                 modsToAddWithInfo,
                 repository
             );
-        } catch (CurseForgeApiGetException e) {
+        } catch (final CurseForgeApiGetException e) {
             System.err.println(e.getMessage());
             return;
         }
@@ -224,15 +229,12 @@ public class Add implements Runnable {
         }
 
         repository.getManuallyAdded().add(mod.slug());
-        for (Entry<
-            Mod,
-            Entry<File, List<Mod>>
-        > entry : modsToAddWithInfo.entrySet()) {
-            Mod modToAdd = entry.getKey();
-            File modToAddFile = entry.getValue().getKey();
-            List<Mod> modToAddDependencies = entry.getValue().getValue();
+        for (final var entry : modsToAddWithInfo.entrySet()) {
+            final Mod modToAdd = entry.getKey();
+            final File modToAddFile = entry.getValue().getKey();
+            final List<Mod> modToAddDependencies = entry.getValue().getValue();
 
-            DependencyInfo dependencyInfo = new DependencyInfo(
+            final DependencyInfo dependencyInfo = new DependencyInfo(
                 modToAddFile.fileDate(),
                 clientOnly,
                 modToAddDependencies
@@ -245,11 +247,11 @@ public class Add implements Runnable {
 
         try {
             mapper.write(repository);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             System.err.println(e.getMessage());
         }
 
-        Ansi msg = new Ansi();
+        final Ansi msg = new Ansi();
 
         msg
             .fgBlue()
