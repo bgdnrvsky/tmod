@@ -145,7 +145,7 @@ public class TModGui extends Application {
         addBtn = createStyledButton("Add Mod", "add-button", "FOLDER");
         removeBtn = createStyledButton("Remove Mod", "remove-button", "TRASH_ALT");
         installBtn = createStyledButton("Install All", "install-button", "DOWNLOAD");
-        refreshBtn = createStyledButton("Refresh", "refresh-button", "SYNC");
+        refreshBtn = createStyledButton("Refresh", "refresh-button", "REFRESH");
 
         // Event handlers
         addBtn.setOnAction(e -> onAddMod());

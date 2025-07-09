@@ -75,6 +75,7 @@ public class FontAwesomeIcon {
         ICON_MAP.put("ACTIVITY", "\uf080");
         ICON_MAP.put("NOTIFICATION", "\uf0f3");
         ICON_MAP.put("LOGOUT", "\uf08b");
+        ICON_MAP.put("REFRESH", "\uf021");
 
         // UPLOAD
         ICON_MAP.put("CLOUD_UPLOAD_ALT", "\uf382");
