@@ -16,6 +16,7 @@ import javafx.concurrent.Task;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
@@ -61,6 +62,8 @@ public class TModGui extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("TMod Manager");
+
+
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(700);
 
@@ -71,8 +74,22 @@ public class TModGui extends Application {
         Scene scene = new Scene(root, 800, 550);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/stylesheet/style.css")).toExternalForm());
 
+
+        primaryStage.getIcons().add(
+                new Image(Objects.requireNonNull(
+                        getClass().getResourceAsStream("/images/png/logo_tmod_bg(0)_zoomed.png")
+                ))
+        );
+
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        Platform.runLater(() ->
+                TitleBarCustomizer.applyTheme(primaryStage,
+                      "#3a3a38",
+                        "#f9f8f4",
+                      "#5a5a58"
+                ));
 
         // Initialize data
         refreshModsList();
@@ -343,7 +360,7 @@ public class TModGui extends Application {
         }
 
         statusTimeline = new Timeline(
-new KeyFrame(javafx.util.Duration.ZERO, new KeyValue(statusIcon.opacityProperty(), 1.0)),
+                new KeyFrame(javafx.util.Duration.ZERO, new KeyValue(statusIcon.opacityProperty(), 1.0)),
                 new KeyFrame(javafx.util.Duration.seconds(0.8), new KeyValue(statusIcon.opacityProperty(), 0.3)),
                 new KeyFrame(javafx.util.Duration.seconds(1.6), new KeyValue(statusIcon.opacityProperty(), 1.0))
         );

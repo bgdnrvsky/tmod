@@ -42,6 +42,18 @@
 
     <dependencies>
 
+        <!-- JNA (Java Native Access) for native library access -->
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>5.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.13.0</version>
+        </dependency>
+
         <!-- Java FX (Era GUI) -->
         <dependency>
             <groupId>org.openjfx</groupId>
