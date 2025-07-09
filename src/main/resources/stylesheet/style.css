@@ -45,25 +45,26 @@
     -fx-spacing: 15;
 }
 
-.toolbar .separator {
-    -fx-orientation: vertical;
-    -fx-pref-height: 30;
-    -fx-background-color: #4a4a48;
-}
+/* UNUSED: Toolbar Separator */
+/*.toolbar .separator {*/
+/*    -fx-pref-height: 30;*/
+/*    -fx-pref-width: 190;*/
+/*    -fx-opacity: 0;*/
+/*    -fx-background-color: transparent;*/
+/*}*/
 
 /* Styled Buttons */
 .styled-button {
     -fx-background-color: #333331;
-    /*-fx-background-color: #d67762;*/
     -fx-text-fill: #f9f8f4;
-    /*-fx-border-color: #4a4a48;*/
     -fx-border-color: #ba694b;
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
-    -fx-padding: 6 5;
+    -fx-padding: 6 12 6 8; /* Adjusted padding for icon */
     -fx-font-size: 13px;
     -fx-cursor: hand;
+    -fx-alignment: center-left; /* Align icon and text */
 }
 
 .styled-button:hover {
@@ -80,21 +81,48 @@
     -fx-cursor: default;
 }
 
-/* Button Specific Colors */
+/* Button-Specific Colors */
 .add-button:hover {
     -fx-border-color: #7a9b6b;
+}
+
+.add-button:hover .button-icon {
+    -fx-fill: #7a9b6b;
 }
 
 .remove-button:hover {
     -fx-border-color: #d67762;
 }
 
+.remove-button:hover .button-icon {
+    -fx-fill: #d67762;
+}
+
 .install-button:hover {
     -fx-border-color: #ba694b;
 }
 
+.install-button:hover .button-icon {
+    -fx-fill: #ba694b;
+}
+
 .refresh-button:hover {
     -fx-border-color: #ba694b;
+}
+
+.refresh-button:hover .button-icon {
+    -fx-fill: #ba694b;
+}
+
+.styled-button:disabled .button-icon {
+    -fx-fill: #a8a8a0; /* Dimmed icon color for disabled state */
+}
+
+/* FontAwesome Icon Styles */
+.button-icon {
+    -fx-font-family: "Font Awesome 5 Free";
+    -fx-fill: #f9f8f4; /* Matches text color */
+    -fx-font-size: 16px; /* Matches size set in FontAwesomeIcon.createIcon */
 }
 
 /* Main Content Area */
@@ -203,17 +231,24 @@
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
-    -fx-padding: 4 8;
+    -fx-padding: 4 8 4 6; /* Adjusted for icon */
     -fx-font-size: 11px;
     -fx-cursor: hand;
+    -fx-alignment: center-left; /* Align icon and text */
+}
+
+.clear-log-button .button-icon {
+    -fx-fill: #a8a8a0; /* Matches text color */
 }
 
 .clear-log-button:hover {
     -fx-background-color: #3a3a38;
-    /*-fx-text-fill: #f9f8f4;*/
-    /*-fx-border-color: #d67762;*/
     -fx-text-fill: #e05e52;
-    -fx-border-color: #e05e52 ;
+    -fx-border-color: #e05e52;
+}
+
+.clear-log-button:hover .button-icon {
+    -fx-fill: #e05e52; /* Matches hover text color */
 }
 
 /* Footer */

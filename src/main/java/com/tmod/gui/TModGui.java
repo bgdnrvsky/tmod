@@ -14,6 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import java.io.File;
@@ -57,7 +58,7 @@ public class TModGui extends Application {
 
         // Create and apply scene with CSS
         Scene scene = new Scene(root, 800, 550);
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/style.css")).toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/stylesheet/style.css")).toExternalForm());
 
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -112,11 +113,12 @@ public class TModGui extends Application {
     /**
      * Creates the main toolbar with action buttons
      */
+
     private HBox createToolbar() {
-        addBtn = createStyledButton("Add Mod", "add-button");
-        removeBtn = createStyledButton("Remove Mod", "remove-button");
-        installBtn = createStyledButton("Install All", "install-button");
-        refreshBtn = createStyledButton("Refresh", "refresh-button");
+        addBtn = createStyledButton("Add Mod", "add-button", "FOLDER");
+        removeBtn = createStyledButton("Remove Mod", "remove-button", "TRASH_ALT");
+        installBtn = createStyledButton("Install All", "install-button", "DOWNLOAD");
+        refreshBtn = createStyledButton("Refresh", "refresh-button", "SYNC");
 
         // Event handlers
         addBtn.setOnAction(e -> onAddMod());
@@ -127,13 +129,23 @@ public class TModGui extends Application {
         // Disable remove button initially
         removeBtn.setDisable(true);
 
-        // TODO: change separator to a custom styled one
-        HBox toolbar = new HBox(15, addBtn, removeBtn, new Separator(), installBtn, refreshBtn);
+        // Create HBoxes for left and right sides
+        HBox leftBox = new HBox(15, addBtn, removeBtn);
+        leftBox.setAlignment(Pos.CENTER_LEFT); // Align buttons to the left
+
+        HBox rightBox = new HBox(15, installBtn, refreshBtn);
+        rightBox.setAlignment(Pos.CENTER_RIGHT); // Align buttons to the right
+
+        // Create the main toolbar, set the alignment to spread out the buttons
+        HBox toolbar = new HBox(15, leftBox, rightBox);
+        toolbar.setHgrow(leftBox, Priority.ALWAYS); // Left box grows and takes up space
+        toolbar.setHgrow(rightBox, Priority.ALWAYS); // Right box grows and takes up space
+
         toolbar.getStyleClass().add("toolbar");
-        toolbar.setAlignment(Pos.CENTER_LEFT);
 
         return toolbar;
     }
+
 
     /**
      * Creates the main content area with mod list and log
@@ -234,11 +246,24 @@ public class TModGui extends Application {
 
     /**
      * Creates a styled button with consistent appearance
+     * Structure :
+     *           {BUTOON}
+     *              |
+     *       {[ICON][ ][TEXT]}
      */
-    private Button createStyledButton(String text, String styleClass) {
+    private Button createStyledButton(String text, String styleClass, String iconName) {
         Button button = new Button(text);
         button.getStyleClass().addAll("styled-button", styleClass);
         button.setMinWidth(120);
+
+        // Add FontAwesome icon
+        if (iconName != null) {
+            Text icon = FontAwesomeIcon.createIcon(iconName, "button-icon", 16);
+            button.setGraphic(icon);
+            button.setContentDisplay(ContentDisplay.LEFT);
+            button.setGraphicTextGap(8);
+        }
+
         return button;
     }
 
