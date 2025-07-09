@@ -1,4 +1,4 @@
-/* TMod Manager - Professional Dark Theme Stylesheet */
+/* TMod Manager - Dark Theme Stylesheet */
 
 /* Global Styles */
 .root {
@@ -22,17 +22,20 @@
     -fx-border-width: 0 0 1 0;
 }
 
+/* Title Section */
 .title-section {
     -fx-padding: 0 0 15 0;
     -fx-alignment: center-left;
 }
 
+/* Application Title */
 .app-title {
     -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: #f9f8f4;
 }
 
+/* Application Subtitle */
 .app-subtitle {
     -fx-font-size: 14px;
     -fx-text-fill: #a8a8a0;
@@ -61,68 +64,79 @@
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
     -fx-background-radius: 6px;
-    -fx-padding: 6 12 6 8; /* Adjusted padding for icon */
+    -fx-padding: 6 12 6 8;
     -fx-font-size: 13px;
     -fx-cursor: hand;
-    -fx-alignment: center-left; /* Align icon and text */
+    -fx-alignment: center-left;
 }
 
+/* Styled Button Hover State */
 .styled-button:hover {
     -fx-background-color: #3a3a38;
     -fx-border-color: #ba694b;
 }
 
+/* Styled Button Pressed State */
 .styled-button:pressed {
     -fx-background-color: #2a2a28;
 }
 
+/* Styled Button Disabled State */
 .styled-button:disabled {
     -fx-opacity: 0.6;
     -fx-cursor: default;
 }
 
-/* Button-Specific Colors */
+/* Add Button Hover State */
 .add-button:hover {
     -fx-border-color: #7a9b6b;
 }
 
+/* Add Button Icon Hover State */
 .add-button:hover .button-icon {
     -fx-fill: #7a9b6b;
 }
 
+/* Remove Button Hover State */
 .remove-button:hover {
     -fx-border-color: #d67762;
 }
 
+/* Remove Button Icon Hover State */
 .remove-button:hover .button-icon {
     -fx-fill: #d67762;
 }
 
+/* Install Button Hover State */
 .install-button:hover {
     -fx-border-color: #ba694b;
 }
 
+/* Install Button Icon Hover State */
 .install-button:hover .button-icon {
     -fx-fill: #ba694b;
 }
 
+/* Refresh Button Hover State */
 .refresh-button:hover {
     -fx-border-color: #ba694b;
 }
 
+/* Refresh Button Icon Hover State */
 .refresh-button:hover .button-icon {
     -fx-fill: #ba694b;
 }
 
+/* Disabled Button Icon */
 .styled-button:disabled .button-icon {
-    -fx-fill: #a8a8a0; /* Dimmed icon color for disabled state */
+    -fx-fill: #a8a8a0;
 }
 
 /* FontAwesome Icon Styles */
 .button-icon {
     -fx-font-family: "Font Awesome 5 Free";
-    -fx-fill: #f9f8f4; /* Matches text color */
-    -fx-font-size: 16px; /* Matches size set in FontAwesomeIcon.createIcon */
+    -fx-fill: #f9f8f4;
+    -fx-font-size: 16px;
 }
 
 /* Main Content Area */
@@ -138,12 +152,14 @@
     -fx-padding: 20;
 }
 
+/* Mod Count Label */
 .mod-count-label {
     -fx-text-fill: #a8a8a0;
     -fx-font-size: 12px;
     -fx-padding: 0 0 10 0;
 }
 
+/* Panel Title */
 .panel-title {
     -fx-font-size: 16px;
     -fx-font-weight: bold;
@@ -160,6 +176,7 @@
     -fx-background-radius: 4px;
 }
 
+/* Mod List Cell */
 .mod-list .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #f9f8f4;
@@ -168,23 +185,28 @@
     -fx-border-color: transparent transparent #4a4a48 transparent;
 }
 
+/* Mod List Cell Hover State */
 .mod-list .list-cell:hover {
     -fx-background-color: #3a3a38;
 }
 
+/* Mod List Cell Selected State */
 .mod-list .list-cell:selected {
     -fx-background-color: #ba694b;
     -fx-text-fill: white;
 }
 
+/* Mod List Cell Selected Hover State */
 .mod-list .list-cell:selected:hover {
     -fx-background-color: #c67a5b;
 }
 
+/* Mod List Cell Empty State */
 .mod-list .list-cell:empty {
     -fx-border-width: 0;
 }
 
+/* Mod List Placeholder Label */
 .mod-list .placeholder .label {
     -fx-text-fill: #a8a8a0;
     -fx-font-style: italic;
@@ -206,19 +228,23 @@
     -fx-highlight-text-fill: white;
 }
 
+/* Log Area Content */
 .log-area .content {
     -fx-background-color: #2a2a28;
 }
 
+/* Log Area Scroll Pane */
 .log-area .scroll-pane {
     -fx-background-color: #2a2a28;
     -fx-border-color: transparent;
 }
 
+/* Log Area Scroll Pane Viewport */
 .log-area .scroll-pane .viewport {
     -fx-background-color: #2a2a28;
 }
 
+/* Log Area Scroll Pane Corner */
 .log-area .scroll-pane .corner {
     -fx-background-color: #2a2a28;
 }
@@ -231,27 +257,28 @@
     -fx-border-width: 1px;
     -fx-border-radius: 4px;
     -fx-background-radius: 4px;
-    -fx-padding: 4 8 4 6; /* Adjusted for icon */
+    -fx-padding: 4 8 4 6;
     -fx-font-size: 11px;
     -fx-cursor: hand;
-    -fx-alignment: center-left; /* Align icon and text */
+    -fx-alignment: center-left;
 }
 
+/* Clear Log Button Icon */
 .clear-log-button .button-icon {
-    -fx-fill: #a8a8a0; /* Matches text color */
+    -fx-fill: #a8a8a0;
 }
 
+/* Clear Log Button Hover State */
 .clear-log-button:hover {
     -fx-background-color: #3a3a38;
     -fx-text-fill: #e05e52;
     -fx-border-color: #e05e52;
 }
 
+/* Clear Log Button Icon Hover State */
 .clear-log-button:hover .button-icon {
-    -fx-fill: #e05e52; /* Matches hover text color */
+    -fx-fill: #e05e52;
 }
-
-
 
 /* Progress Bar */
 .progress-bar {
@@ -262,6 +289,7 @@
     -fx-background-radius: 4px;
 }
 
+/* Progress Bar Filled Area */
 .progress-bar .bar {
     -fx-background-color: #ba694b;
     -fx-background-radius: 3px;
@@ -269,6 +297,7 @@
     -fx-padding: 4px;
 }
 
+/* Progress Bar Track */
 .progress-bar .track {
     -fx-background-color: #333331;
     -fx-background-radius: 4px;
@@ -282,25 +311,30 @@
     -fx-border-radius: 4px;
 }
 
+/* ScrollBar Thumb */
 .scroll-bar .thumb {
     -fx-background-color: #4a4a48;
     -fx-background-radius: 4px;
 }
 
+/* ScrollBar Thumb Hover State */
 .scroll-bar .thumb:hover {
     -fx-background-color: #ba694b;
 }
 
+/* ScrollBar Thumb Pressed State */
 .scroll-bar .thumb:pressed {
     -fx-background-color: #a5583b;
 }
 
+/* ScrollBar Increment and Decrement Buttons */
 .scroll-bar .increment-button,
 .scroll-bar .decrement-button {
     -fx-background-color: transparent;
     -fx-padding: 0;
 }
 
+/* ScrollBar Increment and Decrement Arrows */
 .scroll-bar .increment-arrow,
 .scroll-bar .decrement-arrow {
     -fx-background-color: #a8a8a0;
@@ -313,31 +347,37 @@
     -fx-background-color: #2f2f2d;
 }
 
+/* Alert Header Panel */
 .alert .header-panel {
     -fx-background-color: #2a2a28;
     -fx-padding: 20;
 }
 
+/* Alert Header Label */
 .alert .header-panel .label {
     -fx-text-fill: #f9f8f4;
     -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
 
+/* Alert Content Panel */
 .alert .content-panel {
     -fx-background-color: #2f2f2d;
     -fx-padding: 20;
 }
 
+/* Alert Content Label */
 .alert .content-panel .label {
     -fx-text-fill: #f9f8f4;
 }
 
+/* Alert Button Bar */
 .alert .button-bar {
     -fx-background-color: #2a2a28;
     -fx-padding: 15 20;
 }
 
+/* Alert Button Bar Buttons */
 .alert .button-bar .button {
     -fx-background-color: #333331;
     -fx-text-fill: #f9f8f4;
@@ -349,21 +389,23 @@
     -fx-cursor: hand;
 }
 
+/* Alert Button Bar Button Hover State */
 .alert .button-bar .button:hover {
     -fx-background-color: #3a3a38;
     -fx-border-color: #ba694b;
 }
 
+/* Alert Button Bar Default Button */
 .alert .button-bar .button:default {
     -fx-background-color: #ba694b;
     -fx-text-fill: white;
     -fx-border-color: #ba694b;
 }
 
+/* Alert Button Bar Default Button Hover State */
 .alert .button-bar .button:default:hover {
     -fx-background-color: #c67a5b;
 }
-
 
 /* Footer */
 .footer {
@@ -375,40 +417,45 @@
     -fx-min-height: 40px;
 }
 
-/* Status box */
+/* Status Box */
 .status-box {
     -fx-spacing: 8;
     -fx-alignment: center-left;
 }
 
+/* Status Label */
 .status-label {
     -fx-text-fill: #7a9b6b;
     -fx-font-size: 13px;
 }
 
+/* Status Icon */
 .status-icon {
     -fx-fill: #7a9b6b;
 }
 
+/* Error Icon */
 .error-icon {
     -fx-fill: #e05e52;
 }
 
+/* Success Icon */
 .success-icon {
     -fx-fill: #7a9b6b;
 }
 
-/* Прогресс бокс */
+/* Progress Box */
 .progress-box {
     -fx-spacing: 8;
     -fx-alignment: center-right;
 }
 
+/* Progress Icon */
 .progress-icon {
     -fx-fill: #ba694b;
 }
 
-/* Обновленные стили для прогресс-бара */
+/* Progress Bar (Repeated) */
 .progress-bar {
     -fx-background-color: #333331;
     -fx-border-color: #4a4a48;
@@ -418,6 +465,7 @@
     -fx-pref-width: 200;
 }
 
+/* Progress Bar Filled Area (Repeated) */
 .progress-bar .bar {
     -fx-background-color: #ba694b;
     -fx-background-radius: 3px;
@@ -425,6 +473,7 @@
     -fx-padding: 4px;
 }
 
+/* Progress Bar Track (Repeated) */
 .progress-bar .track {
     -fx-background-color: #333331;
     -fx-background-radius: 4px;
