@@ -63,7 +63,6 @@ public class TModGui extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("TMod Manager");
 
-
         primaryStage.setMinWidth(800);
         primaryStage.setMinHeight(700);
 
