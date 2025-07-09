@@ -251,19 +251,7 @@
     -fx-fill: #e05e52; /* Matches hover text color */
 }
 
-/* Footer */
-.footer {
-    -fx-background-color: #2f2f2d;
-    -fx-padding: 15 25;
-    -fx-border-color: #4a4a48 transparent transparent transparent;
-    -fx-border-width: 1 0 0 0;
-    -fx-alignment: center-left;
-}
 
-.status-label {
-    -fx-text-fill: #f9f8f4;
-    -fx-font-size: 13px;
-}
 
 /* Progress Bar */
 .progress-bar {
@@ -377,3 +365,67 @@
 }
 
 
+/* Footer */
+.footer {
+    -fx-background-color: #2f2f2d;
+    -fx-padding: 10 15;
+    -fx-border-color: #4a4a48 transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-alignment: center-left;
+    -fx-min-height: 40px;
+}
+
+/* Status box */
+.status-box {
+    -fx-spacing: 8;
+    -fx-alignment: center-left;
+}
+
+.status-label {
+    -fx-text-fill: #7a9b6b;
+    -fx-font-size: 13px;
+}
+
+.status-icon {
+    -fx-fill: #7a9b6b;
+}
+
+.error-icon {
+    -fx-fill: #e05e52;
+}
+
+.success-icon {
+    -fx-fill: #7a9b6b;
+}
+
+/* Прогресс бокс */
+.progress-box {
+    -fx-spacing: 8;
+    -fx-alignment: center-right;
+}
+
+.progress-icon {
+    -fx-fill: #ba694b;
+}
+
+/* Обновленные стили для прогресс-бара */
+.progress-bar {
+    -fx-background-color: #333331;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-pref-width: 200;
+}
+
+.progress-bar .bar {
+    -fx-background-color: #ba694b;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 1px;
+    -fx-padding: 4px;
+}
+
+.progress-bar .track {
+    -fx-background-color: #333331;
+    -fx-background-radius: 4px;
+}

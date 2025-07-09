@@ -5,6 +5,9 @@
 package com.tmod.gui;
 
 import com.tmod.cli.commands.CliBridge;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -18,6 +21,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import java.io.File;
+import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
@@ -35,6 +39,13 @@ public class TModGui extends Application {
     private final Label statusLabel = new Label("Ready");
     private final ProgressBar progressBar = new ProgressBar();
     private final Label modCountLabel = new Label("0 mods installed");
+
+    // Animation fields
+    private Timeline statusTimeline;
+    private Timeline progressTimeline;
+    private Text statusIcon;
+    private Text progressIcon;
+    private HBox progressBox;
 
     // UI Comps
     private Button addBtn, removeBtn, installBtn, refreshBtn;
@@ -228,20 +239,142 @@ public class TModGui extends Application {
     /**
      * Creates the footer with status information
      */
+    /**
+     * Enhanced footer method with icon and blinking animation
+     */
     private HBox createFooter() {
+        // Status icon
+        Text statusIcon = FontAwesomeIcon.createIcon("INFO_CIRCLE", "status-icon", 14);
+
+        // Status label with icon
+        HBox statusBox = new HBox(8);
+        statusBox.setAlignment(Pos.CENTER_LEFT);
+
+        statusBox.getChildren().addAll(statusIcon, statusLabel);
+        statusBox.getStyleClass().add("status-box");
+
         statusLabel.getStyleClass().add("status-label");
 
+        // Progress section
+        Text progressIcon = FontAwesomeIcon.createIcon("SPINNER", "progress-icon", 14);
         progressBar.getStyleClass().add("progress-bar");
         progressBar.setVisible(false);
         progressBar.setPrefWidth(200);
 
+        HBox progressBox = new HBox(8);
+        progressBox.setAlignment(Pos.CENTER_RIGHT);
+        progressBox.getChildren().addAll(progressIcon, progressBar);
+        progressBox.getStyleClass().add("progress-box");
+        progressIcon.setVisible(false);
+
+        // Spacer
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox footer = new HBox(15, statusLabel, spacer, progressBar);
+        // Main footer container
+        HBox footer = new HBox(15, statusBox, spacer, progressBox);
         footer.getStyleClass().add("footer");
 
+        // Store references for animation
+        this.statusIcon = statusIcon;
+        this.progressIcon = progressIcon;
+        this.progressBox = progressBox;
+
         return footer;
+    }
+
+    /**
+     * Enhanced progress display with animation
+     */
+    private void showProgress(boolean show) {
+        Platform.runLater(() -> {
+            progressBar.setVisible(show);
+            progressIcon.setVisible(show);
+
+            if (show) {
+                startProgressAnimation();
+            } else {
+                stopProgressAnimation();
+            }
+        });
+    }
+
+    /**
+     * Enhanced status update with icon animation
+     */
+    private void updateStatus(String status) {
+        Platform.runLater(() -> {
+            statusLabel.setText(status);
+
+            // Change icon based on status
+            if (status.toLowerCase().contains("error")) {
+                statusIcon.getStyleClass().clear();
+                statusIcon.getStyleClass().addAll("status-icon", "error-icon");
+                statusIcon = FontAwesomeIcon.createIcon("EXCLAMATION_TRIANGLE", "status-icon error-icon", 14);
+            } else if (status.toLowerCase().contains("completed")) {
+                statusIcon.getStyleClass().clear();
+                statusIcon.getStyleClass().addAll("status-icon", "success-icon");
+                statusIcon = FontAwesomeIcon.createIcon("CHECK_CIRCLE", "status-icon success-icon", 14);
+            } else {
+                statusIcon.getStyleClass().clear();
+                statusIcon.getStyleClass().addAll("status-icon");
+                statusIcon = FontAwesomeIcon.createIcon("INFO_CIRCLE", "status-icon", 14);
+            }
+
+            // Update the icon in the status box
+            HBox statusBox = (HBox) statusLabel.getParent();
+            if (statusBox != null) {
+                statusBox.getChildren().set(0, statusIcon);
+            }
+
+            // Trigger status animation
+            startStatusAnimation();
+        });
+    }
+
+
+
+    /**
+     * Start blinking animation for status
+     */
+    private void startStatusAnimation() {
+        if (statusTimeline != null) {
+            statusTimeline.stop();
+        }
+
+        statusTimeline = new Timeline(
+new KeyFrame(javafx.util.Duration.ZERO, new KeyValue(statusIcon.opacityProperty(), 1.0)),
+                new KeyFrame(javafx.util.Duration.seconds(0.8), new KeyValue(statusIcon.opacityProperty(), 0.3)),
+                new KeyFrame(javafx.util.Duration.seconds(1.6), new KeyValue(statusIcon.opacityProperty(), 1.0))
+        );
+        statusTimeline.setCycleCount(43); // Blink 43 times
+        statusTimeline.play();
+    }
+
+    /**
+     * Start spinning animation for progress
+     */
+    private void startProgressAnimation() {
+        if (progressTimeline != null) {
+            progressTimeline.stop();
+        }
+
+        progressTimeline = new Timeline(
+                new KeyFrame(javafx.util.Duration.ZERO, new KeyValue(progressIcon.rotateProperty(), 0)),
+                new KeyFrame(javafx.util.Duration.seconds(1), new KeyValue(progressIcon.rotateProperty(), 360))
+        );
+        progressTimeline.setCycleCount(Timeline.INDEFINITE);
+        progressTimeline.play();
+    }
+
+    /**
+     * Stop progress animation
+     */
+    private void stopProgressAnimation() {
+        if (progressTimeline != null) {
+            progressTimeline.stop();
+        }
+        progressIcon.setRotate(0);
     }
 
     /**
@@ -366,13 +499,6 @@ public class TModGui extends Application {
         });
     }
 
-    private void updateStatus(String status) {
-        Platform.runLater(() -> statusLabel.setText(status));
-    }
-
-    private void showProgress(boolean show) {
-        Platform.runLater(() -> progressBar.setVisible(show));
-    }
 
     private void updateModCount() {
         Platform.runLater(() -> {
