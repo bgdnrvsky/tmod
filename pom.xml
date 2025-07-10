@@ -30,7 +30,7 @@
                             <transformers>
                                 <transformer implementation=
                                                      "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.tmod.cli.App</mainClass>
+                                    <mainClass>com.tmod.gui.TModGui</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

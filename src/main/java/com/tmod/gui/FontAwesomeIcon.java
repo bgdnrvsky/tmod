@@ -91,8 +91,12 @@ public class FontAwesomeIcon {
         ICON_MAP.put("CLOSE", "\uf00d");
         ICON_MAP.put("FILE_UPLOAD", "\uf574");
         ICON_MAP.put("ARROW_LEFT", "\u2190");
+        ICON_MAP.put("ARROW_RIGHT", "\u2192");
         ICON_MAP.put("TRASH", "\uf1f8");
         ICON_MAP.put("FILE_LIST", "\uf022");
+
+        ICON_MAP.put("CHECK_CIRCLE", "\uf058");
+        ICON_MAP.put("GAMEPAD", "\uf11b");
 
     }
 

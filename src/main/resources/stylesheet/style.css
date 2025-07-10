@@ -132,6 +132,74 @@
     -fx-fill: #a8a8a0;
 }
 
+/* Styles for dialog boxes */
+.action-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 5px;
+    -fx-cursor: hand;
+}
+
+.action-button:hover {
+    -fx-background-color: #5CBF60;
+}
+
+.action-button:pressed {
+    -fx-background-color: #3C9F40;
+}
+
+/* Drag and drop styles */
+.mod-list:drag-over {
+    -fx-border-color: #4CAF50;
+    -fx-border-width: 2px;
+    -fx-border-style: dashed;
+    -fx-effect: dropshadow(gaussian, #4CAF50, 10, 0, 0, 0);
+}
+
+/* Empty list placeholder */
+.list-view .placeholder .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #9e9e9e;
+    -fx-alignment: center;
+    -fx-padding: 20px;
+    -fx-text-alignment: center;
+}
+
+/* Tab styles for add mod dialog */
+.tab-pane {
+    -fx-tab-min-width: 100px;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: #f0f0f0;
+}
+
+.tab-pane .tab {
+    -fx-background-color: #e0e0e0;
+    -fx-padding: 5px 10px;
+}
+
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+    -fx-focus-color: transparent;
+}
+
+.tab-pane .tab-content-area {
+    -fx-background-color: white;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: #666666;
+    -fx-font-weight: normal;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #4CAF50;
+    -fx-font-weight: bold;
+}
+
 /* FontAwesome Icon Styles */
 .button-icon {
     -fx-font-family: "Font Awesome 5 Free";

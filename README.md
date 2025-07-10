@@ -62,7 +62,45 @@ For example, the slug of [Just Enough Items (JEI)](https://www.curseforge.com/mi
 Id is another way that CurseForge uses to identify the mod. You can find it on the CurseForge mod page, _Project ID: XXX_.
 
 For example, the id of [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) is _238222_.
+# TMod Manager
 
+ТМод Менеджер - удобное графическое приложение для управления модами Minecraft.
+
+## Возможности
+
+- Простой и интуитивно понятный интерфейс
+- Визард первого запуска для быстрой настройки
+- Добавление модов из локальных папок или по URL
+- Поддержка drag-and-drop для .jar файлов
+- Управление версиями Minecraft и загрузчиками модов (Forge, Fabric, Quilt)
+- Автоматическая установка и обновление модов
+
+## Системные требования
+
+- Java 21 или выше
+- Операционная система: Windows, macOS или Linux
+
+## Начало работы
+
+1. Запустите TMod Manager
+2. Следуйте инструкциям мастера для настройки вашего первого модпака
+3. Добавляйте моды, перетаскивая .jar файлы в окно программы или используя кнопку "Добавить мод"
+4. Нажмите "Установить все" для установки модов
+
+## Справка по интерфейсу
+
+- **Добавить мод** - Добавляет новый мод из локальной папки или по URL
+- **Удалить мод** - Удаляет выбранный мод из списка
+- **Установить все** - Устанавливает все моды из списка
+- **Обновить** - Обновляет список установленных модов
+
+## Поддержка
+
+При возникновении вопросов или проблем обращайтесь в раздел Issues на GitHub или напишите разработчикам по электронной почте.
+
+## Лицензия
+
+© 2025 TMod Team. Все права защищены.
 ***
 
 Let's start by adding some of the basic, and most popular mods: [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) and [JourneyMap](https://www.curseforge.com/minecraft/mc-mods/journeymap).
