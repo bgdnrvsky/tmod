@@ -1,6 +1,8 @@
+/**
+ * @author: Era (Sou1ence)
+ */
+
 package com.tmod.gui;
-
-
 
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
