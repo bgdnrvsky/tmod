@@ -3,13 +3,13 @@
 /* Wizard Container */
 .wizard-container {
     -fx-background-color: #2f2f2d;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 0 0 8px 0;
     -fx-padding: 30 40 30 40;
     -fx-spacing: 25;
     -fx-alignment: center;
     -fx-border-color: #4a4a48;
     -fx-border-width: 1px;
-    -fx-border-radius: 8px;
+    -fx-border-radius: 0 0 8px 0;
 }
 
 /* Wizard Title */
@@ -207,7 +207,7 @@ ComboBox .list-view {
 ComboBox .list-view .list-cell {
     -fx-background-color: transparent;
     -fx-text-fill: #f9f8f4;
-    -fx-padding: 8 12;
+    -fx-padding: 4 4;
 }
 
 ComboBox .list-view .list-cell:hover {
@@ -224,6 +224,54 @@ ComboBox .list-view .list-cell:selected {
     -fx-background-color: #3a3a38;
     -fx-border-color: #ba694b;
     -fx-transition: all 0.1s ease-in-out;
+}
+
+/* ComboBox ScrollBar */
+ComboBox .list-view .scroll-bar:vertical {
+    -fx-background-color: #2f2f2d;
+    -fx-border-color: transparent;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    -fx-pref-width: 8px;
+}
+
+ComboBox .list-view .scroll-bar:vertical .track {
+    -fx-background-color: #2f2f2d;
+    -fx-background-radius: 4px;
+    -fx-border-color: transparent;
+}
+
+ComboBox .list-view .scroll-bar:vertical .thumb {
+    -fx-background-color: #4a4a48;
+    -fx-background-radius: 4px;
+    -fx-min-height: 20px;
+}
+
+ComboBox .list-view .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: #ba694b;
+}
+
+ComboBox .list-view .scroll-bar:vertical .thumb:pressed {
+    -fx-background-color: #a5583b;
+}
+
+ComboBox .list-view .scroll-bar:vertical .increment-button,
+ComboBox .list-view .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-min-height: 0;
+}
+
+ComboBox .list-view .scroll-bar:vertical .increment-arrow,
+ComboBox .list-view .scroll-bar:vertical .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-shape: null;
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-max-height: 0;
+    -fx-min-height: 0;
 }
 
 /* Wizard Button Pressed State */

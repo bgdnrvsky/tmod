@@ -10,6 +10,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -149,6 +150,28 @@ public class FRW_welcome {
 
         wizardStage.setScene(welcomeScene);
         wizardStage.setResizable(false);
+
+
+        wizardStage.setScene(welcomeScene);
+        wizardStage.setResizable(false);
+        wizardStage.show();
+
+
+        wizardStage.getIcons().add(
+                new Image(Objects.requireNonNull(
+                        FRW_welcome.class.getResourceAsStream("/images/png/logo_tmod_bg(0)_zoomed.png")
+                ))
+        );
+
+        Platform.runLater(() -> {
+            TitleBarCustomizer.applyTheme(wizardStage,
+                    "#3a3a38",
+                    "#f9f8f4",
+                    "#5a5a58"
+            );
+        });
+
+
         wizardStage.showAndWait();
 
         return success.get();
@@ -436,6 +459,7 @@ public class FRW_welcome {
         );
 
         versionComboBox.setValue(selectedVersion);
+        versionComboBox.getStyleClass().add("version-combo-box");
         versionComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal != null) {
                 selectedVersion = newVal;
@@ -523,11 +547,31 @@ public class FRW_welcome {
         alert.setHeaderText(null);
         alert.setContentText(message);
 
+        Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+
+        alertStage.getIcons().add(
+                new Image(Objects.requireNonNull(
+                        FRW_welcome.class.getResourceAsStream("/images/png/logo_tmod_bg(0)_zoomed.png")
+                ))
+        );
+
         Scene scene = alert.getDialogPane().getScene();
-        if (scene != null)
-            scene.getStylesheets().add(Objects.requireNonNull(FRW_welcome.class.getResource("/stylesheet/wizard.css")).toExternalForm());
+        if (scene != null) {
+            scene.getStylesheets().add(
+                    Objects.requireNonNull(FRW_welcome.class.getResource("/stylesheet/wizard.css")).toExternalForm()
+            );
+        }
+
+        alert.show();
+
+        Platform.runLater(() -> {
+            TitleBarCustomizer.applyTheme(alertStage,
+                    "#3a3a38",
+                    "#f9f8f4",
+                    "#5a5a58"
+            );
+        });
 
         alert.showAndWait();
     }
-
 }
