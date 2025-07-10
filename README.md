@@ -1,138 +1,62 @@
-# Tmod
+# TMod Manager
 
-Tmod is a tool that allows you to quickly create and manage your Minecraft modpack.
+A modern GUI application for managing Minecraft modpacks with dependency resolution and compatibility checking
+<br/><br/>
+<img width="998" height="864" alt="изображение" src="https://github.com/user-attachments/assets/5355097a-9d36-4783-8d27-b9a43c57809d" />
 
-Tmod keeps information about dependencies and incompatibilities so you can add the single mod and all the necessary libraries for it will be already there !
 
-# Usage example
+## Features
 
-## Initializing
-Let's start by `cd`ing into the folder where you wish to install mods.
+- **Intuitive Interface**: Clean, modern dark theme with easy-to-use controls
+- **Dependency Management**: Automatically resolves and installs mod dependencies
+- **Real-time Logging**: View operation progress and results in an integrated log panel
+- **Mod Overview**: List view of all installed mods with count display
+- **Batch Operations**: Install all mods at once or manage them individually
+- **Cross-platform**: Built with JavaFX for Windows, macOS, and Linux support
 
-```sh
-$ cd ~/.minecraft/my-pack/ # or any folder you wish
-```
+## Interface
 
-Now you have to init `tmod`!
+The application features a split-panel layout:
+- **Left Panel**: Displays your installed mods with selection and count information
+- **Right Panel**: Shows real-time activity logs and operation feedback
+- **Toolbar**: Quick access buttons for adding, removing, installing, and refreshing mods
+- **Status Bar**: Progress indication and current operation status
 
-```sh
-$ tmod init
-```
+## Usage
 
-## Choose the mod loader
-You will be prompted to choose the mod loader
+### Adding Mods
+Click "Add Mod" and select a mod directory. The application will automatically detect dependencies and add them to your modpack.
 
-```
-Choose the mod loader:
-  Forge
-  Fabric
-  Quilt
-  NeoForge
-```
+### Removing Mods
+Select a mod from the list and click "Remove Mod". A confirmation dialog will appear before removal.
 
-Choose the loader you wish for your modpack using arrow keys, and confirm your choice with <kbd>Enter</kbd>. Let's say that I have chosen `Forge`
+### Installing Mods
+Click "Install All" to download and install all mods in your list along with their dependencies.
 
-## Enter the version
-You will be asked about the version of Minecraft that you are going to be using with your modpack.
+### Refreshing
+Use the "Refresh" button to update the mod list and sync with the current state of your modpack.
 
-`Game version:`
+## Colorscheme
 
-Now, enter the version. Let's say that I have entered the version `1.20.1`
+| Color         | Badge                                                                                                               | Hex Code   |
+| ------------- | --------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 🔶 **Orange** | ![Orange](https://img.shields.io/badge/Accent_Orange-ba694b?style=flat&logo=materialdesignicons&logoColor=f9f8f4)   | `#ba694b`  |
+| 🔷 **Blue**   | ![Blue](https://img.shields.io/badge/Accent_Blue-3d6cac?style=flat&logo=materialdesignicons&logoColor=f9f8f4)       | `#3d6cac`  |
+| 🔴 **Red**    | ![Red](https://img.shields.io/badge/Accent_Red-d67762?style=flat&logo=materialdesignicons&logoColor=f9f8f4)         | `#d67762`  |
+| 🟣 **Purple** | ![Purple](https://img.shields.io/badge/Accent_Purple-9b7aa6?style=flat&logo=materialdesignicons&logoColor=f9f8f4)   | `#9b7aa6`  |
+| 🟡 **Yellow** | ![Yellow](https://img.shields.io/badge/Accent_Yellow-c9a96e?style=flat&logo=materialdesignicons&logoColor=f9f8f4)   | `#c9a96e`  |
+| 🟢 **Aqua**   | ![Aqua](https://img.shields.io/badge/Accent_Aqua-6b9b9b?style=flat&logo=materialdesignicons&logoColor=f9f8f4)       | `#6b9b9b`  |
 
-## Adding mods
+## Technical Details
 
-The time has finally come to add your favourite mods!
+- Built with JavaFX for cross-platform compatibility
+- Integrates with TMod CLI backend for mod management operations
+- Features custom styling with a cohesive dark theme
+- Includes progress indicators and status animations
+- Supports background task execution to maintain UI responsiveness
 
-### Remote mods
+## Requirements
 
-Tmod fetches almost all the data from [CurseForge](https://www.curseforge.com/), a mod that you add from it, I call a _remote_ mod.
-
-You have two possible ways to add a remote mod in Tmod: by its slug and its id.
-
-#### Using slug
-
-Slug is the name used by CurseForge to identify the mod (textual id). Note, that the name of the mod might not be its slug!
-
-Slug is always positioned at the end of the CurseForge mod link, so the pattern is following _https://www.curseforge.com/minecraft/mc-mods/slug_.
-
-For example, the slug of [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) is _jei_.
-
-#### Using the id
-
-Id is another way that CurseForge uses to identify the mod. You can find it on the CurseForge mod page, _Project ID: XXX_.
-
-For example, the id of [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) is _238222_.
-
-***
-
-Let's start by adding some of the basic, and most popular mods: [Just Enough Items (JEI)](https://www.curseforge.com/minecraft/mc-mods/jei) and [JourneyMap](https://www.curseforge.com/minecraft/mc-mods/journeymap).
-
-```sh
-$ tmod add jei
-$ tmod add journeymap
-```
-
-If everything went well, you should see some searching info and short information about each of the mods you have added.
-
-Let's now see the representation of our pool!
-
-```sh
-$ tmod tree
-
-Tmod
-├─ journeymap
-└─ jei
-```
-
-***
-
-Let's add more mods !
-
-```sh
-$ tmod add waystones
-$ tmod add ram-compat
-```
-
-Now, let's check our tree again.
-
-```
-Tmod
-├─ waystones
-│  └─ balm
-├─ jei
-└─ ram-compat
-   ├─ curios
-   ├─ alexs-mobs
-   └─ octo-lib
-      └─ architectury-api
-```
-
-Well, well... As we can see, Tmod is aware about dependencies.
-
-## Installing mods
-Let's finaly install the mods we have added.
-
-```sh
-$ tmod install
-```
-
-This command will download all the mods and put them into the `mods/` directory. Use `-o` flag to overwrite this behaviour.
-
-```sh
-$ tree mods/
-
-mods/
-├── alexsmobs-1.22.9.jar
-├── architectury-9.2.14-forge.jar
-├── balm-forge-1.20.1-7.3.9-all.jar
-├── curios-forge-5.11.0+1.20.1.jar
-├── jei-1.20.1-forge-15.20.0.105.jar
-├── journeymap-1.20.1-5.10.3-forge.jar
-├── OctoLib-FORGE-0.4.2+1.20.1.jar
-├── ramcompat-1.20.1-0.1.4.jar
-└── waystones-forge-1.20-14.1.6.jar
-
-1 directory, 9 files
-```
-
-All the mods and their dependencies were installed !
+- Java 11 or higher
+- JavaFX runtime
+- TMod CLI backend
