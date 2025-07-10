@@ -2,6 +2,7 @@ package com.tmod.cli;
 
 import com.tmod.cli.commands.*;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 import com.tmod.gui.TModGui;
 import org.fusesource.jansi.AnsiConsole;
@@ -25,43 +26,39 @@ import picocli.CommandLine;
 public class App {
 
     @CommandLine.Option(
-        names = { "-r", "--repo" },
-        paramLabel = "<Path>",
-        description = "Change the default repository path",
-        defaultValue = ".tmod",
-        showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
+            names = { "-q", "--quiet" },
+            description = "Silence tmod",
+            defaultValue = "false",
+            showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
     )
-    private Path repoPath = Path.of(".tmod");
+    private boolean quiet = false;
 
     @CommandLine.Option(
-//        names = { "-q", "--quiet" },
-//        description = "Silence tmod",
-//        defaultValue = "false",
-//        showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
-            names = {"--gui"},
-        description = "Launch the graphical user interface instead of the command line interface",
-        defaultValue = "false"
+            names = { "--gui" },
+            description = "Launch the graphical user interface instead of the command line interface",
+            defaultValue = "false",
+            showDefaultValue = CommandLine.Help.Visibility.ON_DEMAND
     )
+    private boolean gui = false;
 
-    private boolean quiet = false;
-    private boolean gui= false;
+    private Path repoPath = Path.of(".tmod");
 
     public static void main(String[] args) {
         App app = new App();
 
-        // 2 Options of running the application:
-        /// GUI
-        if (args.length > 0 && args[0].equals("--gui"))
-            TModGui.launch(TModGui.class, args);
+        AnsiConsole.systemInstall();
+        int exitCode = new CommandLine(app).execute(args);
+        AnsiConsole.systemUninstall();
 
-        /// CLI
-         else {
-            AnsiConsole.systemInstall();
-            int exitCode = new CommandLine(app).execute(args);
-            AnsiConsole.systemUninstall();
-            System.exit(exitCode);
+        if (app.gui) {
+            TModGui.launch(TModGui.class, args);
+            return;
         }
+
+        System.exit(exitCode);
     }
+
+
 
     public Path getRepoPath() {
         return repoPath;

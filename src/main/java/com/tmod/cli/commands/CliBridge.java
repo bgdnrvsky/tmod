@@ -16,22 +16,20 @@ public class CliBridge {
      *
      * @param args arguments to pass to tmod
      */
-    public static String run (String... args) {
+    public static String run(String... args) {
         StringWriter swOut = new StringWriter();
         StringWriter swErr = new StringWriter();
 
-        PrintWriter pwOut = new PrintWriter(swOut);
-        PrintWriter pwErr = new PrintWriter(swErr);
+        // New execution
+        CommandLine cmd = new CommandLine(new App());
 
-        CMD.setOut(pwOut);
-        CMD.setErr(pwErr);
+        cmd.setOut(new PrintWriter(swOut));
+        cmd.setErr(new PrintWriter(swErr));
 
-        pwOut.flush();
-        pwErr.flush();
+        cmd.execute(args);
 
-        return swOut + swErr.toString();
+        return swOut.toString() + swErr.toString();
     }
-
 
     /** Util for command, result - code of execution
      *
