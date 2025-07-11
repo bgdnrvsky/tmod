@@ -1,0 +1,654 @@
+/* Mod Detail Container */
+.mod-detail-container {
+    -fx-background-color: #2a2a28;
+    -fx-text-fill: #f9f8f4;
+    -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+    -fx-font-size: 14px;
+    -fx-focus-color: transparent;
+}
+
+/* Mod Detail Header */
+.mod-detail-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #f9f8f4;
+    -fx-padding: 0 0 5 0;
+}
+
+.mod-detail-author {
+    -fx-font-size: 14px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+}
+
+.mod-detail-downloads {
+    -fx-font-size: 13px;
+    -fx-text-fill: #ba694b;
+    -fx-font-weight: bold;
+}
+
+.mod-detail-updated {
+    -fx-font-size: 13px;
+    -fx-text-fill: #a8a8a0;
+}
+
+.mod-detail-summary {
+    -fx-font-size: 14px;
+    -fx-text-fill: #f9f8f4;
+    -fx-padding: 5 0 0 0;
+    -fx-line-spacing: 2px;
+}
+
+/* Category Chips */
+.category-chip {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #ba694b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 4 10 4 10;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+
+/* TAB PANE STYLES */
+.mod-tab {
+    -fx-background-color: #2a2a28;
+    -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+    -fx-font-size: 12x;
+}
+
+.tab.mod-tab .tab-label {
+    -fx-text-fill: #9b7aa6;
+}
+
+.tab.mod-tab:hover .tab-label {
+    -fx-text-fill: #9b7aa6;
+}
+
+.tab.mod-tab:selected .tab-label {
+    -fx-text-fill: #85638f;
+    -fx-font-weight: bold;
+}
+
+.tab.mod-tab:focused .tab-label {
+    -fx-text-fill: #9b7aa6;
+}
+
+.tab.mod-tab:selected:hover .tab-label {
+    -fx-text-fill: #3d6cac;
+}
+
+.tab.mod-tab:selected {
+    -fx-background-color: #333331;
+}
+
+.tab.mod-tab:hover {
+    -fx-background-color: #2f2f2d;
+}
+
+.tab.mod-tab:selected:focused {
+    -fx-background-color: #3a3a38;
+}
+
+
+
+
+
+
+
+/* Description Tab */
+.description-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+}
+
+.description-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.description-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+}
+
+.mod-description-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: #f9f8f4;
+    -fx-line-spacing: 3px;
+    -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+}
+
+/* Screenshots Tab */
+.screenshots-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+}
+
+.screenshots-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.screenshots-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+}
+
+.screenshot-caption {
+    -fx-font-size: 13px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+    -fx-padding: 5 0 0 0;
+}
+
+.no-screenshots-message {
+    -fx-font-size: 16px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+    -fx-padding: 50 0 0 0;
+}
+
+.error-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #d9534f;
+    -fx-font-style: italic;
+    -fx-padding: 10 0 0 0;
+}
+
+/* Files Tab */
+.files-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+}
+
+.files-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.files-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+}
+
+.no-files-message {
+    -fx-font-size: 16px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+    -fx-padding: 50 0 0 0;
+}
+
+/* Files Table */
+.files-table {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+}
+
+.files-table .column-header-background {
+    -fx-background-color: #333331;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 0 0 1 0;
+}
+
+.files-table .column-header {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 0 1 0 0;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 10 8 10 8;
+}
+
+.files-table .table-row-cell {
+    -fx-background-color: #2a2a28;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 0 0 1 0;
+}
+
+.files-table .table-row-cell:hover {
+    -fx-background-color: #333331;
+}
+
+.files-table .table-row-cell:selected {
+    -fx-background-color: #ba694b;
+    -fx-text-fill: #f9f8f4;
+}
+
+.files-table .table-cell {
+    -fx-padding: 8 8 8 8;
+    -fx-font-size: 13px;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Download Button in Table */
+.dw-button {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #7a9b6b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 11px;
+    -fx-cursor: hand;
+    -fx-font-weight: bold;
+}
+
+.dw-button:hover {
+    -fx-background-color: #3a3a38;
+    -fx-border-color: #7a9b6b;
+}
+
+.dw-button:pressed {
+    -fx-background-color: #2a2a28;
+}
+
+/* Button Bar */
+.install-button {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #7a9b6b;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 5 6 4 6;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.install-button:hover {
+    -fx-background-color: #3a3a38;
+    -fx-border-color: #7a9b6b;
+    -fx-effect: dropshadow(gaussian, rgba(122, 155, 107, 0.3), 3, 0, 0, 1);
+}
+
+.install-button:pressed {
+    -fx-background-color: #2a2a28;
+}
+
+.website-button {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #c9a96e;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 5 6 4 6;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+
+}
+
+.website-button:hover {
+    -fx-background-color: #3a3a38;
+    -fx-border-color: #9b7aa6;
+    -fx-effect: dropshadow(gaussian, rgba(201, 169, 110, 0.3), 3, 0, 0, 1);
+
+}
+
+.website-button:pressed {
+    -fx-background-color: #2a2a28;
+}
+
+.close-button {
+    -fx-background-color: #333331;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #d67762;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 5 6 4 6;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.close-button:hover {
+    -fx-background-color: #3a3a38;
+    -fx-border-color: #d67762;
+    -fx-effect: dropshadow(gaussian, rgba(214, 119, 98, 0.3), 3, 0, 0, 1);
+}
+
+.close-button:pressed {
+    -fx-background-color: #2a2a28;
+}
+
+/* Elegant ScrollPane Styling */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+/* Vertical scrollbar */
+.scroll-pane .scroll-bar:vertical {
+    -fx-pref-width: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Horizontal scrollbar */
+.scroll-pane .scroll-bar:horizontal {
+    -fx-pref-height: 6px;
+    -fx-background-color: transparent;
+}
+
+/* Track (background) */
+.scroll-pane .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+/* Thumb (scroll handle) */
+.scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #ba694b;
+    -fx-background-radius: 6px;
+}
+
+.scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: #d27b5c;
+}
+
+.scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: #a5583b;
+}
+
+/* Increment and Decrement buttons */
+.scroll-pane .scroll-bar .increment-button,
+.scroll-pane .scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-pref-height: 0;
+    -fx-pref-width: 0;
+    -fx-background-color: transparent;
+    -fx-shape: "";
+}
+
+.scroll-pane .scroll-bar .increment-arrow,
+.scroll-pane .scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+
+
+/* ============================================
+   TAB PANE STYLES - КРАСИВЫЕ ВКЛАДКИ
+   ============================================ */
+
+.mod-detail-tabs {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 2);
+}
+
+/* Область заголовков вкладок */
+.mod-detail-tabs .tab-pane .tab-header-area {
+    -fx-background-color: #1f1f1d;
+    -fx-border-color: transparent;
+    -fx-padding: 8 8 0 8;
+    -fx-background-radius: 8px 8px 0 0;
+}
+
+/* Контейнер вкладок */
+.mod-detail-tabs .tab-pane .tab-header-area .headers-region {
+    -fx-background-color: transparent;
+}
+
+/* Отдельная вкладка */
+.mod-detail-tabs .tab-pane .tab-header-area .tab {
+    -fx-background-color: #2a2a28;
+    -fx-text-fill: #a8a8a0;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px 1px 0 1px;
+    -fx-border-radius: 8px 8px 0 0;
+    -fx-background-radius: 8px 8px 0 0;
+    -fx-padding: 12 20 12 20;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 1);
+}
+
+/* Активная вкладка */
+.mod-detail-tabs .tab-pane .tab-header-area .tab:selected {
+    -fx-background-color: #ba694b;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #ba694b;
+    -fx-border-width: 1px 1px 0 1px;
+    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.4), 8, 0, 0, 2);
+    -fx-translate-y: -2px;
+}
+
+/* Наведение на вкладку */
+.mod-detail-tabs .tab-pane .tab-header-area .tab:hover {
+    -fx-background-color: #3a3a38;
+    -fx-text-fill: #f9f8f4;
+    -fx-border-color: #ba694b;
+    -fx-translate-y: -1px;
+    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.2), 5, 0, 0, 1);
+}
+
+/* Область содержимого вкладок */
+.mod-detail-tabs .tab-pane .tab-content-area {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 0 0 8px 8px;
+    -fx-background-radius: 0 0 8px 8px;
+    -fx-padding: 0;
+}
+
+/* ============================================
+   DESCRIPTION TAB STYLES
+   ============================================ */
+
+.description-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0 0 8px 8px;
+}
+
+.description-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.description-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+}
+
+/* Текст описания */
+.mod-description-text {
+    -fx-font-size: 15px;
+    -fx-text-fill: #f9f8f4;
+    -fx-line-spacing: 4px;
+    -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
+    -fx-padding: 20;
+    -fx-background-color: #2a2a28;
+    -fx-background-radius: 0 0 8px 8px;
+}
+
+/* ============================================
+   SCREENSHOTS TAB STYLES
+   ============================================ */
+
+.screenshots-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0 0 8px 8px;
+}
+
+.screenshots-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.screenshots-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+    -fx-padding: 20;
+}
+
+.screenshot-container {
+    -fx-background-color: #333331;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 2px;
+    -fx-background-radius: 2px;
+    -fx-padding: 15;
+    -fx-spacing: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 8, 0, 0, 2);
+}
+
+.screenshot-caption {
+    -fx-font-size: 14px;
+    -fx-text-fill: #f9f8f4;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 0 0;
+    -fx-text-alignment: center;
+    -fx-background-color: #2a2a28;
+    -fx-background-radius: 6px;
+    -fx-padding: 8 12 8 12;
+}
+
+.no-screenshots-message {
+    -fx-font-size: 18px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+    -fx-padding: 80 0 80 0;
+    -fx-text-alignment: center;
+    -fx-background-color: #333331;
+    -fx-background-radius: 12px;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1);
+}
+
+.error-message {
+    -fx-font-size: 14px;
+    -fx-text-fill: #d9534f;
+    -fx-font-weight: bold;
+    -fx-padding: 15 20 15 20;
+    -fx-background-color: #3d2626;
+    -fx-background-radius: 8px;
+    -fx-border-color: #d9534f;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+    -fx-effect: dropshadow(gaussian, rgba(217,83,79,0.3), 5, 0, 0, 1);
+}
+
+/* ============================================
+   FILES TAB STYLES
+   ============================================ */
+
+.files-scroll {
+    -fx-background-color: #2a2a28;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0 0 8px 8px;
+}
+
+.files-scroll .scroll-pane .viewport {
+    -fx-background-color: #2a2a28;
+}
+
+.files-scroll .scroll-pane .content {
+    -fx-background-color: #2a2a28;
+    -fx-padding: 20;
+}
+
+.no-files-message {
+    -fx-font-size: 18px;
+    -fx-text-fill: #a8a8a0;
+    -fx-font-style: italic;
+    -fx-padding: 80 0 80 0;
+    -fx-text-alignment: center;
+    -fx-background-color: #333331;
+    -fx-background-radius: 12px;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1);
+}
+
+/* ============================================
+   IMPROVED SCROLLBAR STYLES
+   ============================================ */
+
+.mod-detail-tabs .scroll-pane .scroll-bar:vertical {
+    -fx-background-color: #1f1f1d;
+    -fx-border-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-pref-width: 12px;
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar:horizontal {
+    -fx-background-color: #1f1f1d;
+    -fx-border-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-pref-height: 12px;
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar .thumb {
+    -fx-background-color: #ba694b;
+    -fx-background-radius: 6px;
+    -fx-border-radius: 6px;
+    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.4), 3, 0, 0, 1);
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar .thumb:hover {
+    -fx-background-color: #c57a5a;
+    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.6), 4, 0, 0, 1);
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar .thumb:pressed {
+    -fx-background-color: #a85d40;
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar .increment-button,
+.mod-detail-tabs .scroll-pane .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+}
+
+.mod-detail-tabs .scroll-pane .scroll-bar .increment-arrow,
+.mod-detail-tabs .scroll-pane .scroll-bar .decrement-arrow {
+    -fx-background-color: transparent;
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS
+   ============================================ */
+
+.mod-detail-tabs .tab-pane .tab-header-area .tab {
+    -fx-transition: all 0.2s ease;
+}
+
+.screenshot-container {
+    -fx-transition: all 0.2s ease;
+}
+
+.screenshot-container:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 12, 0, 0, 3);
+    -fx-translate-y: -2px;
+}
+
+/* ============================================
+   RESPONSIVE LAYOUT IMPROVEMENTS
+   ============================================ */
+
+.mod-detail-tabs .tab-pane .tab-header-area .tab .tab-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: inherit;
+}
+
+
+
+

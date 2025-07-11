@@ -572,14 +572,17 @@ public class ModBrowser {
         // Description tab
         Tab descriptionTab = new Tab("Description");
         descriptionTab.setContent(createDescriptionTab(modDetail));
+        descriptionTab.getStyleClass().add("mod-tab");
 
         // Screenshots tab
         Tab screenshotsTab = new Tab("Screenshots");
         screenshotsTab.setContent(createScreenshotsTab(modDetail));
+        screenshotsTab.getStyleClass().add("mod-tab");
 
         // Files tab
         Tab filesTab = new Tab("Files");
         filesTab.setContent(createFilesTab(modDetail));
+        filesTab.getStyleClass().add("mod-tab");
 
         tabPane.getTabs().addAll(descriptionTab, screenshotsTab, filesTab);
         detailRoot.setCenter(tabPane);
@@ -590,7 +593,7 @@ public class ModBrowser {
 
         Scene detailScene = new Scene(detailRoot, 800, 600);
         detailScene.getStylesheets().add(Objects.requireNonNull(
-                getClass().getResource("/stylesheet/style.css")).toExternalForm());
+                getClass().getResource("/stylesheet/mod_details.css")).toExternalForm());
 
         detailStage.setScene(detailScene);
 
@@ -677,7 +680,7 @@ public class ModBrowser {
         content.setPadding(new Insets(15));
 
         // Convert HTML description to formatted text (basic implementation)
-        String description = modDetail.description;
+        String description = modDetail.description != null ? modDetail.description : "No description available";
         // Replace some basic HTML tags
         description = description.replaceAll("<br/?", "\n")
                 .replaceAll("<p>", "\n")
