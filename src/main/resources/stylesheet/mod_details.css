@@ -7,6 +7,14 @@
     -fx-focus-color: transparent;
 }
 
+
+.scroll-pane .viewport {
+    -fx-background-color: #363634;
+    -fx-border-color: #4a4a48;
+    -fx-text-fill: #f9f8f4;
+}
+
+
 /* Mod Detail Header */
 .mod-detail-title {
     -fx-font-size: 24px;
@@ -70,29 +78,32 @@
 
 .tab.mod-tab:selected .tab-label {
     -fx-text-fill: #85638f;
-    -fx-font-weight: bold;
 }
 
 .tab.mod-tab:focused .tab-label {
     -fx-text-fill: #9b7aa6;
 }
 
-.tab.mod-tab:selected:hover .tab-label {
-    -fx-text-fill: #3d6cac;
+.tab.mod-tab:selected {
+    -fx-border-color: #ba694b #ba694b transparent #ba694b;
+    -fx-border-width: 1px 1px 0px 1px;
+    -fx-border-radius: 4px 4px 0 0;
+    -fx-background-color: #333331;
+    -fx-padding: 0 3 0 3;
 }
 
-.tab.mod-tab:selected {
-    -fx-background-color: #333331;
-}
 
 .tab.mod-tab:hover {
     -fx-background-color: #2f2f2d;
 }
 
 .tab.mod-tab:selected:focused {
-    -fx-background-color: #3a3a38;
+    -fx-background-color: #2f2f2d;
 }
 
+.tab-pane .tab-header-background {
+    -fx-background-color: #2a2a28;
+}
 
 
 
@@ -115,10 +126,12 @@
 
 .mod-description-text {
     -fx-font-size: 14px;
-    -fx-text-fill: #f9f8f4;
+    -fx-fill: #f9f8f4;
     -fx-line-spacing: 3px;
     -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
 }
+
+
 
 /* Screenshots Tab */
 .screenshots-scroll {
@@ -134,10 +147,19 @@
     -fx-background-color: #2a2a28;
 }
 
+.screenshot-image {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.6), 8, 0, 0, 2);
+    -fx-background-color: #1f1f1f;
+    -fx-border-color: #4a4a48;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 4px;
+}
+
 .screenshot-caption {
-    -fx-font-size: 13px;
-    -fx-text-fill: #a8a8a0;
-    -fx-font-style: italic;
+    -fx-font-size: 10px;
+    -fx-fill: #a8a8a0;
     -fx-padding: 5 0 0 0;
 }
 
@@ -327,13 +349,14 @@
 
 /* Vertical scrollbar */
 .scroll-pane .scroll-bar:vertical {
-    -fx-pref-width: 6px;
+    -fx-min-width: 1px;
+    -fx-max-width: 1px;
     -fx-background-color: transparent;
 }
 
 /* Horizontal scrollbar */
 .scroll-pane .scroll-bar:horizontal {
-    -fx-pref-height: 6px;
+    -fx-pref-height: 1px;
     -fx-background-color: transparent;
 }
 
@@ -375,103 +398,7 @@
 
 
 
-/* ============================================
-   TAB PANE STYLES - КРАСИВЫЕ ВКЛАДКИ
-   ============================================ */
-
-.mod-detail-tabs {
-    -fx-background-color: #2a2a28;
-    -fx-border-color: transparent;
-    -fx-background-radius: 8px;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 2);
-}
-
-/* Область заголовков вкладок */
-.mod-detail-tabs .tab-pane .tab-header-area {
-    -fx-background-color: #1f1f1d;
-    -fx-border-color: transparent;
-    -fx-padding: 8 8 0 8;
-    -fx-background-radius: 8px 8px 0 0;
-}
-
-/* Контейнер вкладок */
-.mod-detail-tabs .tab-pane .tab-header-area .headers-region {
-    -fx-background-color: transparent;
-}
-
-/* Отдельная вкладка */
-.mod-detail-tabs .tab-pane .tab-header-area .tab {
-    -fx-background-color: #2a2a28;
-    -fx-text-fill: #a8a8a0;
-    -fx-border-color: #4a4a48;
-    -fx-border-width: 1px 1px 0 1px;
-    -fx-border-radius: 8px 8px 0 0;
-    -fx-background-radius: 8px 8px 0 0;
-    -fx-padding: 12 20 12 20;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 1);
-}
-
-/* Активная вкладка */
-.mod-detail-tabs .tab-pane .tab-header-area .tab:selected {
-    -fx-background-color: #ba694b;
-    -fx-text-fill: #f9f8f4;
-    -fx-border-color: #ba694b;
-    -fx-border-width: 1px 1px 0 1px;
-    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.4), 8, 0, 0, 2);
-    -fx-translate-y: -2px;
-}
-
-/* Наведение на вкладку */
-.mod-detail-tabs .tab-pane .tab-header-area .tab:hover {
-    -fx-background-color: #3a3a38;
-    -fx-text-fill: #f9f8f4;
-    -fx-border-color: #ba694b;
-    -fx-translate-y: -1px;
-    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.2), 5, 0, 0, 1);
-}
-
-/* Область содержимого вкладок */
-.mod-detail-tabs .tab-pane .tab-content-area {
-    -fx-background-color: #2a2a28;
-    -fx-border-color: #4a4a48;
-    -fx-border-width: 1px;
-    -fx-border-radius: 0 0 8px 8px;
-    -fx-background-radius: 0 0 8px 8px;
-    -fx-padding: 0;
-}
-
-/* ============================================
-   DESCRIPTION TAB STYLES
-   ============================================ */
-
-.description-scroll {
-    -fx-background-color: #2a2a28;
-    -fx-border-color: transparent;
-    -fx-background-radius: 0 0 8px 8px;
-}
-
-.description-scroll .scroll-pane .viewport {
-    -fx-background-color: #2a2a28;
-}
-
-.description-scroll .scroll-pane .content {
-    -fx-background-color: #2a2a28;
-}
-
-/* Текст описания */
-.mod-description-text {
-    -fx-font-size: 15px;
-    -fx-text-fill: #f9f8f4;
-    -fx-line-spacing: 4px;
-    -fx-font-family: "Segoe UI", "Helvetica", "Arial", sans-serif;
-    -fx-padding: 20;
-    -fx-background-color: #2a2a28;
-    -fx-background-radius: 0 0 8px 8px;
-}
-
+/*
 /* ============================================
    SCREENSHOTS TAB STYLES
    ============================================ */
@@ -652,3 +579,40 @@
 
 
 
+/* ScrollPane for description, screenshots, and files */
+.description-scroll,
+.screenshots-scroll,
+.files-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: #5a5a58;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* ScrollBar styles */
+.description-scroll .scroll-bar:vertical,
+.description-scroll .scroll-bar:horizontal,
+.screenshots-scroll .scroll-bar:vertical,
+.screenshots-scroll .scroll-bar:horizontal,
+.files-scroll .scroll-bar:vertical,
+.files-scroll .scroll-bar:horizontal {
+    -fx-pref-width: 8; /* Thin scrollbar */
+    -fx-background-color: transparent;
+}
+
+/* ScrollBar track */
+.description-scroll .scroll-bar .track,
+.screenshots-scroll .scroll-bar .track,
+.files-scroll .scroll-bar .track {
+    -fx-background-color: #2f2f2d;
+    -fx-background-radius: 4;
+    -fx-border-color: transparent;
+}
+
+/* ScrollBar thumb */
+.description-scroll .scroll-bar .thumb {
+    -fx-background-color: #ba694b;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-pref-width: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(186,105,75,0.4), 3, 0, 0, 1);
+}

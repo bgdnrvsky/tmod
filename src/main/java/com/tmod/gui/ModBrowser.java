@@ -570,8 +570,12 @@ public class ModBrowser {
         tabPane.getStyleClass().add("mod-detail-tabs");
 
         // Description tab
+
+        Node content = createDescriptionTab(modDetail);
+        content.getStyleClass().add("mod-tab-content");
+
         Tab descriptionTab = new Tab("Description");
-        descriptionTab.setContent(createDescriptionTab(modDetail));
+        descriptionTab.setContent(content);
         descriptionTab.getStyleClass().add("mod-tab");
 
         // Screenshots tab
@@ -720,7 +724,9 @@ public class ModBrowser {
                 // Create image view
                 ImageView imageView = new ImageView();
                 imageView.setPreserveRatio(true);
-                imageView.setFitWidth(700);
+                imageView.setFitWidth(300);
+                imageView.setFitHeight(200);
+                imageView.getStyleClass().add("screenshot-image");
 
                 // Load image asynchronously
                 CompletableFuture.runAsync(() -> {
@@ -739,9 +745,8 @@ public class ModBrowser {
                 });
 
                 // Caption
-                Label captionLabel = new Label(screenshot.title);
+                Text captionLabel = new Text(screenshot.title);
                 captionLabel.getStyleClass().add("screenshot-caption");
-                captionLabel.setWrapText(true);
                 captionLabel.setTextAlignment(TextAlignment.CENTER);
 
                 screenshotBox.getChildren().addAll(imageView, captionLabel);
