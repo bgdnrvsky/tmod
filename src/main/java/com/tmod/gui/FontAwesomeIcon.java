@@ -100,6 +100,12 @@ public class FontAwesomeIcon {
         ICON_MAP.put("CHECK_CIRCLE", "\uf058");
         ICON_MAP.put("GAMEPAD", "\uf11b");
 
+        // Browser icons
+        ICON_MAP.put("SPINNER", "\uf110");
+        ICON_MAP.put("BROWSER", "\uf6dc");
+        ICON_MAP.put("FILTER", "\uf0b0");
+        ICON_MAP.put("SORT", "\uf0dc");
+        ICON_MAP.put("EXCLAMATION_TRIANGLE", "\uf071");
     }
 
     /**

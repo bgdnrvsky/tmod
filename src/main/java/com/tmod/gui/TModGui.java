@@ -53,6 +53,7 @@ public class TModGui extends Application {
 
     // UI Comps
     private Button addBtn, removeBtn, installBtn, refreshBtn;
+    private Stage primaryStage;
 
     /**
      * Entry point for the GUI version of tmod
@@ -64,6 +65,7 @@ public class TModGui extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         primaryStage.setTitle("TMod Manager");
 
         primaryStage.setMinWidth(800);
@@ -156,18 +158,20 @@ public class TModGui extends Application {
         removeBtn = createStyledButton("Remove Mod", "remove-button", "TRASH_ALT");
         installBtn = createStyledButton("Install All", "install-button", "DOWNLOAD");
         refreshBtn = createStyledButton("Refresh", "refresh-button", "REFRESH");
+        Button browseBtn = createStyledButton("Mod Browser", "browse-button", "SEARCH");
 
         // Event handlers
         addBtn.setOnAction(e -> onAddMod());
         removeBtn.setOnAction(e -> onRemoveMod(modListView.getSelectionModel().getSelectedItem()));
         installBtn.setOnAction(e -> onInstallMods());
         refreshBtn.setOnAction(e -> refreshModsList());
+        browseBtn.setOnAction(e -> onOpenModBrowser());
 
         // Disable remove button initially
         removeBtn.setDisable(true);
 
         // Create HBoxes for left and right sides
-        HBox leftBox = new HBox(15, addBtn, removeBtn);
+        HBox leftBox = new HBox(15, addBtn, removeBtn, browseBtn);
         leftBox.setAlignment(Pos.CENTER_LEFT); // Align buttons to the left
 
         HBox rightBox = new HBox(15, installBtn, refreshBtn);
@@ -439,11 +443,11 @@ public class TModGui extends Application {
     protected static Button createStyledButton(String text, String styleClass, String iconName) {
         Button button = new Button(text);
         button.getStyleClass().addAll("styled-button", styleClass);
-        button.setMinWidth(120);
+//        button.setMinWidth(120);
 
         // Add FontAwesome icon
         if (iconName != null) {
-            Text icon = FontAwesomeIcon.createIcon(iconName, "button-icon", 16);
+            Text icon = FontAwesomeIcon.createIcon(iconName, "button-icon", 13);
             icon.setFill(Paint.valueOf("#f9f8f4"));
             button.setGraphic(icon);
             button.setContentDisplay(ContentDisplay.LEFT);
@@ -668,5 +672,16 @@ public class TModGui extends Application {
 
         appendLog("Setup is complete, you are welcome to proceed");
         updateStatus("ModPack is ready");
+    }
+
+    /**
+     * Opens the mod browser window
+     */
+    private void onOpenModBrowser() {
+        appendLog("Opening mod browser...");
+        updateStatus("Opening mod browser");
+
+        ModBrowser browser = new ModBrowser(primaryStage);
+        browser.show();
     }
 }
