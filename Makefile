@@ -17,5 +17,8 @@ tmod: $(JAR_TARGET)
 	cat $(JAR_TARGET) >> tmod
 	chmod +x tmod
 
-$(JAR_TARGET): $(CLI_APP) $(CLI_COMMANDS)
+$(JAR_TARGET): $(CLI_APP) $(CLI_COMMANDS) $(MVN_CMD)
 	$(MVN_CMD) -q -Dmaven.test.skip=true package
+
+$(MVN_CMD):
+	mvn -N wrapper:wrapper
