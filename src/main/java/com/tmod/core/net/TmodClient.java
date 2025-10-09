@@ -261,7 +261,7 @@ public class TmodClient {
      *
      * @param request  the {@link HttpRequest} instance
      * @return {@link HttpResponse} with the string of the response body
-     * @throws HttpGetException error while sending request or status code is not 200
+     * @throws HttpGetException error while sending request or status code is not 200 or 302
      */
     public static HttpResponse<String> HttpGet(HttpRequest request)
         throws HttpGetException {

@@ -12,11 +12,14 @@ import com.tmod.core.repo.models.DependencyInfo;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 import java.util.Map;
 import picocli.CommandLine;
@@ -68,24 +71,15 @@ public class Install implements Runnable {
         boolean alreadyExists = !outputFile.createNewFile();
 
         if (!alreadyExists) {
-            // Download the file
-            HttpRequest request = HttpRequest.newBuilder(
-                new URI(file.downloadUrl())
-            ).build();
-            HttpResponse<String> downloadedFile = TmodClient.HttpGet(request);
-
-            // Write file contents
-            FileOutputStream stream = new FileOutputStream(outputFile);
-            FileChannel channel = stream.getChannel();
-
-            ByteBuffer buffer = ByteBuffer.wrap(
-                downloadedFile.body().getBytes()
-            );
-
-            channel.write(buffer);
-
-            channel.close();
-            stream.close();
+            try
+                (
+                    ReadableByteChannel sourceChannel = Channels.newChannel(new URL(file.downloadUrl()).openStream());
+                    FileOutputStream fileStream = new FileOutputStream(outputFile);
+                    FileChannel fileChannel = fileStream.getChannel()
+                )
+            {
+                fileChannel.transferFrom(sourceChannel, 0, file.fileLength());
+            }
         }
 
         for (String dependencySlug : locks.get(slug).dependencies()) {
