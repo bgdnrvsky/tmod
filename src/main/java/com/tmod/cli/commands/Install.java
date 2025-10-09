@@ -23,6 +23,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "install",
+    aliases = { "i" },
     description = "Download all the mods to a target folder"
 )
 public class Install implements Runnable {

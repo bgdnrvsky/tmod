@@ -30,6 +30,7 @@ import picocli.CommandLine;
 
 @CommandLine.Command(
     name = "add",
+    aliases = { "a" },
     description = "Add minecraft mod to the repo"
 )
 public class Add implements Runnable {
