@@ -44,13 +44,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
     }
 }
 
-record Links(
-    String websiteUrl,
-    String wikiUrl,
-    String issuesUrl,
-    String sourceUrl
-) {}
-
 record Author(int id, String name, String url, String avatarUrl) {}
 
 /**
