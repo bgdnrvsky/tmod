@@ -18,6 +18,13 @@ public class Info implements Runnable {
     @CommandLine.ParentCommand
     private App parent;
 
+    @CommandLine.Option(
+        names = { "-w", "--web" },
+        description = "Print link to CurseForge page",
+        defaultValue = "false"
+    )
+    private boolean showLinkToWeb = false;
+
     @CommandLine.Parameters(
         paramLabel = "<mod id/slug>",
         description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
@@ -40,7 +47,14 @@ public class Info implements Runnable {
             .fgBlue()
             .a(mod.name())
             .fgDefault()
-            .format("(%d) - ", mod.id())
+            .format("(id: %d)", mod.id());
+
+        if (showLinkToWeb) {
+            msg.format("[web: %s]", mod.links().websiteUrl());
+        }
+
+        msg
+            .a(" - ")
             .a(Attribute.ITALIC)
             .a(mod.summary())
             .a(Attribute.ITALIC_OFF);
