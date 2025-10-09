@@ -37,12 +37,12 @@ public class Remove implements Runnable {
     private Path targetDirectoryPath = Path.of("mods/");
 
     @CommandLine.Option(
-        names = { "-r", "--remove" },
-        description = "Remove the mod from the folder as well",
+        names = { "-k", "--keep-file" },
+        description = "Don't remove the mod from the output folder",
         defaultValue = "false",
         showDefaultValue = CommandLine.Help.Visibility.ALWAYS
     )
-    private boolean removeFromFolder = false;
+    private boolean keepTheModFile = false;
 
     @CommandLine.Parameters(arity = "1..*", paramLabel = "slugs")
     private Set<String> removalTargetMods;
@@ -84,7 +84,7 @@ public class Remove implements Runnable {
 
             DependencyInfo dependencyInfo = repository.getLocks().remove(slug);
 
-            if (removeFromFolder) {
+            if (!keepTheModFile) {
                 // Remove the file from the folder
                 Mod mod = TmodClient.searchModBySlug(slug);
                 File modFile;
