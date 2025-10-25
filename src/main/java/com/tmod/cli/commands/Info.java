@@ -1,5 +1,8 @@
 package com.tmod.cli.commands;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.tmod.cli.App;
 import com.tmod.core.models.Mod;
 import com.tmod.core.net.TmodClient;
@@ -25,6 +28,13 @@ public class Info implements Runnable {
     )
     private boolean showLinkToWeb = false;
 
+    @CommandLine.Option(
+        names = { "--json" },
+        description = "Print full info about the mod in JSON format",
+        defaultValue = "false"
+    )
+    private boolean json = false;
+
     @CommandLine.Parameters(
         paramLabel = "<mod id/slug>",
         description = "Search using mod id, or mod's 'slug' (slug is not always the same as the mod name)"
@@ -43,11 +53,7 @@ public class Info implements Runnable {
 
         Ansi msg = new Ansi();
 
-        msg
-            .fgBlue()
-            .a(mod.name())
-            .fgDefault()
-            .format("(id: %d)", mod.id());
+        msg.fgBlue().a(mod.name()).fgDefault().format("(id: %d)", mod.id());
 
         if (showLinkToWeb) {
             msg.format("[web: %s]", mod.links().websiteUrl());
@@ -58,6 +64,18 @@ public class Info implements Runnable {
             .a(Attribute.ITALIC)
             .a(mod.summary())
             .a(Attribute.ITALIC_OFF);
+
+        if (json) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+
+            try {
+                String jsonString = mapper.writeValueAsString(mod);
+                msg.a(jsonString);
+            } catch (JsonProcessingException e) {
+                msg.fgRed().a("ERROR").fgDefault().a(": ").a(e.getMessage());
+            }
+        }
 
         try (AnsiPrintStream stream = AnsiConsole.out()) {
             stream.println(msg);
